@@ -485,7 +485,7 @@ https://rpc.goerli.dev,5</textarea>
                     </label>
                     <label class="flex items-center">
                         <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Predefined List of Addresses</span>
+                        <span class="ml-3 text-main">Use Predefined List of Addresses (from CSV)</span>
                     </label>
                 </div>
 
@@ -502,8 +502,11 @@ https://rpc.goerli.dev,5</textarea>
                 </div>
 
                 <div id="predefined-addresses-section" class="mt-4 hidden">
-                    <p class="font-medium mb-1 text-accent">Predefined Recipient Addresses (Hardcoded)</p>
-                    <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent">
+                    <label for="predefined-file-input" class="block font-medium mb-1 text-accent">Upload Predefined List (CSV)</label>
+                    <input type="file" id="predefined-file-input" accept=".csv" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                    <button id="load-predefined-file-btn" class="mt-2 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Predefined Addresses from CSV</button>
+                    <p id="predefined-addresses-info" class="text-sm text-gray-500 mt-1">No file loaded.</p>
+                    <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent max-h-32 overflow-y-auto mt-2">
                         <!-- Predefined addresses will be populated here -->
                     </ul>
                     <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
@@ -560,16 +563,7 @@ https://rpc.goerli.dev,5</textarea>
                 rpcConfigs: [], // [{url, chainId}]
                 currentRecipientPool: {}, // {chainId: [addresses]}
                 manualRecipientList: [], // For user-provided list
-                predefinedRecipientList: [ // New: Predefined list of addresses
-                    "0x70997970C51812dc3A0108C7f54cE785eBfC7c5f",
-                    "0x3C44cCDdb6a9ADf889Eea886cE43d65fB842e123",
-                    "0x9965507D45B585BCDea73882e56eF28eA2eB6C88",
-                    "0x2B88eED8b8686e0018442e9B854A2052C32B8F6D",
-                    "0xD8661643c7B625219463F83234d70c47F52d7eB2",
-                    "0x71b569e5f1d1e4eA5b7c7B3fD3d6f1C8E5A73b2C",
-                    "0xEd0EAE3B3d0F3A3f7b83d1cE5C8B2E05A1bE8302",
-                    "0x1f7A2F0A3a9f0B8bE2d5eA122A04b3D0aC7C1F0C"
-                ],
+                predefinedRecipientList: [], // Now loaded from CSV
                 customContracts: [], // [{name, address, abi, functions: [{name, argsTemplate, type}]}]
                 config: {},
                 stats: {
@@ -624,6 +618,9 @@ https://rpc.goerli.dev,5</textarea>
                 loadAddressesFromListBtn: document.getElementById('load-addresses-from-list-btn'),
                 listAddressesCount: document.getElementById('list-addresses-count'),
                 predefinedAddressesSection: document.getElementById('predefined-addresses-section'), // New
+                predefinedFileInput: document.getElementById('predefined-file-input'), // New
+                loadPredefinedFileBtn: document.getElementById('load-predefined-file-btn'), // New
+                predefinedAddressesInfo: document.getElementById('predefined-addresses-info'), // New
                 predefinedAddressesDisplay: document.getElementById('predefined-addresses-display'), // New
                 predefinedAddressesCount: document.getElementById('predefined-addresses-count'), // New
                 liveLog: document.getElementById('live-log'),
@@ -1176,6 +1173,63 @@ https://rpc.goerli.dev,5</textarea>
                 }
             };
 
+            const loadPredefinedListFromFile = () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+
+                const file = ui.predefinedFileInput.files[0];
+                if (!file) {
+                    log('No file selected for predefined list.', 'warning');
+                    ui.predefinedAddressesInfo.textContent = 'No file loaded.';
+                    ui.predefinedAddressesCount.textContent = '';
+                    appState.predefinedRecipientList = [];
+                    updatePredefinedAddressesDisplay();
+                    return;
+                }
+
+                ui.predefinedAddressesInfo.textContent = `Loading file: ${file.name}...`;
+                log(`Attempting to load predefined addresses from ${file.name}...`, 'info');
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const addresses = content.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+                    const validAddresses = [];
+                    let invalidCount = 0;
+
+                    addresses.forEach(addr => {
+                        if (ethers.isAddress(addr)) {
+                            validAddresses.push(addr);
+                        } else {
+                            invalidCount++;
+                            log(`Invalid address in predefined file: "${addr}"`, 'warning');
+                        }
+                    });
+
+                    appState.predefinedRecipientList = validAddresses;
+                    ui.predefinedAddressesInfo.textContent = `File loaded: ${file.name}`;
+                    ui.predefinedAddressesCount.textContent = `List contains ${validAddresses.length} valid addresses. ${invalidCount > 0 ? `(${invalidCount} invalid ignored)` : ''}`;
+                    if (validAddresses.length > 0) {
+                        log(`Successfully loaded ${validAddresses.length} addresses from "${file.name}".`, 'success');
+                    } else {
+                        log(`No valid addresses found in "${file.name}".`, 'warning');
+                    }
+                    updatePredefinedAddressesDisplay();
+                };
+
+                reader.onerror = (e) => {
+                    log(`Error reading file: ${e.target.error.name}`, 'error');
+                    ui.predefinedAddressesInfo.textContent = 'Error loading file.';
+                    ui.predefinedAddressesCount.textContent = '';
+                    appState.predefinedRecipientList = [];
+                    updatePredefinedAddressesDisplay();
+                };
+
+                reader.readAsText(file);
+            };
+
             const updatePredefinedAddressesDisplay = () => {
                 ui.predefinedAddressesDisplay.innerHTML = '';
                 if (appState.predefinedRecipientList.length > 0) {
@@ -1184,17 +1238,15 @@ https://rpc.goerli.dev,5</textarea>
                         li.textContent = addr;
                         ui.predefinedAddressesDisplay.appendChild(li);
                     });
-                    ui.predefinedAddressesCount.textContent = `List contains ${appState.predefinedRecipientList.length} addresses.`;
                 } else {
-                    ui.predefinedAddressesDisplay.innerHTML = '<li>No predefined addresses.</li>';
-                    ui.predefinedAddressesCount.textContent = 'List is empty.';
+                    ui.predefinedAddressesDisplay.innerHTML = '<li>No predefined addresses loaded.</li>';
                 }
             };
 
 
             const startFarming = async () => {
                 if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet to start farming.', 'error');
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
                     return;
                 }
 
@@ -1226,7 +1278,7 @@ https://rpc.goerli.dev,5</textarea>
                         return;
                     }
                     if (appState.config.recipientMode === 'predefined' && appState.predefinedRecipientList.length === 0) { // New check for predefined mode
-                        log('Predefined recipient list is empty. Cannot perform "send" actions.', 'error');
+                        log('Predefined recipient list is empty. Please load a CSV file with addresses.', 'error');
                         return;
                     }
                     if (appState.config.probabilities.approve > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'approve'))) {
@@ -1251,7 +1303,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.successCount.textContent = '0';
                     ui.failCount.textContent = '0';
                     ui.progressText.textContent = '0';
-                    ui.progressBar.style.width = '0%';
+                    ui.progressBar.style.width = '100%';
 
 
                     log(`Starting transaction farming process across ${appState.rpcConfigs.length} chains and ${appState.wallets.length} wallets.`, 'info');
@@ -1481,17 +1533,9 @@ https://rpc.goerli.dev,5</textarea>
                         appState.manualRecipientList = [];
                         ui.listAddresses.value = '';
                         ui.listAddressesCount.textContent = '';
-                        // Reset predefined list to its initial state, not entirely clear it
-                        appState.predefinedRecipientList = [
-                            "0x70997970C51812dc3A0108C7f54cE785eBfC7c5f",
-                            "0x3C44cCDdb6a9ADf889Eea886cE43d65fB842e123",
-                            "0x9965507D45B585BCDea73882e56eF28eA2eB6C88",
-                            "0x2B88eED8b8686e0018442e9B854A2052C32B8F6D",
-                            "0xD8661643c7B625219463F83234d70c47F52d7eB2",
-                            "0x71b569e5f1d1e4eA5b7c7B3fD3d6f1C8E5A73b2C",
-                            "0xEd0EAE3B3d0F3A3f7b83d1cE5C8B2E05A1bE8302",
-                            "0x1f7A2F0A3a9f0B8bE2d5eA122A04b3D0aC7C1F0C"
-                        ];
+                        appState.predefinedRecipientList = []; // Clear predefined list
+                        ui.predefinedFileInput.value = ''; // Clear file input
+                        ui.predefinedAddressesInfo.textContent = 'No file loaded.'; // Reset info
                         updatePredefinedAddressesDisplay(); // Update display for predefined list
                         appState.customContracts = [];
                         appState.config = {};
@@ -1773,23 +1817,30 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const connectWallet = async () => {
+                console.log('Connect Wallet button clicked.');
                 if (typeof window.ethereum === 'undefined') {
                     ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
                     log('MetaMask not detected. Please install it.', 'error');
                     setUIEnabled(false);
+                    console.error('MetaMask not detected.');
                     return;
                 }
 
+                console.log('window.ethereum detected. Requesting accounts...');
                 try {
                     log('Requesting wallet connection...', 'info');
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    console.log('eth_requestAccounts returned:', accounts);
+
                     if (accounts.length === 0) {
                         log('No accounts found. Please connect your wallet.', 'error');
                         appState.connectedAddress = null;
                         checkWhitelistStatus(null);
+                        console.warn('No accounts returned from wallet.');
                         return;
                     }
                     appState.connectedAddress = accounts[0];
+                    console.log('Connected address:', appState.connectedAddress);
                     checkWhitelistStatus(appState.connectedAddress);
 
                     // Add event listeners for account/chain changes
@@ -1814,6 +1865,7 @@ https://rpc.goerli.dev,5</textarea>
                     log(`Wallet connection failed: ${error.message}`, 'error');
                     appState.connectedAddress = null;
                     checkWhitelistStatus(null);
+                    console.error('Wallet connection error:', error);
                 }
             };
 
@@ -1828,6 +1880,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.downloadLogBtn.addEventListener('click', downloadLog);
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
+                ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile); // New listener for predefined file load
 
                 ui.closeModalBtn.addEventListener('click', closeGeminiModal);
                 window.addEventListener('click', (event) => {
