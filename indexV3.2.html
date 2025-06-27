@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Script Console: Transaction Farming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals (Slate, Beige, Muted Blue) -->
+    <!-- Application Structure Plan: The SPA is designed as a single-page dashboard, a departure from the linear execution of the source scripts. This structure enhances usability by grouping related settings into logical, interactive sections: a central Control Panel, Configuration (now including action probabilities and contract definitions), Wallets, Recipients, and a Live Log with CSV download. A fixed header provides quick navigation. This user-centric design was chosen because it allows users to configure and monitor the complex task of transaction farming in a non-linear, intuitive way, rather than dealing with multiple config files and command-line flags. The flow is: configure settings (including new contract interactions), load wallets, start the process, and monitor the live log and dynamic charts. This is superior to a script-like interface for discoverability and real-time feedback. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Wallet balances. Goal: Inform/Compare. Viz: Horizontal Bar Chart (Chart.js). Interaction: Updates in real-time as transactions are sent. Justification: Provides a clear, at-a-glance comparison of funds across all source wallets.
+        - Report Info: Transaction sending process. Goal: Organize/Inform. Viz: Live Log panel. Interaction: Auto-scrolls, contains clickable transaction links. Justification: Mimics the familiar console output of the original script, providing detailed, real-time feedback.
+        - Report Info: Transaction distribution. Goal: Analyze/Relationships. Viz: Donut Chart (Chart.js). Interaction: Updates with each successful transaction. Justification: Visualizes which recipient addresses are being used, making the distribution pattern easy to understand.
+        - Report Info: Action distribution (Send, Approve, Mint, Idle). Goal: Analyze/Inform. Viz: Pie Chart (Chart.js). Interaction: Updates dynamically during farming. Justification: Shows the proportion of different actions taken, reflecting the "behavior matrix".
+        - Report Info: Core script logic (`cast send`, `cast balance`, `cast block`, `cast gas-price`, `cast wallet address`). Method: Re-implemented using `ethers.js`. Justification: The original shell commands are not available in a browser. Ethers.js is the standard library for client-side Ethereum interaction, making the application fully functional and interactive, which is the primary goal. It directly replaces the script's core functionality.
+        - Report Info: CSV Logging. Method: In-memory array, then `Blob` and `URL.createObjectURL` for download. Justification: Provides the structured logging feature from the script in a browser-compatible way.
+        - New Feature (Gemini Integration): Contract Function Explanation. Goal: Explain complex smart contract functions in plain language. Viz: Textual explanation in a modal. Interaction: User clicks a button to request explanation. Justification: Demystifies contract interactions, making the tool more accessible and user-friendly.
+        - New Feature (Gemini Integration): Transaction Send Explanation. Goal: Provide context and general risks for sending transactions. Viz: Textual explanation in a modal. Interaction: User clicks a button to request explanation. Justification: Offers immediate guidance and raises awareness of potential risks for users setting up send transactions.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb; /* Warm Beige */
+        }
+        .bg-primary { background-color: #f4f1eb; }
+        .bg-secondary { background-color: #ffffff; }
+        .text-main { color: #2d3748; } /* Slate 800 */
+        .text-accent { color: #4a5568; } /* Slate 600 */
+        .border-accent { border-color: #e2e8f0; } /* Slate 200 */
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-secondary { background-color: #6b7280; color: white; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-success { background-color: #22c55e; color: white; }
+        .btn-success:hover { background-color: #16a34a; }
+        .btn-llm { background-color: #e0f2fe; color: #0284c7; } /* Light blue for LLM buttons */
+        .btn-llm:hover { background-color: #bae6fd; }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        #live-log {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+        .log-warning { color: #f59e0b; }
+        .log-skipped { color: #a8a29e; }
+        .log-copy-btn {
+            background: none;
+            border: none;
+            color: #a8a29e; /* Gray */
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 5px;
+            padding: 0 3px;
+            vertical-align: middle;
+            transition: color 0.2s;
+        }
+        .log-copy-btn:hover {
+            color: #e2e8f0; /* Lighter gray on hover */
+        }
+
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-container .tooltip-text {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the text */
+            left: 50%;
+            margin-left: -75px; /* Center the tooltip */
+            opacity: 0;
+            transition: opacity 0.3s;
+            width: 150px;
+        }
+
+        .tooltip-container .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%; /* At the bottom of the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Disabled styles for fields */
+        .wallet-feature-control:disabled,
+        .wallet-feature-control[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #e2e8f0; /* Light gray */
+        }
+    </style>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-primary text-main">
+
+    <header class="bg-secondary shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl md:text-2xl font-bold text-main">Interactive Script Console</h1>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="nav-link text-accent font-medium pb-1">Dashboard</a>
+                    <a href="#config" class="nav-link text-accent font-medium pb-1">Configuration</a>
+                    <a href="#contracts" class="nav-link text-accent font-medium pb-1">Contracts</a>
+                    <a href="#wallets" class="nav-link text-accent font-medium pb-1">Wallets</a>
+                    <a href="#log" class="nav-link text-accent font-medium pb-1">Live Log</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <div id="security-warning" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8 rounded-r-lg" role="alert">
+            <p class="font-bold">Security Warning</p>
+            <p>Pasting your private keys or sensitive contract ABIs into a website is extremely risky and can result in loss of funds. This application is a client-side tool for demonstration purposes only. Use it with test keys and on test networks. Never use it with mainnet keys holding real assets.</p>
+        </div>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Dashboard</h2>
+            <p class="text-accent mb-6">Start, stop, and monitor the transaction farming process from here, with real-time updates on wallet balances and action distribution.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-secondary p-6 rounded-lg shadow-md flex flex-col items-center justify-center space-y-4">
+                    <button id="connect-wallet-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-success">🔗 Connect Wallet</button>
+                    <div id="wallet-status-display" class="text-center text-sm font-medium text-main">
+                        No wallet connected.
+                    </div>
+                    <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Farming</button>
+                    <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Farming</button>
+                    <button id="clear-all-data-btn" class="w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear All Data</button>
+                </div>
+                 <div class="bg-secondary p-6 rounded-lg shadow-md col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-lg mb-4 text-main">Live Status</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-accent">Total Actions Performed</span>
+                                <span id="progress-text" class="text-sm font-medium text-accent">0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="progress-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                            <div class="p-3 bg-blue-50 rounded-lg">
+                                <div class="text-xs text-blue-500 font-bold uppercase">Status</div>
+                                <div id="status-display" class="text-lg font-semibold text-main">Idle</div>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded-lg">
+                                <div class="text-xs text-green-500 font-bold uppercase">Successful Actions</div>
+                                <div id="success-count" class="text-lg font-semibold text-main">0</div>
+                            </div>
+                            <div class="p-3 bg-red-50 rounded-lg">
+                                <div class="text-xs text-red-500 font-bold uppercase">Failed Actions</div>
+                                <div id="fail-count" class="text-lg font-semibold text-main">0</div>
+                            </div>
+                            <div class="p-3 bg-gray-100 rounded-lg">
+                                <div class="text-xs text-gray-500 font-bold uppercase">Current Gas</div>
+                                <div id="gas-display" class="text-lg font-semibold text-main">N/A</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-secondary p-6 rounded-lg shadow-md lg:col-span-2">
+                    <h3 class="font-bold text-lg mb-4 text-main">Wallet Balances (ETH)</h3>
+                    <p class="text-sm text-accent mb-4">This chart shows the current balance of each loaded wallet, dynamically updating after transactions.</p>
+                    <div class="chart-container">
+                        <canvas id="wallet-balance-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-secondary p-6 rounded-lg shadow-md">
+                    <h3 class="font-bold text-lg mb-4 text-main">Action Distribution</h3>
+                    <p class="text-sm text-accent mb-4">Visualizes the types of actions performed (send, approve, mint, idle).</p>
+                    <div class="chart-container">
+                        <canvas id="action-dist-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configuration Section -->
+        <section id="config" class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
+            <p class="text-accent mb-6">Define the parameters for the transaction farming, including network settings, amounts, delays, and gas thresholds.</p>
+
+            <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <label for="max-txns-per-wallet" class="block font-medium mb-1 text-accent">Max Actions Per Wallet Session
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, approve, mint, idle) a single wallet will attempt in its session on a given blockchain network.</span></span>
+                    </label>
+                    <input type="number" id="max-txns-per-wallet" value="3" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    <p class="text-sm text-gray-500 mt-1">Maximum actions a single wallet will perform in its session on a given chain.</p>
+                </div>
+                <div>
+                    <label for="wallet-idle-chance" class="block font-medium mb-1 text-accent">Wallet Idle Chance (%)
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The percentage chance that a specific wallet will be "idle" for an entire session on a chain, meaning it will perform no actions. This simulates unpredictable human-like behavior.</span></span>
+                    </label>
+                    <input type="number" id="wallet-idle-chance" value="25" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    <p class="text-sm text-gray-500 mt-1">Chance for a wallet to be idle and skip its session on a chain.</p>
+                </div>
+                <div>
+                    <label for="gas-multiplier" class="block font-medium mb-1 text-accent">Max Gas Price Multiplier
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">If the current gas price on the network exceeds the average gas price by this multiplier, the script will temporarily pause activities for that wallet on that chain to avoid high fees.</span></span>
+                    </label>
+                    <input type="number" id="gas-multiplier" value="2" step="0.1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    <p class="text-sm text-gray-500 mt-1">Skip wallet activity if current gas price exceeds average by this multiplier.</p>
+                </div>
+                <div>
+                    <label for="block-lookback" class="block font-medium mb-1 text-accent">Blocks to Scan for Addresses
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The number of recent blockchain blocks the script will scan to find and add new potential recipient addresses to its pool. A higher number means more discovery but takes longer.</span></span>
+                    </label>
+                    <input type="number" id="block-lookback" value="100" min="10" max="1000" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses.</p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block font-medium mb-1 text-accent">Transaction Amount Range (ETH)
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">When a 'send' action is chosen, a random amount of ETH will be sent within this specified minimum and maximum range.</span></span>
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input type="number" id="min-amount" value="0.0001" step="0.0001" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <span class="text-gray-500">to</span>
+                        <input type="number" id="max-amount" value="0.0002" step="0.0001" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    </div>
+                     <p class="text-sm text-gray-500 mt-1">A random ETH amount within this range will be sent for 'send' actions.</p>
+                     <button id="explain-send-tx-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Explain Send Tx</button>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block font-medium mb-1 text-accent">Delay Between Actions (seconds)
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send, approve, mint, or idle), the script will pause for a random duration within this minimum and maximum second range.</span></span>
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input type="number" id="min-delay" value="10" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <span class="text-gray-500">to</span>
+                        <input type="number" id="max-delay" value="30" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">A random delay will be applied after each action.</p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block font-medium mb-1 text-accent">RPC Endpoints & Chain IDs (Format: URL,ChainID - one per line)
+                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">List the RPC URLs for the blockchain networks you want to interact with, followed by their corresponding Chain ID (e.g., 'https://mainnet.infura.io/v3/YOUR_ID,1'). The script will cycle through these networks.</span></span>
+                    </label>
+                    <textarea id="rpc-urls" rows="4" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1
+https://rpc.goerli.dev,5</textarea>
+                    <p class="text-sm text-gray-500 mt-1">The script will cycle through these RPCs and chains.</p>
+                    <button id="test-rpc-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>⚡ Test RPC Connections</button>
+                </div>
+
+                <div class="md:col-span-2">
+                    <h3 class="font-bold text-lg mb-4 text-main">Action Probability Matrix (%)</h3>
+                    <p class="text-sm text-accent mb-4">Define the percentage chance for each action type. Must sum to 100.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                            <label for="prob-send" class="block font-medium mb-1 text-accent">Send</label>
+                            <input type="number" id="prob-send" value="50" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                        </div>
+                        <div>
+                            <label for="prob-approve" class="block font-medium mb-1 text-accent">Approve</label>
+                            <input type="number" id="prob-approve" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                        </div>
+                        <div>
+                            <label for="prob-mint" class="block font-medium mb-1 text-accent">Mint</label>
+                            <input type="number" id="prob-mint" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                        </div>
+                        <div>
+                            <label for="prob-idle-action" class="block font-medium mb-1 text-accent">Idle Action</label>
+                            <input type="number" id="prob-idle-action" value="10" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                        </div>
+                    </div>
+                    <p id="prob-sum-warning" class="text-sm text-red-500 mt-2 hidden">Probabilities must sum to 100%!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contract Interaction Section -->
+        <section id="contracts" class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Custom Contract Interactions</h2>
+            <p class="text-accent mb-6">Define contracts and their functions (e.g., "approve", "mint") for the "Approve" and "Mint" actions in the behavior matrix. You can add multiple and the script will randomly pick one for the chosen action type.</p>
+
+            <div class="bg-secondary p-8 rounded-lg shadow-md">
+                <button id="add-contract-btn" class="mb-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>➕ Add New Contract</button>
+
+                <div id="contract-list" class="space-y-6">
+                    <!-- Contract entries will be injected here -->
+                    <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
+                            <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                        </div>
+                        <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                        <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                        <label class="block font-medium mb-1 text-accent">Address:</label>
+                        <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                        <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                        <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                        <div data-field="functions" class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <option value="approve" selected>Approve</option>
+                                    <option value="mint">Mint</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
+                            <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                        </div>
+                        <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                        <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                        <label class="block font-medium mb-1 text-accent">Address:</label>
+                        <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                        <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                        <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                        <div data-field="functions" class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <option value="approve">Approve</option>
+                                    <option value="mint" selected>Mint</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wallet and Recipient Section -->
+        <section id="wallets" class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Wallets</h2>
+            <p class="text-accent mb-6">Load your source wallets by pasting private keys below. Ensure you have sufficient balance for transactions.</p>
+            <div class="bg-secondary p-8 rounded-lg shadow-md mb-8">
+                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-4 rounded-r-lg" role="alert">
+                    <p class="font-bold text-sm">Important Security Reminder:</p>
+                    <p class="text-xs italic">Only use test keys on testnets for this application. Never use mainnet private keys holding real funds.</p>
+                </div>
+                <label for="private-keys" class="block font-medium mb-1 text-accent">Private Keys (one per line)</label>
+                <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled></textarea>
+                <button id="load-keys-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Wallets & Check Balances</button>
+                <p id="keys-loaded-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+            </div>
+
+            <h3 class="text-2xl font-bold mb-2 text-main">Loaded Wallets</h3>
+            <p class="text-accent mb-6">Overview of all wallets currently loaded in the application.</p>
+            <div class="bg-secondary p-6 rounded-lg shadow-md">
+                <ul id="wallet-list-display" class="list-disc pl-5 space-y-2 text-sm text-accent">
+                    <li id="no-wallets-msg">No wallets loaded yet.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Recipient Section - Kept separate for clarity on dynamic scanning -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Recipient Settings</h2>
+            <p class="text-accent mb-6">Choose how the script will select destination addresses for transactions.</p>
+            <div class="bg-secondary p-8 rounded-lg shadow-md">
+                <div class="space-y-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="pool" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" checked disabled>
+                        <span class="ml-3 text-main">Use Dynamically Scanned Pool</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="fixed" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Fixed Address</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="list" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Custom List of Addresses (one per line)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Predefined List of Addresses</span>
+                    </label>
+                </div>
+
+                <div id="fixed-address-section" class="mt-4 hidden">
+                    <label for="fixed-address" class="block font-medium mb-1 text-accent">Fixed Recipient Address</label>
+                    <input type="text" id="fixed-address" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled>
+                </div>
+
+                <div id="list-addresses-section" class="mt-4 hidden">
+                    <label for="list-addresses" class="block font-medium mb-1 text-accent">Recipient Addresses (one per line)</label>
+                    <textarea id="list-addresses" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x...&#10;0x...&#10;... (one address per line)" disabled></textarea>
+                    <button id="load-addresses-from-list-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Addresses from List</button>
+                    <p id="list-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                </div>
+
+                <div id="predefined-addresses-section" class="mt-4 hidden">
+                    <p class="font-medium mb-1 text-accent">Predefined Recipient Addresses (Hardcoded)</p>
+                    <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent">
+                        <!-- Predefined addresses will be populated here -->
+                    </ul>
+                    <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Live Log Section -->
+        <section id="log">
+             <h2 class="text-3xl font-bold mb-2 text-main">Live Log</h2>
+             <p class="text-accent mb-6">Real-time output from the transaction farming process will appear below. You can also download the complete log.</p>
+            <div class="bg-gray-800 text-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
+                <div id="live-log"></div>
+            </div>
+            <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
+        </section>
+    </main>
+
+    <!-- Gemini Explanation Modal -->
+    <div id="gemini-modal" class="modal hidden">
+        <div class="modal-content text-main">
+            <span class="close-button">&times;</span>
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Gemini Explanation</h3>
+            <div id="modal-content" class="text-accent">
+                <div class="modal-loader"></div>
+                <p class="text-center mt-4">Generating explanation...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal hidden">
+        <div class="modal-content text-main">
+            <span class="close-confirm-button">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Confirm Action</h3>
+            <p id="confirm-message" class="mb-6 text-accent">Are you sure you want to proceed?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-confirm-btn" class="py-2 px-4 rounded-lg font-semibold btn-secondary">Cancel</button>
+                <button id="confirm-action-btn" class="py-2 px-4 rounded-lg font-semibold btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import the whitelist.js file -->
+    <script src="./whitelist.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appState = {
+                isRunning: false,
+                stopFlag: false,
+                wallets: [],
+                rpcConfigs: [], // [{url, chainId}]
+                currentRecipientPool: {}, // {chainId: [addresses]}
+                manualRecipientList: [], // For user-provided list
+                predefinedRecipientList: [ // New: Predefined list of addresses
+                    "0x70997970C51812dc3A0108C7f54cE785eBfC7c5f",
+                    "0x3C44cCDdb6a9ADf889Eea886cE43d65fB842e123",
+                    "0x9965507D45B585BCDea73882e56eF28eA2eB6C88",
+                    "0x2B88eED8b8686e0018442e9B854A2052C32B8F6D",
+                    "0xD8661643c7B625219463F83234d70c47F52d7eB2",
+                    "0x71b569e5f1d1e4eA5b7c7B3fD3d6f1C8E5A73b2C",
+                    "0xEd0EAE3B3d0F3A3f7b83d1cE5C8B2E05A1bE8302",
+                    "0x1f7A2F0A3a9f0B8bE2d5eA122A04b3D0aC7C1F0C"
+                ],
+                customContracts: [], // [{name, address, abi, functions: [{name, argsTemplate, type}]}]
+                config: {},
+                stats: {
+                    totalActions: 0,
+                    successfulActions: 0,
+                    failedActions: 0,
+                    actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 }
+                },
+                logEntries: [], // For CSV export
+                charts: {
+                    walletBalance: null,
+                    actionDist: null
+                },
+                pendingConfirmation: null, // Callback for confirmation modal
+                connectedAddress: null,
+                isWhitelisted: false
+            };
+
+
+            const ui = {
+                connectWalletBtn: document.getElementById('connect-wallet-btn'),
+                walletStatusDisplay: document.getElementById('wallet-status-display'),
+                walletFeatureControls: document.querySelectorAll('.wallet-feature-control'),
+                startBtn: document.getElementById('start-btn'),
+                stopBtn: document.getElementById('stop-btn'),
+                clearAllDataBtn: document.getElementById('clear-all-data-btn'),
+                maxTxnsPerWallet: document.getElementById('max-txns-per-wallet'),
+                walletIdleChance: document.getElementById('wallet-idle-chance'),
+                minAmount: document.getElementById('min-amount'),
+                maxAmount: document.getElementById('max-amount'),
+                minDelay: document.getElementById('min-delay'),
+                maxDelay: document.getElementById('max-delay'),
+                gasMultiplier: document.getElementById('gas-multiplier'),
+                blockLookback: document.getElementById('block-lookback'),
+                rpcUrls: document.getElementById('rpc-urls'),
+                testRpcBtn: document.getElementById('test-rpc-btn'),
+                probSend: document.getElementById('prob-send'),
+                probApprove: document.getElementById('prob-approve'),
+                probMint: document.getElementById('prob-mint'),
+                probIdleAction: document.getElementById('prob-idle-action'),
+                probSumWarning: document.getElementById('prob-sum-warning'),
+                privateKeys: document.getElementById('private-keys'),
+                loadKeysBtn: document.getElementById('load-keys-btn'),
+                keysLoadedCount: document.getElementById('keys-loaded-count'),
+                walletListDisplay: document.getElementById('wallet-list-display'),
+                noWalletsMsg: document.getElementById('no-wallets-msg'),
+                recipientMode: document.getElementsByName('recipient-mode'),
+                fixedAddressSection: document.getElementById('fixed-address-section'),
+                fixedAddress: document.getElementById('fixed-address'),
+                listAddressesSection: document.getElementById('list-addresses-section'),
+                listAddresses: document.getElementById('list-addresses'),
+                loadAddressesFromListBtn: document.getElementById('load-addresses-from-list-btn'),
+                listAddressesCount: document.getElementById('list-addresses-count'),
+                predefinedAddressesSection: document.getElementById('predefined-addresses-section'), // New
+                predefinedAddressesDisplay: document.getElementById('predefined-addresses-display'), // New
+                predefinedAddressesCount: document.getElementById('predefined-addresses-count'), // New
+                liveLog: document.getElementById('live-log'),
+                downloadLogBtn: document.getElementById('download-log-btn'),
+                progressBar: document.getElementById('progress-bar'),
+                progressText: document.getElementById('progress-text'),
+                statusDisplay: document.getElementById('status-display'),
+                successCount: document.getElementById('success-count'),
+                failCount: document.getElementById('fail-count'),
+                gasDisplay: document.getElementById('gas-display'),
+                walletBalanceChartCanvas: document.getElementById('wallet-balance-chart'),
+                actionDistChartCanvas: document.getElementById('action-dist-chart'),
+                addContractBtn: document.getElementById('add-contract-btn'),
+                contractList: document.getElementById('contract-list'),
+                explainSendTxBtn: document.getElementById('explain-send-tx-btn'),
+                geminiModal: document.getElementById('gemini-modal'),
+                modalTitle: document.getElementById('modal-title'),
+                modalContent: document.getElementById('modal-content'),
+                closeModalBtn: document.querySelector('#gemini-modal .close-button'),
+                confirmationModal: document.getElementById('confirmation-modal'),
+                confirmMessage: document.getElementById('confirm-message'),
+                confirmActionBtn: document.getElementById('confirm-action-btn'),
+                cancelConfirmBtn: document.getElementById('cancel-confirm-btn'),
+                closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button')
+            };
+
+            // Function to enable/disable UI elements based on whitelist status
+            const setUIEnabled = (enabled) => {
+                ui.walletFeatureControls.forEach(control => {
+                    control.disabled = !enabled;
+                    // Special handling for radio buttons if needed, usually managed by parent container disable
+                    if (control.type === 'radio') {
+                         control.parentElement.style.opacity = enabled ? '1' : '0.6';
+                         control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
+                    }
+                });
+
+                // Handle visibility of recipient sections based on selected mode and overall enabled status
+                const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
+                if (enabled) {
+                    ui.fixedAddressSection.classList.toggle('hidden', selectedRecipientMode !== 'fixed');
+                    ui.listAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'list');
+                    ui.predefinedAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'predefined'); // New
+                } else {
+                    ui.fixedAddressSection.classList.add('hidden');
+                    ui.listAddressesSection.classList.add('hidden');
+                    ui.predefinedAddressesSection.classList.add('hidden'); // New
+                }
+
+                // If not enabled, ensure wallet private keys and RPCs are cleared and charts reset
+                if (!enabled) {
+                    ui.privateKeys.value = '';
+                    ui.keysLoadedCount.textContent = '';
+                    appState.wallets = []; // Clear wallets in state too
+                    updateWalletBalanceChart(); // Reset chart
+                    ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                    // Re-add default contracts
+                    ui.contractList.innerHTML = `
+                        <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
+                                <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                            </div>
+                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                            <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">Address:</label>
+                            <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                            <div data-field="functions" class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <option value="approve" selected>Approve</option>
+                                        <option value="mint">Mint</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
+                                <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                            </div>
+                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                            <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">Address:</label>
+                            <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                            <div data-field="functions" class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <option value="approve">Approve</option>
+                                        <option value="mint" selected>Mint</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // Re-attach event listeners for new contract elements
+                    ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
+                        addContractEventListeners(contractDiv.dataset.id);
+                    });
+                }
+            };
+
+            const openGeminiModal = (title, contentHtml) => {
+                ui.modalTitle.textContent = title;
+                ui.modalContent.innerHTML = contentHtml;
+                ui.geminiModal.classList.remove('hidden');
+            };
+
+            const closeGeminiModal = () => {
+                ui.geminiModal.classList.add('hidden');
+                ui.modalContent.innerHTML = '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>';
+            };
+
+            const openConfirmationModal = (message, callback) => {
+                ui.confirmMessage.textContent = message;
+                appState.pendingConfirmation = callback;
+                ui.confirmationModal.classList.remove('hidden');
+            };
+
+            const closeConfirmationModal = () => {
+                ui.confirmationModal.classList.add('hidden');
+                appState.pendingConfirmation = null;
+            };
+
+            const confirmAction = () => {
+                if (appState.pendingConfirmation) {
+                    appState.pendingConfirmation(true);
+                }
+                closeConfirmationModal();
+            };
+
+            const cancelAction = () => {
+                if (appState.pendingConfirmation) {
+                    appState.pendingConfirmation(false);
+                }
+                closeConfirmationModal();
+            };
+
+            const log = (message, type = 'info', actionData = {}) => {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntryDiv = document.createElement('div');
+                logEntryDiv.innerHTML = `<span class="text-gray-500 mr-2">${timestamp}</span> <span class="log-${type}">${message}</span>`;
+                ui.liveLog.appendChild(logEntryDiv);
+                ui.liveLog.scrollTop = ui.liveLog.scrollHeight;
+
+                appState.logEntries.push({
+                    Timestamp: new Date().toISOString(),
+                    ChainID: actionData.chainId || '',
+                    WalletAddress: actionData.walletAddress || '',
+                    Action: actionData.action || 'Log',
+                    Status: type.toUpperCase(),
+                    Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';') // Strip HTML, escape commas
+                });
+            };
+
+            const initCharts = () => {
+                const chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#2d3748' } } },
+                    scales: {
+                        x: { ticks: { color: '#4a5568' } },
+                        y: { ticks: { color: '#4a5568' } }
+                    }
+                };
+
+                appState.charts.walletBalance = new Chart(ui.walletBalanceChartCanvas, {
+                    type: 'bar',
+                    data: { labels: [], datasets: [{ label: 'ETH Balance', data: [], backgroundColor: '#60a5fa', borderColor: '#3b82f6', borderWidth: 1 }] },
+                    options: { ...chartOptions, indexAxis: 'y' }
+                });
+
+                appState.charts.actionDist = new Chart(ui.actionDistChartCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Send', 'Approve', 'Mint', 'Idle', 'Skipped'],
+                        datasets: [{
+                            label: 'Actions',
+                            data: [0, 0, 0, 0, 0],
+                            backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a8a29e', '#ef4444'],
+                            borderColor: '#ffffff',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { ...chartOptions, scales: {} }
+                });
+            };
+
+            const updateWalletBalanceChart = () => {
+                const chart = appState.charts.walletBalance;
+                chart.data.labels = appState.wallets.map(w => `...${w.address.slice(-6)}`);
+                chart.data.datasets[0].data = appState.wallets.map(w => w.balance);
+                chart.update();
+
+                // Update wallet list display
+                if (appState.wallets.length > 0) {
+                    ui.noWalletsMsg.classList.add('hidden');
+                    ui.walletListDisplay.innerHTML = appState.wallets.map(w =>
+                        `<li>Wallet: ...${w.address.slice(-10)} | Balance: ${w.balance} ETH</li>`
+                    ).join('');
+                } else {
+                    ui.noWalletsMsg.classList.remove('hidden');
+                    ui.walletListDisplay.innerHTML = '<li id="no-wallets-msg">No wallets loaded yet.</li>';
+                }
+            };
+
+            const updateActionDistChart = (actionType) => {
+                appState.stats.actionCounts[actionType]++;
+                const chart = appState.charts.actionDist;
+                const dataMap = {
+                    send: 0, approve: 1, mint: 2, idle: 3, skipped: 4
+                };
+                if (dataMap[actionType] !== undefined) {
+                    chart.data.datasets[0].data[dataMap[actionType]] = appState.stats.actionCounts[actionType];
+                    chart.update();
+                }
+            };
+
+            const loadConfiguration = () => {
+                const probInputs = document.querySelectorAll('.prob-input');
+                let totalProb = 0;
+                probInputs.forEach(input => totalProb += parseInt(input.value) || 0);
+
+                if (totalProb !== 100) {
+                    ui.probSumWarning.classList.remove('hidden');
+                    return false;
+                } else {
+                    ui.probSumWarning.classList.add('hidden');
+                }
+
+                const minAmount = parseFloat(ui.minAmount.value);
+                const maxAmount = parseFloat(ui.maxAmount.value);
+                if (minAmount > maxAmount) {
+                    log('Error: Minimum amount cannot be greater than maximum amount.', 'error');
+                    return false;
+                }
+
+                const minDelay = parseInt(ui.minDelay.value);
+                const maxDelay = parseInt(ui.maxDelay.value);
+                if (minDelay > maxDelay) {
+                    log('Error: Minimum delay cannot be greater than maximum delay.', 'error');
+                    return false;
+                }
+
+                appState.config = {
+                    maxTxnsPerWallet: parseInt(ui.maxTxnsPerWallet.value) || 3,
+                    walletIdleChance: parseInt(ui.walletIdleChance.value) || 25,
+                    minAmount: minAmount || 0.0001,
+                    maxAmount: maxAmount || 0.0002,
+                    minDelay: minDelay * 1000 || 10000,
+                    maxDelay: maxDelay * 1000 || 30000,
+                    gasMultiplier: parseFloat(ui.gasMultiplier.value) || 2,
+                    blockLookback: parseInt(ui.blockLookback.value) || 100,
+                    recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
+                    fixedAddress: ui.fixedAddress.value.trim(),
+                    probabilities: {
+                        send: parseInt(ui.probSend.value) || 50,
+                        approve: parseInt(ui.probApprove.value) || 20,
+                        mint: parseInt(ui.probMint.value) || 20,
+                        idle: parseInt(ui.probIdleAction.value) || 10,
+                    }
+                };
+
+                appState.rpcConfigs = ui.rpcUrls.value.split('\n').map(line => {
+                    const [url, chainIdStr] = line.split(',').map(s => s.trim());
+                    const chainId = parseInt(chainIdStr);
+                    if (!url || isNaN(chainId)) {
+                        log(`Warning: Invalid RPC entry ignored: "${line}". Format should be "URL,ChainID".`, 'warning');
+                        return null;
+                    }
+                    return { url, chainId: chainId };
+                }).filter(Boolean); // Filter out null entries
+
+                appState.customContracts = [];
+                ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
+                    const nameInput = contractDiv.querySelector('[data-field="name"]');
+                    const addressInput = contractDiv.querySelector('[data-field="address"]');
+                    const abiInput = contractDiv.querySelector('[data-field="abi"]');
+
+                    const name = nameInput ? nameInput.value : '';
+                    const address = addressInput ? addressInput.value : '';
+                    let abi = [];
+                    try {
+                        abi = abiInput && abiInput.value ? JSON.parse(abiInput.value) : [];
+                    } catch (e) {
+                        log(`Invalid ABI JSON for contract "${name}": ${e.message}`, 'error');
+                        // Do not return here, continue processing other fields if possible
+                    }
+
+                    const functions = [];
+                    contractDiv.querySelectorAll('[data-field="functions"] > .flex').forEach(funcDiv => {
+                        const funcNameInput = funcDiv.querySelector('[data-func-field="name"]');
+                        const argsTemplateInput = funcDiv.querySelector('[data-func-field="argsTemplate"]');
+                        const typeSelect = funcDiv.querySelector('[data-func-field="type"]');
+
+                        if (funcNameInput && argsTemplateInput && typeSelect) { // Ensure all necessary elements exist
+                            functions.push({
+                                name: funcNameInput.value,
+                                argsTemplate: argsTemplateInput.value,
+                                type: typeSelect.value
+                            });
+                        }
+                    });
+                    appState.customContracts.push({ name, address, abi, functions });
+                });
+
+                return true;
+            };
+
+            const getRandomInRange = (min, max) => Math.random() * (max - min) + min;
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            const chooseAction = () => {
+                const rand = Math.random() * 100;
+                let cumulativeProb = 0;
+                const probs = appState.config.probabilities;
+
+                if (rand < (cumulativeProb += probs.send)) return 'send';
+                if (rand < (cumulativeProb += probs.approve)) return 'approve';
+                if (rand < (cumulativeProb += probs.mint)) return 'mint';
+                return 'idle-action'; // Fallback for idle or if sum is not exactly 100
+            };
+
+            const scanRecentBlocks = async (rpc, chainId) => {
+                appState.currentRecipientPool[chainId] = appState.currentRecipientPool[chainId] || [];
+                const provider = new ethers.JsonRpcProvider(rpc);
+                log(`Scanning ${appState.config.blockLookback} blocks on Chain ID ${chainId}...`, 'info');
+                try {
+                    const currentBlockNumber = await provider.getBlockNumber();
+                    const startBlock = Math.max(0, currentBlockNumber - appState.config.blockLookback);
+                    const newAddresses = new Set();
+
+                    for (let blk = startBlock; blk <= currentBlockNumber; blk++) {
+                        const block = await provider.getBlock(blk, true); // true for full transactions
+                        if (block && block.transactions) {
+                            block.transactions.forEach(tx => {
+                                if (tx.to && ethers.isAddress(tx.to)) {
+                                    newAddresses.add(tx.to);
+                                }
+                            });
+                        }
+                    }
+
+                    const existingAddresses = new Set(appState.currentRecipientPool[chainId]);
+                    newAddresses.forEach(addr => existingAddresses.add(addr));
+                    appState.currentRecipientPool[chainId] = Array.from(existingAddresses);
+                    log(`Found ${newAddresses.size} new addresses. Total recipients for chain ${chainId}: ${appState.currentRecipientPool[chainId].length}`, 'success');
+                } catch (error) {
+                    log(`Failed to scan blocks for chain ${chainId}: ${error.message}`, 'error');
+                }
+            };
+
+            const executeContractAction = async (wallet, contractDef, funcName, funcArgsTemplate, actionType) => {
+                try {
+                    if (!ethers.isAddress(contractDef.address)) {
+                        throw new Error(`Invalid contract address: ${contractDef.address}`);
+                    }
+                    let contract = new ethers.Contract(contractDef.address, contractDef.abi, wallet);
+
+                    let parsedArgs = [];
+                    if (funcArgsTemplate) {
+                        const argsStrings = funcArgsTemplate.split(',').map(s => s.trim());
+                        // Simple argument parsing: assumes numbers or addresses for now
+                        parsedArgs = argsStrings.map(arg => {
+                            if (arg.startsWith('0x') && arg.length === 42) { // Basic address check
+                                return arg;
+                            }
+                            if (!isNaN(arg) && !isNaN(parseFloat(arg))) {
+                                try {
+                                    return BigInt(arg); // Use BigInt for large numbers/wei
+                                } catch (e) {
+                                    log(`Warning: Could not parse BigInt from "${arg}". Using string.`, 'warning');
+                                    return arg;
+                                }
+                            }
+                            return arg; // Return as string if not recognized
+                        });
+                    }
+
+                    log(`Calling contract ${contractDef.name} (${contractDef.address.slice(0,6)}...) function "${funcName}" with args: [${parsedArgs.join(', ')}]`, 'info');
+                    const txResponse = await contract[funcName](...parsedArgs);
+                    log(`Contract action sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId: wallet.provider._network.chainId, walletAddress: wallet.address, action: actionType });
+
+                    await txResponse.wait();
+                    log(`Contract action confirmed!`, 'success');
+                    updateActionDistChart(actionType);
+                    appState.stats.successfulActions++;
+                    // Update balance after contract interaction too
+                    const balanceWei = await wallet.provider.getBalance(wallet.address);
+                    wallet.balance = parseFloat(ethers.formatEther(balanceWei)).toFixed(6);
+                    updateWalletBalanceChart();
+
+                } catch (error) {
+                    log(`Contract action (${funcName}) failed: ${error.message}`, 'error', { chainId: wallet.provider._network.chainId, walletAddress: wallet.address, action: actionType });
+                    appState.stats.failedActions++;
+                }
+            };
+
+            async function callGeminiApi(prompt) {
+                log('Calling Gemini API for explanation...', 'info');
+                openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
+                const apiKey = ""; // Canvas will provide this
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }]
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const explanation = result.candidates[0].content.parts[0].text;
+                        ui.modalTitle.textContent = "Gemini Explanation";
+                        ui.modalContent.innerHTML = `<p>${explanation.replace(/\n/g, '<br>')}</p>`;
+                        return explanation;
+                    } else {
+                        ui.modalTitle.textContent = "Gemini Explanation Error";
+                        ui.modalContent.innerHTML = `<p class="text-red-500">No explanation generated. The model might have been unable to process the request or returned an unexpected format.</p>`;
+                        return "No explanation generated.";
+                    }
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    ui.modalTitle.textContent = "Gemini API Error";
+                    ui.modalContent.innerHTML = `<p class="text-red-500">Failed to get explanation: ${error.message}. Please check your network connection or try again later.</p>`;
+                    return `Failed to get explanation: ${error.message}.`;
+                }
+            }
+
+
+            const loadWallets = async () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+
+                const keys = ui.privateKeys.value.split('\n').map(k => k.trim()).filter(Boolean);
+                if (keys.length === 0) {
+                    log('No private keys provided.', 'error');
+                    return;
+                }
+                if (appState.rpcConfigs.length === 0) {
+                    log('Please provide at least one RPC URL and Chain ID in Configuration.', 'error');
+                    return;
+                }
+
+                log(`Attempting to load ${keys.length} wallets and check balances...`, 'info');
+                appState.wallets = [];
+                ui.keysLoadedCount.textContent = `Loading 0 / ${keys.length}...`;
+
+                // Use the first RPC provider for initial balance checks
+                const defaultProvider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
+
+                for (let i = 0; i < keys.length; i++) {
+                    try {
+                        const wallet = new ethers.Wallet(keys[i], defaultProvider);
+                        const balanceWei = await defaultProvider.getBalance(wallet.address);
+                        const balanceEth = ethers.formatEther(balanceWei);
+                        appState.wallets.push({
+                            privateKey: keys[i],
+                            address: wallet.address,
+                            balance: parseFloat(balanceEth).toFixed(6)
+                        });
+                        ui.keysLoadedCount.textContent = `Loaded ${i + 1} / ${keys.length} wallets.`;
+                    } catch (error) {
+                        log(`Failed to load key #${i+1}: Invalid key or RPC issue - ${error.message}`, 'error');
+                    }
+                }
+
+                log(`Successfully loaded ${appState.wallets.length} wallets and their balances.`, 'success');
+                ui.keysLoadedCount.textContent = `Loaded ${appState.wallets.length} wallets.`;
+                updateWalletBalanceChart();
+            };
+
+            const testRpcConnections = async () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+                loadConfiguration(); // Ensure RPCs are loaded from UI
+                if (appState.rpcConfigs.length === 0) {
+                    log('No RPC URLs configured to test.', 'warning');
+                    return;
+                }
+
+                log('Testing RPC connections...', 'info');
+                for (const rpcConfig of appState.rpcConfigs) {
+                    const provider = new ethers.JsonRpcProvider(rpcConfig.url);
+                    try {
+                        const network = await provider.getNetwork();
+                        const blockNumber = await provider.getBlockNumber();
+                        if (network.chainId === BigInt(rpcConfig.chainId)) {
+                            log(`✅ RPC ${rpcConfig.url} connected (Chain ID: ${network.chainId}, Latest Block: ${blockNumber})`, 'success');
+                        } else {
+                            log(`⚠️ RPC ${rpcConfig.url} connected but Chain ID mismatch. Configured: ${rpcConfig.chainId}, Actual: ${network.chainId}. Latest Block: ${blockNumber}.`, 'warning');
+                        }
+                    }
+                    catch (error) {
+                        log(`❌ Failed to connect to RPC ${rpcConfig.url}: ${error.message}`, 'error');
+                    }
+                }
+                log('RPC connection testing complete.', 'info');
+            };
+
+            const loadAddressesFromList = () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+                const addressesInput = ui.listAddresses.value.split('\n').map(addr => addr.trim()).filter(Boolean);
+                const validAddresses = [];
+                let invalidCount = 0;
+
+                addressesInput.forEach(addr => {
+                    if (ethers.isAddress(addr)) {
+                        validAddresses.push(addr);
+                    } else {
+                        invalidCount++;
+                        log(`Invalid address in list: "${addr}"`, 'warning');
+                    }
+                });
+
+                appState.manualRecipientList = validAddresses;
+                ui.listAddressesCount.textContent = `Loaded ${validAddresses.length} valid addresses. ${invalidCount > 0 ? `(${invalidCount} invalid ignored)` : ''}`;
+                if (validAddresses.length > 0) {
+                    log(`Successfully loaded ${validAddresses.length} recipient addresses from list.`, 'success');
+                } else {
+                    log('No valid addresses loaded from list.', 'warning');
+                }
+            };
+
+            const updatePredefinedAddressesDisplay = () => {
+                ui.predefinedAddressesDisplay.innerHTML = '';
+                if (appState.predefinedRecipientList.length > 0) {
+                    appState.predefinedRecipientList.forEach(addr => {
+                        const li = document.createElement('li');
+                        li.textContent = addr;
+                        ui.predefinedAddressesDisplay.appendChild(li);
+                    });
+                    ui.predefinedAddressesCount.textContent = `List contains ${appState.predefinedRecipientList.length} addresses.`;
+                } else {
+                    ui.predefinedAddressesDisplay.innerHTML = '<li>No predefined addresses.</li>';
+                    ui.predefinedAddressesCount.textContent = 'List is empty.';
+                }
+            };
+
+
+            const startFarming = async () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet to start farming.', 'error');
+                    return;
+                }
+
+                openConfirmationModal('Are you sure you want to start transaction farming? Ensure your settings and keys are for test purposes only, as this involves real blockchain interactions.', async (confirmed) => {
+                    if (!confirmed) {
+                        log('Farming start cancelled by user.', 'info');
+                        return;
+                    }
+
+                    if (!loadConfiguration()) {
+                        log('Configuration is invalid. Please fix errors before starting.', 'error');
+                        return;
+                    }
+
+                    if (appState.wallets.length === 0) {
+                        log('Please load wallets first.', 'error');
+                        return;
+                    }
+                    if (appState.rpcConfigs.length === 0) {
+                        log('Please provide at least one RPC URL and Chain ID.', 'error');
+                        return;
+                    }
+                    if (appState.config.recipientMode === 'fixed' && !ethers.isAddress(appState.config.fixedAddress)) {
+                        log('Invalid fixed recipient address.', 'error');
+                        return;
+                    }
+                    if (appState.config.recipientMode === 'list' && appState.manualRecipientList.length === 0) {
+                        log('Recipient list is empty. Please load addresses into the list or choose another recipient mode.', 'error');
+                        return;
+                    }
+                    if (appState.config.recipientMode === 'predefined' && appState.predefinedRecipientList.length === 0) { // New check for predefined mode
+                        log('Predefined recipient list is empty. Cannot perform "send" actions.', 'error');
+                        return;
+                    }
+                    if (appState.config.probabilities.approve > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'approve'))) {
+                        log('Approve action probability is set, but no "approve" contract functions are defined.', 'warning');
+                    }
+                    if (appState.config.probabilities.mint > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'mint'))) {
+                        log('Mint action probability is set, but no "mint" contract functions are defined.', 'warning');
+                    }
+
+                    appState.isRunning = true;
+                    appState.stopFlag = false;
+                    appState.stats = { success: 0, fail: 0, totalActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
+                    appState.logEntries = []; // Clear log for new session
+                    // Reset chart data directly to zero, then update
+                    appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
+                    appState.charts.actionDist.update();
+
+
+                    ui.startBtn.disabled = true;
+                    ui.stopBtn.disabled = false;
+                    ui.statusDisplay.textContent = 'Running';
+                    ui.successCount.textContent = '0';
+                    ui.failCount.textContent = '0';
+                    ui.progressText.textContent = '0';
+                    ui.progressBar.style.width = '0%';
+
+
+                    log(`Starting transaction farming process across ${appState.rpcConfigs.length} chains and ${appState.wallets.length} wallets.`, 'info');
+
+                    // Main loop: Iterate through each RPC config (chain)
+                    for (const rpcConfig of appState.rpcConfigs) {
+                        if (appState.stopFlag) break;
+
+                        const rpcUrl = rpcConfig.url;
+                        const chainId = rpcConfig.chainId;
+                        const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+                        log(`🌐 Chain Session: ${rpcUrl} (Chain ID: ${chainId})`, 'info');
+
+                        // Scan blocks for recipients for this chain if needed
+                        if (appState.config.recipientMode === 'pool') {
+                           await scanRecentBlocks(rpcUrl, chainId);
+                        }
+                        const currentChainRecipientPool = appState.currentRecipientPool[chainId];
+
+
+                        if (appState.config.recipientMode === 'pool' && (!currentChainRecipientPool || currentChainRecipientPool.length === 0)) {
+                            log(`Recipient pool for chain ${chainId} is empty. Cannot perform 'send' actions on this chain.`, 'warning');
+                            // continue; // Decide if we continue or skip chain
+                        }
+
+                        // Shuffle wallets for this session
+                        const shuffledWallets = [...appState.wallets].sort(() => Math.random() - 0.5);
+
+                        // Loop through each wallet for the current chain
+                        for (const walletInfo of shuffledWallets) {
+                            if (appState.stopFlag) break;
+
+                            const walletAddress = walletInfo.address;
+                            let wallet = new ethers.Wallet(walletInfo.privateKey, provider);
+
+                            // Wallet Persona: Idle chance
+                            if (Math.random() * 100 < appState.config.walletIdleChance) {
+                                log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId}.`, 'info', { chainId, walletAddress, action: 'idle' });
+                                updateActionDistChart('idle');
+                                await sleep(getRandomInRange(appState.config.minDelay, appState.config.maxDelay)); // Still add a small delay
+                                continue;
+                            }
+
+                            // Check balance before starting actions for this wallet on this chain
+                            try {
+                                const balanceWei = await provider.getBalance(walletAddress);
+                                if (balanceWei < ethers.parseEther("0.001")) { // Minimum balance threshold
+                                    log(`Skipping wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} due to low balance.`, 'warning', { chainId, walletAddress, action: 'skipped' });
+                                    updateActionDistChart('skipped');
+                                    continue;
+                                }
+                            } catch (balanceError) {
+                                log(`Failed to check balance for ...${walletAddress.slice(-6)} on Chain ID ${chainId}: ${balanceError.message}`, 'error', { chainId, walletAddress, action: 'skipped' });
+                                updateActionDistChart('skipped');
+                                continue;
+                            }
+
+
+                            const actionsForWallet = Math.floor(getRandomInRange(1, appState.config.maxTxnsPerWallet + 0.999));
+                            log(`Wallet ...${walletAddress.slice(-6)} will perform ${actionsForWallet} action(s) on Chain ID ${chainId}.`, 'info');
+
+                            for (let i = 1; i <= actionsForWallet; i++) {
+                                if (appState.stopFlag) break;
+
+                                appState.stats.totalActions++;
+                                ui.progressText.textContent = `${appState.stats.totalActions}`;
+                                ui.progressBar.style.width = `100%`; // Simple fill for continuous mode, remove if we add overall goal
+
+                                // Gas-Aware Scheduling
+                                try {
+                                    const feeData = await provider.getFeeData();
+                                    const currentGasPrice = feeData.gasPrice;
+                                    const averageGasPrice = feeData.maxFeePerGas || feeData.gasPrice; // Use maxFeePerGas for EIP-1559, fallback to gasPrice
+
+                                    ui.gasDisplay.textContent = `${(Number(ethers.formatUnits(currentGasPrice, 'gwei'))).toFixed(2)} gwei`;
+
+                                    if (currentGasPrice && averageGasPrice && currentGasPrice > (averageGasPrice * BigInt(Math.round(appState.config.gasMultiplier * 100))) / BigInt(100) ) {
+                                        log(`Gas price (${ethers.formatUnits(currentGasPrice, 'gwei')} gwei) is too high. Skipping action for ...${walletAddress.slice(-6)} on Chain ID ${chainId}.`, 'warning', { chainId, walletAddress, action: 'skipped' });
+                                        updateActionDistChart('skipped');
+                                        break; // End this wallet's actions on this chain if gas is too high
+                                    }
+                                } catch (gasError) {
+                                    log(`Failed to get gas price for Chain ID ${chainId}: ${gasError.message}. Proceeding without gas check.`, 'warning', { chainId, walletAddress, action: 'skipped' });
+                                    // Continue if gas check fails
+                                }
+
+                                const chosenBehavior = chooseAction();
+                                log(`[Action ${i}/${actionsForWallet}] Wallet ...${walletAddress.slice(-6)} chose to: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress, action: chosenBehavior });
+
+                                let actionSuccess = false;
+                                switch (chosenBehavior) {
+                                    case "send":
+                                        let recipientAddress;
+                                        if (appState.config.recipientMode === 'fixed') {
+                                            recipientAddress = ui.fixedAddress.value.trim(); // Get current fixed address
+                                            if (!ethers.isAddress(recipientAddress)) {
+                                                log(`Fixed recipient address "${recipientAddress}" is invalid. Skipping send.`, 'error', { chainId, walletAddress, action: 'send' });
+                                                updateActionDistChart('skipped');
+                                                break;
+                                            }
+                                        } else if (appState.config.recipientMode === 'list') {
+                                            if (appState.manualRecipientList.length === 0) {
+                                                log(`Recipient list is empty. Skipping send for wallet ...${walletAddress.slice(-6)}.`, 'warning', { chainId, walletAddress, action: 'send' });
+                                                updateActionDistChart('skipped');
+                                                break;
+                                            }
+                                            recipientAddress = appState.manualRecipientList[Math.floor(Math.random() * appState.manualRecipientList.length)];
+                                        }
+                                        else if (appState.config.recipientMode === 'predefined') { // New: Predefined list
+                                            if (appState.predefinedRecipientList.length === 0) {
+                                                log(`Predefined recipient list is empty. Skipping send for wallet ...${walletAddress.slice(-6)}.`, 'warning', { chainId, walletAddress, action: 'send' });
+                                                updateActionDistChart('skipped');
+                                                break;
+                                            }
+                                            recipientAddress = appState.predefinedRecipientList[Math.floor(Math.random() * appState.predefinedRecipientList.length)];
+                                        }
+                                        else if (currentChainRecipientPool && currentChainRecipientPool.length > 0) {
+                                            recipientAddress = currentChainRecipientPool[Math.floor(Math.random() * currentChainRecipientPool.length)];
+                                        } else {
+                                            log(`No valid recipient found for 'send' action on Chain ID ${chainId}. Skipping.`, 'warning', { chainId, walletAddress, action: 'send' });
+                                            updateActionDistChart('skipped');
+                                            break; // Skip this action
+                                        }
+
+                                        const amount = getRandomInRange(appState.config.minAmount, appState.config.maxAmount);
+                                        const tx = {
+                                            to: recipientAddress,
+                                            value: ethers.parseEther(amount.toFixed(12))
+                                        };
+
+                                        try {
+                                            log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}...`, 'info');
+                                            const txResponse = await wallet.sendTransaction(tx);
+                                            log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress, action: 'send' });
+
+                                            await txResponse.wait();
+                                            log(`Tx confirmed!`, 'success');
+                                            actionSuccess = true;
+                                        } catch (error) {
+                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send' });
+                                        }
+                                        break;
+
+                                    case "approve":
+                                    case "mint":
+                                        const availableContracts = appState.customContracts.filter(c =>
+                                            c.functions.some(f => f.type === chosenBehavior)
+                                        );
+                                        if (availableContracts.length > 0) {
+                                            const randomContractDef = availableContracts[Math.floor(Math.random() * availableContracts.length)];
+                                            const relevantFunctions = randomContractDef.functions.filter(f => f.type === chosenBehavior);
+                                            if (relevantFunctions.length > 0) {
+                                                const randomFunction = relevantFunctions[Math.floor(Math.random() * relevantFunctions.length)];
+                                                await executeContractAction(wallet, randomContractDef, randomFunction.name, randomFunction.argsTemplate, chosenBehavior);
+                                                actionSuccess = true; // Assume success if call initiated, actual success logged by executeContractAction
+                                            } else {
+                                                log(`No suitable functions found for ${chosenBehavior} in defined contracts. Skipping.`, 'warning', { chainId, walletAddress, action: chosenBehavior });
+                                                updateActionDistChart('skipped');
+                                            }
+                                        } else {
+                                            log(`No custom contracts defined for ${chosenBehavior} actions. Skipping.`, 'warning', { chainId, walletAddress, action: chosenBehavior });
+                                            updateActionDistChart('skipped');
+                                        }
+                                        break;
+
+                                    case "idle-action":
+                                        log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle' });
+                                        updateActionDistChart('idle');
+                                        actionSuccess = true;
+                                        break;
+                                }
+
+                                if (actionSuccess) {
+                                    appState.stats.successfulActions++;
+                                } else {
+                                    appState.stats.failedActions++;
+                                }
+                                updateActionDistChart(chosenBehavior); // Update action distribution chart regardless of success/failure
+
+                                ui.successCount.textContent = appState.stats.successfulActions;
+                                ui.failCount.textContent = appState.stats.failedActions;
+
+                                // Update wallet balance after each action
+                                try {
+                                    const newBalanceWei = await provider.getBalance(wallet.address);
+                                    walletInfo.balance = parseFloat(ethers.formatEther(newBalanceWei)).toFixed(6);
+                                    updateWalletBalanceChart();
+                                } catch (balanceUpdateError) {
+                                    log(`Failed to update balance for ...${walletInfo.address.slice(-6)}: ${balanceUpdateError.message}`, 'warning');
+                                }
+
+                                if (i < actionsForWallet && !appState.stopFlag) {
+                                    const delay = getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
+                                    log(`Waiting for ${Math.round(delay/1000)} seconds before next action...`, 'info');
+                                    await sleep(delay);
+                                }
+                            }
+                        }
+                    }
+
+                    log('Farming process finished.', 'success');
+                    stopFarming();
+                }); // End of confirmation modal callback
+            };
+
+            const stopFarming = () => {
+                appState.isRunning = false;
+                appState.stopFlag = true;
+                ui.startBtn.disabled = false;
+                ui.stopBtn.disabled = true;
+                ui.statusDisplay.textContent = 'Idle';
+            };
+
+            const clearAllData = () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+                openConfirmationModal('Are you sure you want to clear ALL configurations, loaded wallets, and log data? This action cannot be undone.', (confirmed) => {
+                    if (confirmed) {
+                        appState.isRunning = false;
+                        appState.stopFlag = false;
+                        appState.wallets = [];
+                        appState.rpcConfigs = [];
+                        appState.currentRecipientPool = {};
+                        appState.manualRecipientList = [];
+                        ui.listAddresses.value = '';
+                        ui.listAddressesCount.textContent = '';
+                        // Reset predefined list to its initial state, not entirely clear it
+                        appState.predefinedRecipientList = [
+                            "0x70997970C51812dc3A0108C7f54cE785eBfC7c5f",
+                            "0x3C44cCDdb6a9ADf889Eea886cE43d65fB842e123",
+                            "0x9965507D45B585BCDea73882e56eF28eA2eB6C88",
+                            "0x2B88eED8b8686e0018442e9B854A2052C32B8F6D",
+                            "0xD8661643c7B625219463F83234d70c47F52d7eB2",
+                            "0x71b569e5f1d1e4eA5b7c7B3fD3d6f1C8E5A73b2C",
+                            "0xEd0EAE3B3d0F3A3f7b83d1cE5C8B2E05A1bE8302",
+                            "0x1f7A2F0A3a9f0B8bE2d5eA122A04b3D0aC7C1F0C"
+                        ];
+                        updatePredefinedAddressesDisplay(); // Update display for predefined list
+                        appState.customContracts = [];
+                        appState.config = {};
+                        appState.stats = { success: 0, fail: 0, totalActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
+                        appState.logEntries = [];
+
+                        // Clear UI elements
+                        ui.privateKeys.value = '';
+                        ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`; // Reset to default examples
+                        ui.contractList.innerHTML = `
+                            <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
+                                    <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                                </div>
+                                <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                                <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                                <label class="block font-medium mb-1 text-accent">Address:</label>
+                                <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                                <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                                <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                                <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                                <div data-field="functions" class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                            <option value="approve" selected>Approve</option>
+                                            <option value="mint">Mint</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                        <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
+                                    <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                                </div>
+                                <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                                <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                                <label class="block font-medium mb-1 text-accent">Address:</label>
+                                <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                                <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                                <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                                <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                                <div data-field="functions" class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                            <option value="approve">Approve</option>
+                                            <option value="mint" selected>Mint</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                        <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `; // Re-add default example contracts
+                        ui.liveLog.innerHTML = ''; // Clear live log display
+
+                        // Reset charts
+                        appState.charts.walletBalance.data.labels = [];
+                        appState.charts.walletBalance.data.datasets[0].data = [];
+                        appState.charts.walletBalance.update();
+                        appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
+                        appState.charts.actionDist.update();
+
+                        // Re-attach event listeners for new contract elements
+                        ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
+                            addContractEventListeners(contractDiv.dataset.id);
+                        });
+
+                        ui.keysLoadedCount.textContent = '';
+                        updateWalletBalanceChart(); // To show "No wallets loaded yet."
+                        log('All application data has been cleared.', 'info');
+                    }
+                });
+            };
+
+
+            const addContractEntry = (contract = { name: '', address: '', abi: '[]', functions: [{ name: '', argsTemplate: '', type: 'send' }] }) => {
+                const newId = `contract-${Date.now()}`;
+                const contractHtml = `
+                    <div class="border border-accent p-4 rounded-lg" data-id="${newId}">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-lg text-main">${contract.name || 'New Contract'}</h4>
+                            <button data-id="${newId}" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>🗑️ Remove</button>
+                        </div>
+                        <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                        <input type="text" value="${contract.name}" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                        <label class="block font-medium mb-1 text-accent">Address:</label>
+                        <input type="text" value="${contract.address}" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                        <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>${contract.abi}</textarea>
+                        <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                        <button data-id="${newId}" class="add-function-btn py-1 px-3 mb-2 rounded-lg font-semibold transition-all duration-300 btn-secondary text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>➕ Add Function</button>
+                        <div data-field="functions" class="space-y-2">
+                            ${contract.functions.map(func => `
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" placeholder="functionName" value="${func.name}" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                    <input type="text" placeholder="arg1,arg2" value="${func.argsTemplate}" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                        <option value="approve" ${func.type === 'approve' ? 'selected' : ''}>Approve</option>
+                                        <option value="mint" ${func.type === 'mint' ? 'selected' : ''}>Mint</option>
+                                        <option value="other" ${func.type === 'other' ? 'selected' : ''}>Other</option>
+                                    </select>
+                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>✨ Explain</button>
+                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>🗑️</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                ui.contractList.insertAdjacentHTML('beforeend', contractHtml);
+                addContractEventListeners(newId);
+            };
+
+            const addContractEventListeners = (id) => {
+                const contractDiv = ui.contractList.querySelector(`[data-id="${id}"]`);
+                if (!contractDiv) return;
+
+                contractDiv.querySelector('.remove-contract-btn').addEventListener('click', (e) => {
+                    e.target.closest('.border.border-accent').remove();
+                });
+
+                const functionsContainer = contractDiv.querySelector('[data-field="functions"]');
+                const addFunctionBtn = contractDiv.querySelector('.add-function-btn');
+                if (addFunctionBtn) { // Ensure button exists
+                    addFunctionBtn.addEventListener('click', () => {
+                        const funcHtml = `
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                    <option value="approve">Approve</option>
+                                    <option value="mint">Mint</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>✨ Explain</button>
+                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>🗑️</button>
+                            </div>
+                        `;
+                        functionsContainer.insertAdjacentHTML('beforeend', funcHtml);
+                        const newFuncDiv = functionsContainer.lastElementChild;
+                        newFuncDiv.querySelector('.remove-function-btn').addEventListener('click', (e) => {
+                            e.target.closest('.flex').remove();
+                        });
+                        newFuncDiv.querySelector('.explain-func-btn').addEventListener('click', handleExplainFunction);
+                    });
+                }
+
+
+                // Attach listeners for initial functions and dynamically added ones
+                functionsContainer.querySelectorAll('.remove-function-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.target.closest('.flex').remove();
+                    });
+                });
+                functionsContainer.querySelectorAll('.explain-func-btn').forEach(btn => {
+                    btn.addEventListener('click', handleExplainFunction);
+                });
+
+
+                 const nameInput = contractDiv.querySelector('[data-field="name"]');
+                 if (nameInput) {
+                    nameInput.addEventListener('input', (e) => {
+                        contractDiv.querySelector('h4').textContent = e.target.value || 'New Contract';
+                    });
+                 }
+            };
+
+            const handleExplainFunction = async (event) => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+                const funcDiv = event.target.closest('.flex');
+                const funcName = funcDiv.querySelector('[data-func-field="name"]').value;
+                const funcArgs = funcDiv.querySelector('[data-func-field="argsTemplate"]').value;
+
+                if (!funcName) {
+                    openGeminiModal('Error', '<p class="text-red-500">Please enter a function name to explain.</p>');
+                    return;
+                }
+
+                const prompt = `Describe what the Ethereum smart contract function '${funcName}' with arguments '${funcArgs}' (if any) typically does. If it's a common ERC20/ERC721 function like 'approve' or 'mint', explain its standard behavior. Keep the explanation concise and easy to understand for a non-developer.`;
+                await callGeminiApi(prompt);
+            };
+
+            const handleExplainSendTx = async () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+                const minAmount = ui.minAmount.value;
+                const maxAmount = ui.maxAmount.value;
+                const recipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
+                const fixedAddress = ui.fixedAddress.value.trim();
+                const listAddressCount = appState.manualRecipientList.length;
+                const predefinedAddressCount = appState.predefinedRecipientList.length; // New
+
+                let recipientDescription = '';
+                if (recipientMode === 'fixed' && fixedAddress) {
+                    recipientDescription = `a fixed address (${fixedAddress.substring(0, 6)}...)`;
+                } else if (recipientMode === 'list' && listAddressCount > 0) {
+                    recipientDescription = `a random address from a custom list of ${listAddressCount} addresses`;
+                } else if (recipientMode === 'predefined' && predefinedAddressCount > 0) { // New
+                    recipientDescription = `a random address from a predefined list of ${predefinedAddressCount} addresses`;
+                }
+                else {
+                    recipientDescription = 'a random address from a dynamically scanned pool';
+                }
+
+                const prompt = `I am setting up a script to send Ethereum. The amount will be between ${minAmount} and ${maxAmount} ETH. The recipient will be ${recipientDescription}. Explain the typical purpose of such transactions in a blockchain context and any general risks a user should be aware of.`;
+                await callGeminiApi(prompt);
+            };
+
+
+            const downloadLog = () => {
+                if (!appState.isWhitelisted) {
+                    log('Access denied. Please connect a whitelisted wallet.', 'error');
+                    return;
+                }
+                if (appState.logEntries.length === 0) {
+                    alert('No log data to download.');
+                    return;
+                }
+
+                const headers = Object.keys(appState.logEntries[0]).join(',');
+                const rows = appState.logEntries.map(entry =>
+                    Object.values(entry).map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')
+                );
+
+                const csvContent = headers + '\n' + rows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `tx_log_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const copyToClipboard = (text) => {
+                // Using document.execCommand for better iFrame compatibility
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'absolute'; // Prevent scrolling to bottom
+                textarea.style.left = '-9999px'; // Hide off-screen
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    log(`Copied "${text}" to clipboard.`, 'info');
+                } catch (err) {
+                    log('Failed to copy to clipboard (unsupported by browser/iframe).', 'error');
+                    console.error('Copy failed:', err);
+                }
+                document.body.removeChild(textarea);
+            };
+
+            const checkWhitelistStatus = (address) => {
+                if (address && typeof WHITELISTED_ADDRESSES !== 'undefined' && WHITELISTED_ADDRESSES.includes(address.toLowerCase())) {
+                    appState.isWhitelisted = true;
+                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${address.slice(0, 6)}...${address.slice(-4)}</strong> <br> <span class="text-green-600 font-bold">Whitelisted! ✅</span>`;
+                    setUIEnabled(true);
+                    log(`Wallet ${address} is whitelisted. Features enabled.`, 'success');
+                } else {
+                    appState.isWhitelisted = false;
+                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'N/A'}</strong> <br> <span class="text-red-600 font-bold">Not Whitelisted! ❌</span>`;
+                    setUIEnabled(false);
+                    log(`Wallet ${address || 'N/A'} is NOT whitelisted. Features disabled.`, 'error');
+                }
+            };
+
+            const connectWallet = async () => {
+                if (typeof window.ethereum === 'undefined') {
+                    ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
+                    log('MetaMask not detected. Please install it.', 'error');
+                    setUIEnabled(false);
+                    return;
+                }
+
+                try {
+                    log('Requesting wallet connection...', 'info');
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    if (accounts.length === 0) {
+                        log('No accounts found. Please connect your wallet.', 'error');
+                        appState.connectedAddress = null;
+                        checkWhitelistStatus(null);
+                        return;
+                    }
+                    appState.connectedAddress = accounts[0];
+                    checkWhitelistStatus(appState.connectedAddress);
+
+                    // Add event listeners for account/chain changes
+                    window.ethereum.on('accountsChanged', (newAccounts) => {
+                        if (newAccounts.length === 0) {
+                            log('Wallet disconnected.', 'warning');
+                            appState.connectedAddress = null;
+                            checkWhitelistStatus(null);
+                        } else if (newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
+                            log(`Account changed to: ${newAccounts[0]}`, 'info');
+                            appState.connectedAddress = newAccounts[0];
+                            checkWhitelistStatus(appState.connectedAddress);
+                        }
+                    });
+
+                    window.ethereum.on('chainChanged', (chainId) => {
+                        log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure RPCs match.`, 'warning');
+                        // Optionally re-check whitelist if chain-specific whitelisting is implemented
+                    });
+
+                } catch (error) {
+                    log(`Wallet connection failed: ${error.message}`, 'error');
+                    appState.connectedAddress = null;
+                    checkWhitelistStatus(null);
+                }
+            };
+
+
+            const setupEventListeners = () => {
+                ui.connectWalletBtn.addEventListener('click', connectWallet);
+                ui.startBtn.addEventListener('click', startFarming);
+                ui.stopBtn.addEventListener('click', stopFarming);
+                ui.clearAllDataBtn.addEventListener('click', clearAllData);
+                ui.loadKeysBtn.addEventListener('click', loadWallets);
+                ui.testRpcBtn.addEventListener('click', testRpcConnections);
+                ui.downloadLogBtn.addEventListener('click', downloadLog);
+                ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
+                ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
+
+                ui.closeModalBtn.addEventListener('click', closeGeminiModal);
+                window.addEventListener('click', (event) => {
+                    if (event.target === ui.geminiModal) {
+                        closeGeminiModal();
+                    }
+                });
+
+                // Confirmation Modal Listeners
+                ui.confirmActionBtn.addEventListener('click', confirmAction);
+                ui.cancelConfirmBtn.addEventListener('click', cancelAction);
+                ui.closeConfirmBtn.addEventListener('click', cancelAction);
+                window.addEventListener('click', (event) => {
+                    if (event.target === ui.confirmationModal) {
+                        cancelAction();
+                    }
+                });
+
+                // Event delegation for copy buttons in live log
+                ui.liveLog.addEventListener('click', (event) => {
+                    const copyBtn = event.target.closest('.log-copy-btn');
+                    if (copyBtn && copyBtn.dataset.txHash) {
+                        copyToClipboard(copyBtn.dataset.txHash);
+                    }
+                });
+
+
+                ui.recipientMode.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        if (!appState.isWhitelisted) { // Only change UI if enabled by whitelist
+                            log('Access denied. Please connect a whitelisted wallet.', 'error');
+                            e.target.checked = (appState.config.recipientMode === 'pool'); // Revert selection if not whitelisted
+                            return;
+                        }
+                        ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
+                        ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
+                        ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined'); // New
+                        loadConfiguration(); // Re-load config to update recipientMode
+                    });
+                });
+
+                document.querySelectorAll('.prob-input').forEach(input => {
+                    input.addEventListener('input', loadConfiguration);
+                });
+
+                // Attach input change listeners for min/max amount/delay to re-validate config
+                ui.minAmount.addEventListener('input', loadConfiguration);
+                ui.maxAmount.addEventListener('input', loadConfiguration);
+                ui.minDelay.addEventListener('input', loadConfiguration);
+                ui.maxDelay.addEventListener('input', loadConfiguration);
+
+
+                ui.addContractBtn.addEventListener('click', () => addContractEntry({
+                    name: 'New Contract', address: '', abi: '[]', functions: []
+                }));
+
+                // Initial setup for existing example contracts and their explain buttons
+                document.querySelectorAll('#contract-list .border.border-accent').forEach(contractDiv => {
+                    addContractEventListeners(contractDiv.dataset.id || `example-${Date.now()}`);
+                });
+
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                         this.classList.add('active');
+                    });
+                });
+            };
+
+            initCharts();
+            setupEventListeners();
+            loadConfiguration(); // Initial load to validate probabilities and RPCs
+            updateWalletBalanceChart(); // Display "No wallets loaded" initially
+            setUIEnabled(false); // Disable all features by default
+            updatePredefinedAddressesDisplay(); // Populate predefined addresses on load
+
+            // Attempt to auto-connect or check existing connection on load
+            if (typeof window.ethereum !== 'undefined') {
+                 window.ethereum.request({ method: 'eth_accounts' })
+                    .then(accounts => {
+                        if (accounts.length > 0) {
+                            appState.connectedAddress = accounts[0];
+                            checkWhitelistStatus(appState.connectedAddress);
+                        } else {
+                             ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                             log('No wallet connected on startup.', 'info');
+                        }
+                    })
+                    .catch(error => {
+                        log(`Error checking existing wallet connection: ${error.message}`, 'error');
+                         ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
+                    });
+
+                 // Set up listeners for changes even if not initially connected
+                 window.ethereum.on('accountsChanged', (newAccounts) => {
+                     if (newAccounts.length === 0) {
+                         log('Wallet disconnected.', 'warning');
+                         appState.connectedAddress = null;
+                         checkWhitelistStatus(null);
+                     } else {
+                         log(`Account changed to: ${newAccounts[0]}`, 'info');
+                         appState.connectedAddress = newAccounts[0];
+                         checkWhitelistStatus(appState.connectedAddress);
+                     }
+                 });
+
+                 window.ethereum.on('chainChanged', (chainId) => {
+                     log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure RPCs match.`, 'warning');
+                     // Optionally re-check whitelist if chain-specific whitelisting is desired
+                 });
+            } else {
+                ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
+                log('MetaMask not detected on startup.', 'error');
+            }
+
+            log('Console initialized. Please connect a whitelisted wallet to begin.');
+        });
+    </script>
+</body>
+</html>
