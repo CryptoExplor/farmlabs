@@ -1,29 +1,41 @@
+// scripts/inject-api-key.js
 const fs = require('fs');
 const path = require('path');
 
-const inputFile = path.join(__dirname, 'index.html');
-const outputFile = path.join(__dirname, 'dist', 'index.html');
-const geminiApiKey = process.env.GEMINI_API_KEY; // This will come from Vercel's environment variables
+const inputFile = path.join(__dirname, '..', 'index.html');
+const outputFile = path.join(__dirname, '..', 'dist', 'index.html');
+const placeholderKey = 'AIzaSyDDvQ_-ipx-o0ZuH0d094NGWBI-ut9s_Ew';
+const geminiApiKey = process.env.GEMINI_API_KEY;
 
 if (!geminiApiKey) {
-    console.error('GEMINI_API_KEY environment variable is not set!');
+    console.error('[ERROR] GEMINI_API_KEY environment variable is not set!');
     process.exit(1);
 }
 
 fs.readFile(inputFile, 'utf8', (err, data) => {
     if (err) {
-        console.error('Error reading input file:', err);
-        return;
+        console.error('[ERROR] Failed to read index.html:', err);
+        process.exit(1);
     }
 
-    const result = data.replace('AIzaSyDDvQ_-ipx-o0ZuH0d094NGWBI-ut9s_Ew', geminiApiKey);
+    if (!data.includes(placeholderKey)) {
+        console.warn('[WARNING] Placeholder key not found in index.html. Nothing to replace.');
+    }
 
-    fs.mkdirSync(path.dirname(outputFile), { recursive: true });
-    fs.writeFile(outputFile, result, 'utf8', (err) => {
+    const updatedHtml = data.replace(placeholderKey, geminiApiKey);
+
+    try {
+        fs.mkdirSync(path.dirname(outputFile), { recursive: true });
+    } catch (mkdirErr) {
+        console.error('[ERROR] Failed to create dist directory:', mkdirErr);
+        process.exit(1);
+    }
+
+    fs.writeFile(outputFile, updatedHtml, 'utf8', (err) => {
         if (err) {
-            console.error('Error writing output file:', err);
-            return;
+            console.error('[ERROR] Failed to write updated index.html:', err);
+            process.exit(1);
         }
-        console.log('index.html successfully built with API key injected!');
+        console.log('[SUCCESS] index.html built with API key injected.');
     });
 });
