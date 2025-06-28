@@ -1,9 +1,20 @@
 // whitelist.js
 
-// If you want all wallets to be whitelisted for testing purposes,
-// you can uncomment and use the line below.
-// Ensure you understand the security implications before using this in a production environment.
-window.WHITELISTED_ADDRESSES.includes = () => true;
+// Empty whitelist array (can be filled later if needed)
+window.WHITELISTED_ADDRESSES = [].map(addr => addr.toLowerCase());
 
-// Note: If you choose to uncomment the line above, any address will be considered whitelisted.
-// Otherwise, only the addresses explicitly listed in the array above will be whitelisted.
+// Set this flag to true to allow all users (whitelist bypass mode)
+window.ALLOW_ALL_USERS = true;
+
+/**
+ * Call this function to check if a wallet is allowed.
+ * If ALLOW_ALL_USERS is true, all addresses are allowed.
+ * Otherwise, only those in the whitelist are allowed.
+ * 
+ * @param {string} address - Wallet address to check
+ * @returns {boolean}
+ */
+window.isWalletWhitelisted = function(address) {
+    if (window.ALLOW_ALL_USERS) return true;
+    return window.WHITELISTED_ADDRESSES.includes(address.toLowerCase());
+};
