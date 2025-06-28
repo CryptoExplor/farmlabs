@@ -8,8 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- Include the whitelist.js file here -->
-    <script src="whitelist.js"></script>
+    <!-- Removed whitelist.js as the feature is no longer needed -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -170,7 +169,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Disabled styles for fields */
+        /* Disabled styles for fields - now controlled by overall app state, not whitelist */
         .wallet-feature-control:disabled,
         .wallet-feature-control[disabled] {
             opacity: 0.6;
@@ -282,7 +281,7 @@
                     <p class="text-xs italic">Only use test keys on testnets for this application. Never use mainnet private keys holding real funds.</p>
                 </div>
                 <label for="private-keys" class="block font-medium mb-1 text-accent">Private Keys (one per line)</label>
-                <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled></textarea>
+                <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" disabled></textarea>
                 <button id="load-keys-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Wallets & Check Balances</button>
                 <p id="keys-loaded-count" class="text-sm text-green-600 mt-2 font-medium"></p>
             </div>
@@ -371,7 +370,7 @@
             <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
             <p class="text-accent mb-6">Define the parameters for the transaction farming, including network settings, amounts, delays, and gas thresholds.</p>
 
-            <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:col-cols-2 gap-8">
                 <div>
                     <label for="max-txns-per-wallet" class="block font-medium mb-1 text-accent">Max Actions Per Wallet Session
                         <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, approve, mint, idle) a single wallet will attempt in its session on a given blockchain network.</span></span>
@@ -632,7 +631,7 @@ https://rpc.goerli.dev,5</textarea>
                 },
                 pendingConfirmation: null, // Callback for confirmation modal
                 connectedAddress: null,
-                isWhitelisted: false
+                // Removed isWhitelisted, now public
             };
 
 
@@ -700,10 +699,11 @@ https://rpc.goerli.dev,5</textarea>
                 closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button')
             };
 
-            // Function to enable/disable UI elements based on whitelist status
+            // Function to enable/disable UI elements - now always enables as whitelist is removed
             const setUIEnabled = (enabled) => {
                 ui.walletFeatureControls.forEach(control => {
                     control.disabled = !enabled;
+                    // Adjust opacity/cursor for radio buttons based on enabled state
                     if (control.type === 'radio') {
                          control.parentElement.style.opacity = enabled ? '1' : '0.6';
                          control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
@@ -717,17 +717,20 @@ https://rpc.goerli.dev,5</textarea>
                     ui.listAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'list');
                     ui.predefinedAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'predefined');
                 } else {
+                    // When disabled, hide all recipient specific sections
                     ui.fixedAddressSection.classList.add('hidden');
                     ui.listAddressesSection.classList.add('hidden');
                     ui.predefinedAddressesSection.classList.add('hidden');
                 }
 
+                // Reset specific elements when disabled
                 if (!enabled) {
                     ui.privateKeys.value = '';
                     ui.keysLoadedCount.textContent = '';
                     appState.wallets = [];
                     updateWalletBalanceChart();
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                    // Reset contract list to initial examples when disabled
                     ui.contractList.innerHTML = `
                         <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
                             <div class="flex justify-between items-center mb-2">
@@ -1083,7 +1086,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = "AIzaSyBns3XoeRSd1p1kttRjbv8qR9J01pdrCaQ"; // Replaced with user's provided API Key
+                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1118,11 +1121,7 @@ https://rpc.goerli.dev,5</textarea>
 
 
             const loadWallets = async () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
-
+                // No whitelist check needed anymore
                 const keys = ui.privateKeys.value.split('\n').map(k => k.trim()).filter(Boolean);
                 if (keys.length === 0) {
                     log('No private keys provided.', 'error');
@@ -1161,10 +1160,7 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const testRpcConnections = async () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
+                // No whitelist check needed anymore
                 loadConfiguration();
                 if (appState.rpcConfigs.length === 0) {
                     log('No RPC URLs configured to test.', 'warning');
@@ -1191,10 +1187,7 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const loadAddressesFromList = () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
+                // No whitelist check needed anymore
                 const addressesInput = ui.listAddresses.value.split('\n').map(addr => addr.trim()).filter(Boolean);
                 const validAddresses = [];
                 let invalidCount = 0;
@@ -1218,11 +1211,7 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const loadPredefinedListFromFile = () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
-
+                // No whitelist check needed anymore
                 const file = ui.predefinedFileInput.files[0];
                 if (!file) {
                     log('No file selected for predefined list.', 'warning');
@@ -1289,11 +1278,7 @@ https://rpc.goerli.dev,5</textarea>
 
 
             const startFarming = async () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
-
+                // No whitelist check needed anymore
                 openConfirmationModal('Are you sure you want to start transaction farming? Ensure your settings and keys are for test purposes only, as this involves real blockchain interactions.', async (confirmed) => {
                     if (!confirmed) {
                         log('Farming start cancelled by user.', 'info');
@@ -1567,10 +1552,7 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const clearAllData = () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
+                // No whitelist check needed anymore
                 openConfirmationModal('Are you sure you want to clear ALL configurations, loaded wallets, and log data? This action cannot be undone.', (confirmed) => {
                     if (confirmed) {
                         appState.isRunning = false;
@@ -1650,7 +1632,7 @@ https://rpc.goerli.dev,5</textarea>
                         ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
                             addContractEventListeners(contractDiv.dataset.id);
                         });
-                        setUIEnabled(false); // Re-disable controls after clearing
+                        setUIEnabled(false); // Re-disable controls after clearing, as wallet isn't yet connected for public features
                     }
                 });
             };
@@ -1662,28 +1644,28 @@ https://rpc.goerli.dev,5</textarea>
                     <div class="border border-accent p-4 rounded-lg" data-id="${newId}">
                         <div class="flex justify-between items-center mb-2">
                             <h4 class="font-bold text-lg text-main">${contract.name || 'New Contract'}</h4>
-                            <button data-id="${newId}" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>🗑️ Remove</button>
+                            <button data-id="${newId}" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️ Remove</button>
                         </div>
                         <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                        <input type="text" value="${contract.name}" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                        <input type="text" value="${contract.name}" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" >
                         <label class="block font-medium mb-1 text-accent">Address:</label>
-                        <input type="text" value="${contract.address}" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                        <input type="text" value="${contract.address}" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" >
                         <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>${contract.abi}</textarea>
+                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" >${contract.abi}</textarea>
                         <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                        <button data-id="${newId}" class="add-function-btn py-1 px-3 mb-2 rounded-lg font-semibold transition-all duration-300 btn-secondary text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>➕ Add Function</button>
+                        <button data-id="${newId}" class="add-function-btn py-1 px-3 mb-2 rounded-lg font-semibold transition-all duration-300 btn-secondary text-sm wallet-feature-control" >➕ Add Function</button>
                         <div data-field="functions" class="space-y-2">
                             ${contract.functions.map(func => `
                                 <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
-                                    <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
-                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                    <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
+                                    <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
+                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
                                         <option value="approve">Approve</option>
                                         <option value="mint">Mint</option>
                                         <option value="other">Other</option>
                                     </select>
-                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>✨ Explain</button>
-                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>🗑️</button>
+                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" >✨ Explain</button>
+                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️</button>
                                 </div>
                             `).join('')}
                         </div>
@@ -1707,15 +1689,15 @@ https://rpc.goerli.dev,5</textarea>
                     addFunctionBtn.addEventListener('click', () => {
                         const funcHtml = `
                             <div class="flex items-center space-x-2">
-                                <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
-                                <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
-                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>
+                                <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
+                                <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
+                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
                                     <option value="approve">Approve</option>
                                     <option value="mint">Mint</option>
                                     <option value="other">Other</option>
                                 </select>
-                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>✨ Explain</button>
-                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" ${!appState.isWhitelisted ? 'disabled' : ''}>🗑️</button>
+                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" >✨ Explain</button>
+                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️</button>
                             </div>
                         `;
                         functionsContainer.insertAdjacentHTML('beforeend', funcHtml);
@@ -1745,10 +1727,7 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const handleExplainFunction = async (event) => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
+                // No whitelist check needed anymore
                 const funcDiv = event.target.closest('.flex');
                 const funcName = funcDiv.querySelector('[data-func-field="name"]').value;
                 const funcArgs = funcDiv.querySelector('[data-func-field="argsTemplate"]').value;
@@ -1763,10 +1742,7 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const handleExplainSendTx = async () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
+                // No whitelist check needed anymore
                 const minAmount = ui.minAmount.value;
                 const maxAmount = ui.maxAmount.value;
                 const recipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
@@ -1796,10 +1772,7 @@ https://rpc.goerli.dev,5</textarea>
 
 
             const downloadLog = () => {
-                if (!appState.isWhitelisted) {
-                    log('Access denied. Please connect a whitelisted wallet.', 'error');
-                    return;
-                }
+                // No whitelist check needed anymore
                 if (appState.logEntries.length === 0) {
                     // Changed alert to custom modal message
                     openGeminiModal('No Data', '<p class="text-accent">No log data to download.</p>');
@@ -1838,85 +1811,75 @@ https://rpc.goerli.dev,5</textarea>
                 document.body.removeChild(textarea);
             };
 
-            const checkWhitelistStatus = (address) => {
-                // Ensure WHITELISTED_ADDRESSES is globally accessible and defined from whitelist.js
-                // It's assumed whitelist.js defines `const WHITELISTED_ADDRESSES = [...]`
-                if (address && typeof window.WHITELISTED_ADDRESSES !== 'undefined' && window.WHITELISTED_ADDRESSES.includes(address.toLowerCase())) {
-                    appState.isWhitelisted = true;
-                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${address.slice(0, 6)}...${address.slice(-4)}</strong> <br> <span class="text-green-600 font-bold">Whitelisted! ✅</span>`;
-                    setUIEnabled(true);
-                    log(`Wallet ${address} is whitelisted. Features enabled.`, 'success');
-                } else {
-                    appState.isWhitelisted = false;
-                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'N/A'}</strong> <br> <span class="text-red-600 font-bold">Not Whitelisted! ❌</span>`;
-                    setUIEnabled(false);
-                    log(`Wallet ${address || 'N/A'} is NOT whitelisted. Features disabled.`, 'error');
-                }
-            };
+            // Removed checkWhitelistStatus function as it's no longer needed.
+            // All features are now public by default once a wallet is connected.
 
             const connectWallet = async () => {
                 console.log('Connect Wallet button clicked.');
-                // Explicitly check for window.ethereum
                 if (typeof window.ethereum === 'undefined') {
                     log('MetaMask or compatible wallet not detected. Please install one.', 'error');
                     ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a> or a compatible browser extension.`;
-                    setUIEnabled(false);
+                    setUIEnabled(false); // Still disable if no wallet detected
                     console.error('window.ethereum is not defined.');
                     return;
                 }
 
                 log('window.ethereum detected. Requesting accounts...', 'info');
                 try {
-                    // Request accounts using window.ethereum.request
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     console.log('eth_requestAccounts returned:', accounts);
 
                     if (accounts.length === 0) {
                         log('No accounts found. Please connect your wallet and select an account.', 'error');
                         appState.connectedAddress = null;
-                        checkWhitelistStatus(null);
+                        ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                        setUIEnabled(false); // Disable features if no account selected
                         console.warn('No accounts returned from wallet.');
                         return;
                     }
                     appState.connectedAddress = accounts[0];
                     log(`Wallet connected: ${appState.connectedAddress}`, 'success');
                     console.log('Connected address:', appState.connectedAddress);
-                    checkWhitelistStatus(appState.connectedAddress);
+                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                    setUIEnabled(true); // Enable features as it's now public
 
                     // Set up event listeners for window.ethereum
-                    // These listeners ensure the UI updates if the user changes accounts or networks in their wallet
                     window.ethereum.on('accountsChanged', (newAccounts) => {
                         log('Wallet accounts changed event detected.', 'info');
                         if (newAccounts.length === 0) {
                             log('Wallet disconnected or no accounts selected.', 'warning');
                             appState.connectedAddress = null;
-                            checkWhitelistStatus(null);
+                            ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                            setUIEnabled(false); // Disable features on disconnect
                         } else if (appState.connectedAddress && newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
                             log(`Account changed to: ${newAccounts[0]}`, 'info');
                             appState.connectedAddress = newAccounts[0];
-                            checkWhitelistStatus(appState.connectedAddress);
-                        } else if (!appState.connectedAddress) { // Case where wallet was disconnected and then reconnected/account selected
+                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            setUIEnabled(true); // Re-enable if a new account is connected
+                        } else if (!appState.connectedAddress) {
                             log(`Wallet reconnected with account: ${newAccounts[0]}`, 'info');
                             appState.connectedAddress = newAccounts[0];
-                            checkWhitelistStatus(appState.connectedAddress);
+                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            setUIEnabled(true);
                         }
                     });
 
                     window.ethereum.on('chainChanged', (chainId) => {
                         log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure your RPC configurations match this network.`, 'warning');
-                        // You might want to re-initialize providers or re-check balances here
                     });
 
                     window.ethereum.on('disconnect', (error) => {
                         log(`Wallet disconnected: ${error.message || 'Unknown error'}`, 'error');
                         appState.connectedAddress = null;
-                        checkWhitelistStatus(null);
+                        ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                        setUIEnabled(false); // Disable features on disconnect
                     });
 
                 } catch (error) {
                     log(`Wallet connection failed: ${error.message}`, 'error');
                     appState.connectedAddress = null;
-                    checkWhitelistStatus(null);
+                    ui.walletStatusDisplay.innerHTML = `Connection failed.`;
+                    setUIEnabled(false); // Disable features on connection failure
                     console.error('Wallet connection error:', error);
                 }
             };
@@ -1960,14 +1923,7 @@ https://rpc.goerli.dev,5</textarea>
 
                 ui.recipientMode.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        if (!appState.isWhitelisted) {
-                            log('Access denied. Please connect a whitelisted wallet.', 'error');
-                            // Reset to previous state if not whitelisted
-                            // This might be tricky if the radio was already changed.
-                            // A better approach might be to block radio clicks directly.
-                            Array.from(ui.recipientMode).find(r => r.value === appState.config.recipientMode).checked = true;
-                            return;
-                        }
+                        // No whitelist check here, just update visibility based on selection
                         ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
                         ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
                         ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined');
@@ -2005,19 +1961,19 @@ https://rpc.goerli.dev,5</textarea>
             setupEventListeners();
             loadConfiguration();
             updateWalletBalanceChart();
-            setUIEnabled(false); // Initially disable controls until wallet is connected and whitelisted
+            setUIEnabled(false); // Initially disable controls until wallet is connected (now fully public)
             updatePredefinedAddressesDisplay();
 
             // Initial check for window.ethereum and existing connection on page load
             if (typeof window.ethereum !== 'undefined') {
                  log('MetaMask or compatible wallet detected on startup. Checking for existing connection...', 'info');
-                 // Request current accounts without prompting the user
                  window.ethereum.request({ method: 'eth_accounts' })
                     .then(accounts => {
                         if (accounts.length > 0) {
                             appState.connectedAddress = accounts[0];
                             log(`Existing wallet connection found: ${appState.connectedAddress}`, 'info');
-                            checkWhitelistStatus(appState.connectedAddress);
+                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            setUIEnabled(true); // Enable features immediately if already connected
                         } else {
                              ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
                              log('No existing wallet connection found on startup.', 'info');
@@ -2034,11 +1990,13 @@ https://rpc.goerli.dev,5</textarea>
                      if (newAccounts.length === 0) {
                          log('Wallet disconnected or no accounts selected (startup listener).', 'warning');
                          appState.connectedAddress = null;
-                         checkWhitelistStatus(null);
+                         ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                         setUIEnabled(false);
                      } else {
                          log(`Account changed to: ${newAccounts[0]} (startup listener)`, 'info');
                          appState.connectedAddress = newAccounts[0];
-                         checkWhitelistStatus(appState.connectedAddress);
+                         ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                         setUIEnabled(true);
                      }
                  });
 
@@ -2049,7 +2007,8 @@ https://rpc.goerli.dev,5</textarea>
                  window.ethereum.on('disconnect', (error) => {
                     log(`Wallet disconnected: ${error.message || 'Unknown error'} (startup listener)`, 'error');
                     appState.connectedAddress = null;
-                    checkWhitelistStatus(null);
+                    ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                    setUIEnabled(false);
                 });
 
             } else {
@@ -2057,7 +2016,7 @@ https://rpc.goerli.dev,5</textarea>
                 log('MetaMask or compatible wallet not detected on startup.', 'error');
             }
 
-            log('Console initialized. Please connect a whitelisted wallet to begin.');
+            log('Console initialized. Please connect your wallet to begin.');
 
             // --- NEW FOOTER FUNCTIONALITY ---
             const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
