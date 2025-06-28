@@ -7,19 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chosen Palette: Warm Neutrals (Slate, Beige, Muted Blue) -->
-    <!-- Application Structure Plan: The SPA is designed as a single-page dashboard, a departure from the linear execution of the source scripts. This structure enhances usability by grouping related settings into logical, interactive sections: a central Control Panel, Configuration (now including action probabilities and contract definitions), Wallets, Recipients, and a Live Log with CSV download. A fixed header provides quick navigation. This user-centric design was chosen because it allows users to configure and monitor the complex task of transaction farming in a non-linear, intuitive way, rather than dealing with multiple config files and command-line flags. The flow is: configure settings (including new contract interactions), load wallets, start the process, and monitor the live log and dynamic charts. This is superior to a script-like interface for discoverability and real-time feedback. -->
-    <!-- Visualization & Content Choices:
-        - Report Info: Wallet balances. Goal: Inform/Compare. Viz: Horizontal Bar Chart (Chart.js). Interaction: Updates in real-time as transactions are sent. Justification: Provides a clear, at-a-glance comparison of funds across all source wallets.
-        - Report Info: Transaction sending process. Goal: Organize/Inform. Viz: Live Log panel. Interaction: Auto-scrolls, contains clickable transaction links. Justification: Mimics the familiar console output of the original script, providing detailed, real-time feedback.
-        - Report Info: Transaction distribution. Goal: Analyze/Relationships. Viz: Donut Chart (Chart.js). Interaction: Updates with each successful transaction. Justification: Visualizes which recipient addresses are being used, making the distribution pattern easy to understand.
-        - Report Info: Action distribution (Send, Approve, Mint, Idle). Goal: Analyze/Inform. Viz: Pie Chart (Chart.js). Interaction: Updates dynamically during farming. Justification: Shows the proportion of different actions taken, reflecting the "behavior matrix".
-        - Report Info: Core script logic (`cast send`, `cast balance`, `cast block`, `cast gas-price`, `cast wallet address`). Method: Re-implemented using `ethers.js`. Justification: The original shell commands are not available in a browser. Ethers.js is the standard library for client-side Ethereum interaction, making the application fully functional and interactive, which is the primary goal. It directly replaces the script's core functionality.
-        - Report Info: CSV Logging. Method: In-memory array, then `Blob` and `URL.createObjectURL` for download. Justification: Provides the structured logging feature from the script in a browser-compatible way.
-        - New Feature (Gemini Integration): Contract Function Explanation. Goal: Explain complex smart contract functions in plain language. Viz: Textual explanation in a modal. Interaction: User clicks a button to request explanation. Justification: Demystifies contract interactions, making the tool more accessible and user-friendly.
-        - New Feature (Gemini Integration): Transaction Send Explanation. Goal: Provide context and general risks for sending transactions. Viz: Textual explanation in a modal. Interaction: User clicks a button to request explanation. Justification: Offers immediate guidance and raises awareness of potential risks for users setting up send transactions.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -152,14 +140,16 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             position: relative;
         }
-        .close-button {
+        .close-button, .close-qr-button {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
         .close-button:hover,
-        .close-button:focus {
+        .close-button:focus,
+        .close-qr-button:hover,
+        .close-qr-button:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
@@ -525,7 +515,49 @@ https://rpc.goerli.dev,5</textarea>
             <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
         </section>
     </main>
+    
+    <!-- NEW FOOTER SECTION -->
+    <footer class="bg-secondary text-center text-accent py-8 mt-12 border-t border-accent">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-2xl font-bold text-main mb-2">We Grow Together!</h3>
+            <p class="mb-4 max-w-2xl mx-auto">
+                Consider supporting our development efforts by donating to the address below. Your contribution helps keep this project alive and continuously improving.
+            </p>
+            <div class="flex items-center justify-center bg-gray-100 p-3 rounded-lg max-w-md mx-auto mb-6">
+                <span id="donation-address" class="text-sm md:text-base text-main font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-200 transition-colors" title="Copy Address">
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-500" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-200 transition-colors" title="Show QR Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                        <path d="M2 2h2v2H2V2Z"/>
+                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                        <path d="M10 0v6h6V0h-6Zm5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mt-8">© 2025 FarmLabs. All rights reserved.</p>
+        </div>
+    </footer>
 
+    <!-- QR Code Modal -->
+    <div id="qr-code-modal" class="modal hidden">
+        <div class="modal-content text-main flex flex-col items-center text-center">
+            <span class="close-qr-button self-end">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
+            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
+            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
+        </div>
+    </div>
+    
     <!-- Gemini Explanation Modal -->
     <div id="gemini-modal" class="modal hidden">
         <div class="modal-content text-main">
@@ -551,10 +583,16 @@ https://rpc.goerli.dev,5</textarea>
         </div>
     </div>
 
-    <!-- Import the whitelist.js file -->
-    <script src="./whitelist.js"></script>
-
     <script>
+        // Define WHITELISTED_ADDRESSES globally or import from a separate file
+        // For this merged script, we'll define it here.
+        // In a real application, this would likely come from a secure backend or a separate, non-public file.
+        const WHITELISTED_ADDRESSES = [
+            "0xYourWhitelistedAddress1".toLowerCase(),
+            "0xYourWhitelistedAddress2".toLowerCase()
+            // Add more whitelisted addresses here
+        ];
+
         document.addEventListener('DOMContentLoaded', () => {
             const appState = {
                 isRunning: false,
@@ -617,12 +655,12 @@ https://rpc.goerli.dev,5</textarea>
                 listAddresses: document.getElementById('list-addresses'),
                 loadAddressesFromListBtn: document.getElementById('load-addresses-from-list-btn'),
                 listAddressesCount: document.getElementById('list-addresses-count'),
-                predefinedAddressesSection: document.getElementById('predefined-addresses-section'), // New
-                predefinedFileInput: document.getElementById('predefined-file-input'), // New
-                loadPredefinedFileBtn: document.getElementById('load-predefined-file-btn'), // New
-                predefinedAddressesInfo: document.getElementById('predefined-addresses-info'), // New
-                predefinedAddressesDisplay: document.getElementById('predefined-addresses-display'), // New
-                predefinedAddressesCount: document.getElementById('predefined-addresses-count'), // New
+                predefinedAddressesSection: document.getElementById('predefined-addresses-section'),
+                predefinedFileInput: document.getElementById('predefined-file-input'),
+                loadPredefinedFileBtn: document.getElementById('load-predefined-file-btn'),
+                predefinedAddressesInfo: document.getElementById('predefined-addresses-info'),
+                predefinedAddressesDisplay: document.getElementById('predefined-addresses-display'),
+                predefinedAddressesCount: document.getElementById('predefined-addresses-count'),
                 liveLog: document.getElementById('live-log'),
                 downloadLogBtn: document.getElementById('download-log-btn'),
                 progressBar: document.getElementById('progress-bar'),
@@ -651,33 +689,29 @@ https://rpc.goerli.dev,5</textarea>
             const setUIEnabled = (enabled) => {
                 ui.walletFeatureControls.forEach(control => {
                     control.disabled = !enabled;
-                    // Special handling for radio buttons if needed, usually managed by parent container disable
                     if (control.type === 'radio') {
                          control.parentElement.style.opacity = enabled ? '1' : '0.6';
                          control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
                     }
                 });
 
-                // Handle visibility of recipient sections based on selected mode and overall enabled status
                 const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
                 if (enabled) {
                     ui.fixedAddressSection.classList.toggle('hidden', selectedRecipientMode !== 'fixed');
                     ui.listAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'list');
-                    ui.predefinedAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'predefined'); // New
+                    ui.predefinedAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'predefined');
                 } else {
                     ui.fixedAddressSection.classList.add('hidden');
                     ui.listAddressesSection.classList.add('hidden');
-                    ui.predefinedAddressesSection.classList.add('hidden'); // New
+                    ui.predefinedAddressesSection.classList.add('hidden');
                 }
 
-                // If not enabled, ensure wallet private keys and RPCs are cleared and charts reset
                 if (!enabled) {
                     ui.privateKeys.value = '';
                     ui.keysLoadedCount.textContent = '';
-                    appState.wallets = []; // Clear wallets in state too
-                    updateWalletBalanceChart(); // Reset chart
+                    appState.wallets = [];
+                    updateWalletBalanceChart();
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                    // Re-add default contracts
                     ui.contractList.innerHTML = `
                         <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
                             <div class="flex justify-between items-center mb-2">
@@ -732,7 +766,6 @@ https://rpc.goerli.dev,5</textarea>
                             </div>
                         </div>
                     `;
-                    // Re-attach event listeners for new contract elements
                     ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
                         addContractEventListeners(contractDiv.dataset.id);
                     });
@@ -788,7 +821,7 @@ https://rpc.goerli.dev,5</textarea>
                     WalletAddress: actionData.walletAddress || '',
                     Action: actionData.action || 'Log',
                     Status: type.toUpperCase(),
-                    Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';') // Strip HTML, escape commas
+                    Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';')
                 });
             };
 
@@ -831,7 +864,6 @@ https://rpc.goerli.dev,5</textarea>
                 chart.data.datasets[0].data = appState.wallets.map(w => w.balance);
                 chart.update();
 
-                // Update wallet list display
                 if (appState.wallets.length > 0) {
                     ui.noWalletsMsg.classList.add('hidden');
                     ui.walletListDisplay.innerHTML = appState.wallets.map(w =>
@@ -908,7 +940,7 @@ https://rpc.goerli.dev,5</textarea>
                         return null;
                     }
                     return { url, chainId: chainId };
-                }).filter(Boolean); // Filter out null entries
+                }).filter(Boolean);
 
                 appState.customContracts = [];
                 ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
@@ -923,7 +955,6 @@ https://rpc.goerli.dev,5</textarea>
                         abi = abiInput && abiInput.value ? JSON.parse(abiInput.value) : [];
                     } catch (e) {
                         log(`Invalid ABI JSON for contract "${name}": ${e.message}`, 'error');
-                        // Do not return here, continue processing other fields if possible
                     }
 
                     const functions = [];
@@ -932,7 +963,7 @@ https://rpc.goerli.dev,5</textarea>
                         const argsTemplateInput = funcDiv.querySelector('[data-func-field="argsTemplate"]');
                         const typeSelect = funcDiv.querySelector('[data-func-field="type"]');
 
-                        if (funcNameInput && argsTemplateInput && typeSelect) { // Ensure all necessary elements exist
+                        if (funcNameInput && argsTemplateInput && typeSelect) {
                             functions.push({
                                 name: funcNameInput.value,
                                 argsTemplate: argsTemplateInput.value,
@@ -957,7 +988,7 @@ https://rpc.goerli.dev,5</textarea>
                 if (rand < (cumulativeProb += probs.send)) return 'send';
                 if (rand < (cumulativeProb += probs.approve)) return 'approve';
                 if (rand < (cumulativeProb += probs.mint)) return 'mint';
-                return 'idle-action'; // Fallback for idle or if sum is not exactly 100
+                return 'idle-action';
             };
 
             const scanRecentBlocks = async (rpc, chainId) => {
@@ -970,7 +1001,7 @@ https://rpc.goerli.dev,5</textarea>
                     const newAddresses = new Set();
 
                     for (let blk = startBlock; blk <= currentBlockNumber; blk++) {
-                        const block = await provider.getBlock(blk, true); // true for full transactions
+                        const block = await provider.getBlock(blk, true);
                         if (block && block.transactions) {
                             block.transactions.forEach(tx => {
                                 if (tx.to && ethers.isAddress(tx.to)) {
@@ -999,20 +1030,19 @@ https://rpc.goerli.dev,5</textarea>
                     let parsedArgs = [];
                     if (funcArgsTemplate) {
                         const argsStrings = funcArgsTemplate.split(',').map(s => s.trim());
-                        // Simple argument parsing: assumes numbers or addresses for now
                         parsedArgs = argsStrings.map(arg => {
-                            if (arg.startsWith('0x') && arg.length === 42) { // Basic address check
+                            if (arg.startsWith('0x') && arg.length === 42) {
                                 return arg;
                             }
                             if (!isNaN(arg) && !isNaN(parseFloat(arg))) {
                                 try {
-                                    return BigInt(arg); // Use BigInt for large numbers/wei
+                                    return BigInt(arg);
                                 } catch (e) {
                                     log(`Warning: Could not parse BigInt from "${arg}". Using string.`, 'warning');
                                     return arg;
                                 }
                             }
-                            return arg; // Return as string if not recognized
+                            return arg;
                         });
                     }
 
@@ -1024,7 +1054,6 @@ https://rpc.goerli.dev,5</textarea>
                     log(`Contract action confirmed!`, 'success');
                     updateActionDistChart(actionType);
                     appState.stats.successfulActions++;
-                    // Update balance after contract interaction too
                     const balanceWei = await wallet.provider.getBalance(wallet.address);
                     wallet.balance = parseFloat(ethers.formatEther(balanceWei)).toFixed(6);
                     updateWalletBalanceChart();
@@ -1038,7 +1067,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = ""; // Canvas will provide this
+                const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1092,7 +1121,6 @@ https://rpc.goerli.dev,5</textarea>
                 appState.wallets = [];
                 ui.keysLoadedCount.textContent = `Loading 0 / ${keys.length}...`;
 
-                // Use the first RPC provider for initial balance checks
                 const defaultProvider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
 
                 for (let i = 0; i < keys.length; i++) {
@@ -1121,7 +1149,7 @@ https://rpc.goerli.dev,5</textarea>
                     log('Access denied. Please connect a whitelisted wallet.', 'error');
                     return;
                 }
-                loadConfiguration(); // Ensure RPCs are loaded from UI
+                loadConfiguration();
                 if (appState.rpcConfigs.length === 0) {
                     log('No RPC URLs configured to test.', 'warning');
                     return;
@@ -1277,7 +1305,7 @@ https://rpc.goerli.dev,5</textarea>
                         log('Recipient list is empty. Please load addresses into the list or choose another recipient mode.', 'error');
                         return;
                     }
-                    if (appState.config.recipientMode === 'predefined' && appState.predefinedRecipientList.length === 0) { // New check for predefined mode
+                    if (appState.config.recipientMode === 'predefined' && appState.predefinedRecipientList.length === 0) {
                         log('Predefined recipient list is empty. Please load a CSV file with addresses.', 'error');
                         return;
                     }
@@ -1291,8 +1319,7 @@ https://rpc.goerli.dev,5</textarea>
                     appState.isRunning = true;
                     appState.stopFlag = false;
                     appState.stats = { success: 0, fail: 0, totalActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
-                    appState.logEntries = []; // Clear log for new session
-                    // Reset chart data directly to zero, then update
+                    appState.logEntries = [];
                     appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
                     appState.charts.actionDist.update();
 
@@ -1308,7 +1335,6 @@ https://rpc.goerli.dev,5</textarea>
 
                     log(`Starting transaction farming process across ${appState.rpcConfigs.length} chains and ${appState.wallets.length} wallets.`, 'info');
 
-                    // Main loop: Iterate through each RPC config (chain)
                     for (const rpcConfig of appState.rpcConfigs) {
                         if (appState.stopFlag) break;
 
@@ -1318,7 +1344,6 @@ https://rpc.goerli.dev,5</textarea>
 
                         log(`🌐 Chain Session: ${rpcUrl} (Chain ID: ${chainId})`, 'info');
 
-                        // Scan blocks for recipients for this chain if needed
                         if (appState.config.recipientMode === 'pool') {
                            await scanRecentBlocks(rpcUrl, chainId);
                         }
@@ -1327,31 +1352,26 @@ https://rpc.goerli.dev,5</textarea>
 
                         if (appState.config.recipientMode === 'pool' && (!currentChainRecipientPool || currentChainRecipientPool.length === 0)) {
                             log(`Recipient pool for chain ${chainId} is empty. Cannot perform 'send' actions on this chain.`, 'warning');
-                            // continue; // Decide if we continue or skip chain
                         }
 
-                        // Shuffle wallets for this session
                         const shuffledWallets = [...appState.wallets].sort(() => Math.random() - 0.5);
 
-                        // Loop through each wallet for the current chain
                         for (const walletInfo of shuffledWallets) {
                             if (appState.stopFlag) break;
 
                             const walletAddress = walletInfo.address;
                             let wallet = new ethers.Wallet(walletInfo.privateKey, provider);
 
-                            // Wallet Persona: Idle chance
                             if (Math.random() * 100 < appState.config.walletIdleChance) {
                                 log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId}.`, 'info', { chainId, walletAddress, action: 'idle' });
                                 updateActionDistChart('idle');
-                                await sleep(getRandomInRange(appState.config.minDelay, appState.config.maxDelay)); // Still add a small delay
+                                await sleep(getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
                                 continue;
                             }
 
-                            // Check balance before starting actions for this wallet on this chain
                             try {
                                 const balanceWei = await provider.getBalance(walletAddress);
-                                if (balanceWei < ethers.parseEther("0.001")) { // Minimum balance threshold
+                                if (balanceWei < ethers.parseEther("0.001")) {
                                     log(`Skipping wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} due to low balance.`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                     updateActionDistChart('skipped');
                                     continue;
@@ -1371,24 +1391,22 @@ https://rpc.goerli.dev,5</textarea>
 
                                 appState.stats.totalActions++;
                                 ui.progressText.textContent = `${appState.stats.totalActions}`;
-                                ui.progressBar.style.width = `100%`; // Simple fill for continuous mode, remove if we add overall goal
+                                ui.progressBar.style.width = `100%`;
 
-                                // Gas-Aware Scheduling
                                 try {
                                     const feeData = await provider.getFeeData();
                                     const currentGasPrice = feeData.gasPrice;
-                                    const averageGasPrice = feeData.maxFeePerGas || feeData.gasPrice; // Use maxFeePerGas for EIP-1559, fallback to gasPrice
+                                    const averageGasPrice = feeData.maxFeePerGas || feeData.gasPrice;
 
                                     ui.gasDisplay.textContent = `${(Number(ethers.formatUnits(currentGasPrice, 'gwei'))).toFixed(2)} gwei`;
 
                                     if (currentGasPrice && averageGasPrice && currentGasPrice > (averageGasPrice * BigInt(Math.round(appState.config.gasMultiplier * 100))) / BigInt(100) ) {
                                         log(`Gas price (${ethers.formatUnits(currentGasPrice, 'gwei')} gwei) is too high. Skipping action for ...${walletAddress.slice(-6)} on Chain ID ${chainId}.`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                         updateActionDistChart('skipped');
-                                        break; // End this wallet's actions on this chain if gas is too high
+                                        break;
                                     }
                                 } catch (gasError) {
                                     log(`Failed to get gas price for Chain ID ${chainId}: ${gasError.message}. Proceeding without gas check.`, 'warning', { chainId, walletAddress, action: 'skipped' });
-                                    // Continue if gas check fails
                                 }
 
                                 const chosenBehavior = chooseAction();
@@ -1399,7 +1417,7 @@ https://rpc.goerli.dev,5</textarea>
                                     case "send":
                                         let recipientAddress;
                                         if (appState.config.recipientMode === 'fixed') {
-                                            recipientAddress = ui.fixedAddress.value.trim(); // Get current fixed address
+                                            recipientAddress = ui.fixedAddress.value.trim();
                                             if (!ethers.isAddress(recipientAddress)) {
                                                 log(`Fixed recipient address "${recipientAddress}" is invalid. Skipping send.`, 'error', { chainId, walletAddress, action: 'send' });
                                                 updateActionDistChart('skipped');
@@ -1413,7 +1431,7 @@ https://rpc.goerli.dev,5</textarea>
                                             }
                                             recipientAddress = appState.manualRecipientList[Math.floor(Math.random() * appState.manualRecipientList.length)];
                                         }
-                                        else if (appState.config.recipientMode === 'predefined') { // New: Predefined list
+                                        else if (appState.config.recipientMode === 'predefined') {
                                             if (appState.predefinedRecipientList.length === 0) {
                                                 log(`Predefined recipient list is empty. Skipping send for wallet ...${walletAddress.slice(-6)}.`, 'warning', { chainId, walletAddress, action: 'send' });
                                                 updateActionDistChart('skipped');
@@ -1426,7 +1444,7 @@ https://rpc.goerli.dev,5</textarea>
                                         } else {
                                             log(`No valid recipient found for 'send' action on Chain ID ${chainId}. Skipping.`, 'warning', { chainId, walletAddress, action: 'send' });
                                             updateActionDistChart('skipped');
-                                            break; // Skip this action
+                                            break;
                                         }
 
                                         const amount = getRandomInRange(appState.config.minAmount, appState.config.maxAmount);
@@ -1459,11 +1477,11 @@ https://rpc.goerli.dev,5</textarea>
                                             if (relevantFunctions.length > 0) {
                                                 const randomFunction = relevantFunctions[Math.floor(Math.random() * relevantFunctions.length)];
                                                 await executeContractAction(wallet, randomContractDef, randomFunction.name, randomFunction.argsTemplate, chosenBehavior);
-                                                actionSuccess = true; // Assume success if call initiated, actual success logged by executeContractAction
+                                                actionSuccess = true;
                                             } else {
                                                 log(`No suitable functions found for ${chosenBehavior} in defined contracts. Skipping.`, 'warning', { chainId, walletAddress, action: chosenBehavior });
                                                 updateActionDistChart('skipped');
-                                            }
+											}
                                         } else {
                                             log(`No custom contracts defined for ${chosenBehavior} actions. Skipping.`, 'warning', { chainId, walletAddress, action: chosenBehavior });
                                             updateActionDistChart('skipped');
@@ -1482,12 +1500,8 @@ https://rpc.goerli.dev,5</textarea>
                                 } else {
                                     appState.stats.failedActions++;
                                 }
-                                updateActionDistChart(chosenBehavior); // Update action distribution chart regardless of success/failure
+                                updateActionDistChart(chosenBehavior);
 
-                                ui.successCount.textContent = appState.stats.successfulActions;
-                                ui.failCount.textContent = appState.stats.failedActions;
-
-                                // Update wallet balance after each action
                                 try {
                                     const newBalanceWei = await provider.getBalance(wallet.address);
                                     walletInfo.balance = parseFloat(ethers.formatEther(newBalanceWei)).toFixed(6);
@@ -1507,7 +1521,7 @@ https://rpc.goerli.dev,5</textarea>
 
                     log('Farming process finished.', 'success');
                     stopFarming();
-                }); // End of confirmation modal callback
+                });
             };
 
             const stopFarming = () => {
@@ -1533,18 +1547,17 @@ https://rpc.goerli.dev,5</textarea>
                         appState.manualRecipientList = [];
                         ui.listAddresses.value = '';
                         ui.listAddressesCount.textContent = '';
-                        appState.predefinedRecipientList = []; // Clear predefined list
-                        ui.predefinedFileInput.value = ''; // Clear file input
-                        ui.predefinedAddressesInfo.textContent = 'No file loaded.'; // Reset info
-                        updatePredefinedAddressesDisplay(); // Update display for predefined list
+                        appState.predefinedRecipientList = [];
+                        ui.predefinedFileInput.value = '';
+                        ui.predefinedAddressesInfo.textContent = 'No file loaded.';
+                        updatePredefinedAddressesDisplay();
                         appState.customContracts = [];
                         appState.config = {};
                         appState.stats = { success: 0, fail: 0, totalActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
                         appState.logEntries = [];
 
-                        // Clear UI elements
                         ui.privateKeys.value = '';
-                        ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`; // Reset to default examples
+                        ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
                         ui.contractList.innerHTML = `
                             <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
                                 <div class="flex justify-between items-center mb-2">
@@ -1598,24 +1611,11 @@ https://rpc.goerli.dev,5</textarea>
                                     </div>
                                 </div>
                             </div>
-                        `; // Re-add default example contracts
-                        ui.liveLog.innerHTML = ''; // Clear live log display
-
-                        // Reset charts
-                        appState.charts.walletBalance.data.labels = [];
-                        appState.charts.walletBalance.data.datasets[0].data = [];
-                        appState.charts.walletBalance.update();
-                        appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
-                        appState.charts.actionDist.update();
-
-                        // Re-attach event listeners for new contract elements
+                        `;
                         ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
                             addContractEventListeners(contractDiv.dataset.id);
                         });
-
-                        ui.keysLoadedCount.textContent = '';
-                        updateWalletBalanceChart(); // To show "No wallets loaded yet."
-                        log('All application data has been cleared.', 'info');
+                        setUIEnabled(false); // Re-disable controls after clearing
                     }
                 });
             };
@@ -1668,7 +1668,7 @@ https://rpc.goerli.dev,5</textarea>
 
                 const functionsContainer = contractDiv.querySelector('[data-field="functions"]');
                 const addFunctionBtn = contractDiv.querySelector('.add-function-btn');
-                if (addFunctionBtn) { // Ensure button exists
+                if (addFunctionBtn) {
                     addFunctionBtn.addEventListener('click', () => {
                         const funcHtml = `
                             <div class="flex items-center space-x-2">
@@ -1692,8 +1692,6 @@ https://rpc.goerli.dev,5</textarea>
                     });
                 }
 
-
-                // Attach listeners for initial functions and dynamically added ones
                 functionsContainer.querySelectorAll('.remove-function-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.target.closest('.flex').remove();
@@ -1702,7 +1700,6 @@ https://rpc.goerli.dev,5</textarea>
                 functionsContainer.querySelectorAll('.explain-func-btn').forEach(btn => {
                     btn.addEventListener('click', handleExplainFunction);
                 });
-
 
                  const nameInput = contractDiv.querySelector('[data-field="name"]');
                  if (nameInput) {
@@ -1740,14 +1737,14 @@ https://rpc.goerli.dev,5</textarea>
                 const recipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
                 const fixedAddress = ui.fixedAddress.value.trim();
                 const listAddressCount = appState.manualRecipientList.length;
-                const predefinedAddressCount = appState.predefinedRecipientList.length; // New
+                const predefinedAddressCount = appState.predefinedRecipientList.length;
 
                 let recipientDescription = '';
                 if (recipientMode === 'fixed' && fixedAddress) {
                     recipientDescription = `a fixed address (${fixedAddress.substring(0, 6)}...)`;
                 } else if (recipientMode === 'list' && listAddressCount > 0) {
                     recipientDescription = `a random address from a custom list of ${listAddressCount} addresses`;
-                } else if (recipientMode === 'predefined' && predefinedAddressCount > 0) { // New
+                } else if (recipientMode === 'predefined' && predefinedAddressCount > 0) {
                     recipientDescription = `a random address from a predefined list of ${predefinedAddressCount} addresses`;
                 }
                 else {
@@ -1785,11 +1782,10 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const copyToClipboard = (text) => {
-                // Using document.execCommand for better iFrame compatibility
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
-                textarea.style.position = 'absolute'; // Prevent scrolling to bottom
-                textarea.style.left = '-9999px'; // Hide off-screen
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
                 document.body.appendChild(textarea);
                 textarea.select();
                 try {
@@ -1818,47 +1814,61 @@ https://rpc.goerli.dev,5</textarea>
 
             const connectWallet = async () => {
                 console.log('Connect Wallet button clicked.');
+                // Explicitly check for window.ethereum
                 if (typeof window.ethereum === 'undefined') {
-                    ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
-                    log('MetaMask not detected. Please install it.', 'error');
+                    log('MetaMask or compatible wallet not detected. Please install one.', 'error');
+                    ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a> or a compatible browser extension.`;
                     setUIEnabled(false);
-                    console.error('MetaMask not detected.');
+                    console.error('window.ethereum is not defined.');
                     return;
                 }
 
-                console.log('window.ethereum detected. Requesting accounts...');
+                log('window.ethereum detected. Requesting accounts...', 'info');
                 try {
-                    log('Requesting wallet connection...', 'info');
+                    // Request accounts using window.ethereum.request
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     console.log('eth_requestAccounts returned:', accounts);
 
                     if (accounts.length === 0) {
-                        log('No accounts found. Please connect your wallet.', 'error');
+                        log('No accounts found. Please connect your wallet and select an account.', 'error');
                         appState.connectedAddress = null;
                         checkWhitelistStatus(null);
                         console.warn('No accounts returned from wallet.');
                         return;
                     }
                     appState.connectedAddress = accounts[0];
+                    log(`Wallet connected: ${appState.connectedAddress}`, 'success');
                     console.log('Connected address:', appState.connectedAddress);
                     checkWhitelistStatus(appState.connectedAddress);
 
-                    // Add event listeners for account/chain changes
+                    // Set up event listeners for window.ethereum
+                    // These listeners ensure the UI updates if the user changes accounts or networks in their wallet
                     window.ethereum.on('accountsChanged', (newAccounts) => {
+                        log('Wallet accounts changed event detected.', 'info');
                         if (newAccounts.length === 0) {
-                            log('Wallet disconnected.', 'warning');
+                            log('Wallet disconnected or no accounts selected.', 'warning');
                             appState.connectedAddress = null;
                             checkWhitelistStatus(null);
-                        } else if (newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
+                        } else if (appState.connectedAddress && newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
                             log(`Account changed to: ${newAccounts[0]}`, 'info');
+                            appState.connectedAddress = newAccounts[0];
+                            checkWhitelistStatus(appState.connectedAddress);
+                        } else if (!appState.connectedAddress) { // Case where wallet was disconnected and then reconnected/account selected
+                            log(`Wallet reconnected with account: ${newAccounts[0]}`, 'info');
                             appState.connectedAddress = newAccounts[0];
                             checkWhitelistStatus(appState.connectedAddress);
                         }
                     });
 
                     window.ethereum.on('chainChanged', (chainId) => {
-                        log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure RPCs match.`, 'warning');
-                        // Optionally re-check whitelist if chain-specific whitelisting is implemented
+                        log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure your RPC configurations match this network.`, 'warning');
+                        // You might want to re-initialize providers or re-check balances here
+                    });
+
+                    window.ethereum.on('disconnect', (error) => {
+                        log(`Wallet disconnected: ${error.message || 'Unknown error'}`, 'error');
+                        appState.connectedAddress = null;
+                        checkWhitelistStatus(null);
                     });
 
                 } catch (error) {
@@ -1880,7 +1890,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.downloadLogBtn.addEventListener('click', downloadLog);
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
-                ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile); // New listener for predefined file load
+                ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
 
                 ui.closeModalBtn.addEventListener('click', closeGeminiModal);
                 window.addEventListener('click', (event) => {
@@ -1889,7 +1899,6 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 });
 
-                // Confirmation Modal Listeners
                 ui.confirmActionBtn.addEventListener('click', confirmAction);
                 ui.cancelConfirmBtn.addEventListener('click', cancelAction);
                 ui.closeConfirmBtn.addEventListener('click', cancelAction);
@@ -1899,7 +1908,6 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 });
 
-                // Event delegation for copy buttons in live log
                 ui.liveLog.addEventListener('click', (event) => {
                     const copyBtn = event.target.closest('.log-copy-btn');
                     if (copyBtn && copyBtn.dataset.txHash) {
@@ -1910,15 +1918,15 @@ https://rpc.goerli.dev,5</textarea>
 
                 ui.recipientMode.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        if (!appState.isWhitelisted) { // Only change UI if enabled by whitelist
+                        if (!appState.isWhitelisted) {
                             log('Access denied. Please connect a whitelisted wallet.', 'error');
-                            e.target.checked = (appState.config.recipientMode === 'pool'); // Revert selection if not whitelisted
+                            e.target.checked = (appState.config.recipientMode === 'pool');
                             return;
                         }
                         ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
                         ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
-                        ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined'); // New
-                        loadConfiguration(); // Re-load config to update recipientMode
+                        ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined');
+                        loadConfiguration();
                     });
                 });
 
@@ -1926,7 +1934,6 @@ https://rpc.goerli.dev,5</textarea>
                     input.addEventListener('input', loadConfiguration);
                 });
 
-                // Attach input change listeners for min/max amount/delay to re-validate config
                 ui.minAmount.addEventListener('input', loadConfiguration);
                 ui.maxAmount.addEventListener('input', loadConfiguration);
                 ui.minDelay.addEventListener('input', loadConfiguration);
@@ -1937,7 +1944,6 @@ https://rpc.goerli.dev,5</textarea>
                     name: 'New Contract', address: '', abi: '[]', functions: []
                 }));
 
-                // Initial setup for existing example contracts and their explain buttons
                 document.querySelectorAll('#contract-list .border.border-accent').forEach(contractDiv => {
                     addContractEventListeners(contractDiv.dataset.id || `example-${Date.now()}`);
                 });
@@ -1952,21 +1958,24 @@ https://rpc.goerli.dev,5</textarea>
 
             initCharts();
             setupEventListeners();
-            loadConfiguration(); // Initial load to validate probabilities and RPCs
-            updateWalletBalanceChart(); // Display "No wallets loaded" initially
-            setUIEnabled(false); // Disable all features by default
-            updatePredefinedAddressesDisplay(); // Populate predefined addresses on load
+            loadConfiguration();
+            updateWalletBalanceChart();
+            setUIEnabled(false); // Initially disable controls until wallet is connected and whitelisted
+            updatePredefinedAddressesDisplay();
 
-            // Attempt to auto-connect or check existing connection on load
+            // Initial check for window.ethereum and existing connection on page load
             if (typeof window.ethereum !== 'undefined') {
+                 log('MetaMask or compatible wallet detected on startup. Checking for existing connection...', 'info');
+                 // Request current accounts without prompting the user
                  window.ethereum.request({ method: 'eth_accounts' })
                     .then(accounts => {
                         if (accounts.length > 0) {
                             appState.connectedAddress = accounts[0];
+                            log(`Existing wallet connection found: ${appState.connectedAddress}`, 'info');
                             checkWhitelistStatus(appState.connectedAddress);
                         } else {
                              ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
-                             log('No wallet connected on startup.', 'info');
+                             log('No existing wallet connection found on startup.', 'info');
                         }
                     })
                     .catch(error => {
@@ -1974,29 +1983,90 @@ https://rpc.goerli.dev,5</textarea>
                          ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
                     });
 
-                 // Set up listeners for changes even if not initially connected
+                 // Re-attach event listeners in case the page was refreshed and they were lost
                  window.ethereum.on('accountsChanged', (newAccounts) => {
+                     log('Wallet accounts changed event detected (startup listener).', 'info');
                      if (newAccounts.length === 0) {
-                         log('Wallet disconnected.', 'warning');
+                         log('Wallet disconnected or no accounts selected (startup listener).', 'warning');
                          appState.connectedAddress = null;
                          checkWhitelistStatus(null);
                      } else {
-                         log(`Account changed to: ${newAccounts[0]}`, 'info');
+                         log(`Account changed to: ${newAccounts[0]} (startup listener)`, 'info');
                          appState.connectedAddress = newAccounts[0];
                          checkWhitelistStatus(appState.connectedAddress);
                      }
                  });
 
                  window.ethereum.on('chainChanged', (chainId) => {
-                     log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure RPCs match.`, 'warning');
-                     // Optionally re-check whitelist if chain-specific whitelisting is desired
+                     log(`Network changed to Chain ID: ${parseInt(chainId, 16)} (startup listener). Please ensure RPCs match.`, 'warning');
                  });
+
+                 window.ethereum.on('disconnect', (error) => {
+                    log(`Wallet disconnected: ${error.message || 'Unknown error'} (startup listener)`, 'error');
+                    appState.connectedAddress = null;
+                    checkWhitelistStatus(null);
+                });
+
             } else {
                 ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
-                log('MetaMask not detected on startup.', 'error');
+                log('MetaMask or compatible wallet not detected on startup.', 'error');
             }
 
             log('Console initialized. Please connect a whitelisted wallet to begin.');
+
+            // --- NEW FOOTER FUNCTIONALITY ---
+            const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
+            const copyBtn = document.getElementById('copy-address-btn');
+            const copyIcon = document.getElementById('copy-icon');
+            const checkIcon = document.getElementById('check-icon');
+            const showQrBtn = document.getElementById('show-qr-btn');
+            const qrModal = document.getElementById('qr-code-modal');
+            const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrAddressDisplay = document.getElementById('qr-address-display');
+
+            // Initialize QR Code once
+            if(typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeContainer, {
+                    text: donationAddressStr,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#2d3748",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                qrAddressDisplay.textContent = donationAddressStr;
+            } else {
+                console.error("QRCode library is not loaded.")
+                qrCodeContainer.innerHTML = "QR Code library failed to load. Please check your connection.";
+            }
+
+            // Copy to clipboard
+            copyBtn.addEventListener('click', () => {
+                copyToClipboard(donationAddressStr);
+                copyIcon.classList.add('hidden');
+                checkIcon.classList.remove('hidden');
+                setTimeout(() => {
+                    copyIcon.classList.remove('hidden');
+                    checkIcon.classList.add('hidden');
+                }, 2000);
+            });
+
+            // Show QR Modal
+            showQrBtn.addEventListener('click', () => {
+                qrModal.classList.remove('hidden');
+            });
+
+            // Close QR Modal logic
+            const closeQrModal = () => {
+                qrModal.classList.add('hidden');
+            }
+            closeQrModalBtn.addEventListener('click', closeQrModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
         });
     </script>
 </body>
