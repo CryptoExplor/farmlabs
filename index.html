@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- Removed whitelist.js as the feature is no longer needed -->
+    <!-- Removed whitelist.js as the feature is no longer needed, making the app public -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -370,7 +370,9 @@
             <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
             <p class="text-accent mb-6">Define the parameters for the transaction farming, including network settings, amounts, delays, and gas thresholds.</p>
 
-            <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:col-cols-2 gap-8">
+            <!-- Main configuration grid container -->
+            <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Individual configuration items -->
                 <div>
                     <label for="max-txns-per-wallet" class="block font-medium mb-1 text-accent">Max Actions Per Wallet Session
                         <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, approve, mint, idle) a single wallet will attempt in its session on a given blockchain network.</span></span>
@@ -400,31 +402,36 @@
                     <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses.</p>
                 </div>
 
+                <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
                 <div class="md:col-span-2">
                     <label class="block font-medium mb-1 text-accent">Transaction Amount Range (ETH)
                         <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">When a 'send' action is chosen, a random amount of ETH will be sent within this specified minimum and maximum range.</span></span>
                     </label>
                     <div class="flex items-center space-x-4">
-                        <input type="number" id="min-amount" value="0.0001" step="0.0001" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
+                        <input type="number" id="min-amount" value="0.0001" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                         <span class="text-gray-500">to</span>
-                        <input type="number" id="max-amount" value="0.0002" step="0.0001" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <input type="number" id="max-amount" value="0.0002" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                     </div>
                      <p class="text-sm text-gray-500 mt-1">A random ETH amount within this range will be sent for 'send' actions.</p>
                      <button id="explain-send-tx-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Explain Send Tx</button>
                 </div>
 
+                <!-- Delay Between Actions (spans 2 columns on medium screens and up) -->
                 <div class="md:col-span-2">
                     <label class="block font-medium mb-1 text-accent">Delay Between Actions (seconds)
                         <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send, approve, mint, or idle), the script will pause for a random duration within this minimum and maximum second range.</span></span>
                     </label>
                     <div class="flex items-center space-x-4">
-                        <input type="number" id="min-delay" value="10" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
+                        <input type="number" id="min-delay" value="10" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                         <span class="text-gray-500">to</span>
-                        <input type="number" id="max-delay" value="30" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <input type="number" id="max-delay" value="30" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                     </div>
                     <p class="text-sm text-gray-500 mt-1">A random delay will be applied after each action.</p>
                 </div>
 
+                <!-- RPC Endpoints & Chain IDs (spans 2 columns on medium screens and up) -->
                 <div class="md:col-span-2">
                     <label class="block font-medium mb-1 text-accent">RPC Endpoints & Chain IDs (Format: URL,ChainID - one per line)
                         <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">List the RPC URLs for the blockchain networks you want to interact with, followed by their corresponding Chain ID (e.g., 'https://mainnet.infura.io/v3/YOUR_ID,1'). The script will cycle through these networks.</span></span>
@@ -435,6 +442,7 @@ https://rpc.goerli.dev,5</textarea>
                     <button id="test-rpc-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>⚡ Test RPC Connections</button>
                 </div>
 
+                <!-- Action Probability Matrix (spans 2 columns on medium screens and up, contains its own grid) -->
                 <div class="md:col-span-2">
                     <h3 class="font-bold text-lg mb-4 text-main">Action Probability Matrix (%)</h3>
                     <p class="text-sm text-accent mb-4">Define the percentage chance for each action type. Must sum to 100.</p>
