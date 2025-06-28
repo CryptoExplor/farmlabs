@@ -188,9 +188,10 @@
                 <h1 class="text-xl md:text-2xl font-bold text-main">Interactive Script Console</h1>
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="#dashboard" class="nav-link text-accent font-medium pb-1">Dashboard</a>
+                    <a href="#wallets" class="nav-link text-accent font-medium pb-1">Wallets</a>
+                    <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1">Recipients</a>
                     <a href="#config" class="nav-link text-accent font-medium pb-1">Configuration</a>
                     <a href="#contracts" class="nav-link text-accent font-medium pb-1">Contracts</a>
-                    <a href="#wallets" class="nav-link text-accent font-medium pb-1">Wallets</a>
                     <a href="#log" class="nav-link text-accent font-medium pb-1">Live Log</a>
                 </nav>
             </div>
@@ -267,6 +268,100 @@
                     <div class="chart-container">
                         <canvas id="action-dist-chart"></canvas>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wallet Section -->
+        <section id="wallets" class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Wallets</h2>
+            <p class="text-accent mb-6">Load your source wallets by pasting private keys below. Ensure you have sufficient balance for transactions.</p>
+            <div class="bg-secondary p-8 rounded-lg shadow-md mb-8">
+                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-4 rounded-r-lg" role="alert">
+                    <p class="font-bold text-sm">Important Security Reminder:</p>
+                    <p class="text-xs italic">Only use test keys on testnets for this application. Never use mainnet private keys holding real funds.</p>
+                </div>
+                <label for="private-keys" class="block font-medium mb-1 text-accent">Private Keys (one per line)</label>
+                <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled></textarea>
+                <button id="load-keys-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Wallets & Check Balances</button>
+                <p id="keys-loaded-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+            </div>
+
+            <h3 class="text-2xl font-bold mb-2 text-main">Loaded Wallets</h3>
+            <p class="text-accent mb-6">Overview of all wallets currently loaded in the application.</p>
+            <div class="bg-secondary p-6 rounded-lg shadow-md">
+                <ul id="wallet-list-display" class="list-disc pl-5 space-y-2 text-sm text-accent">
+                    <li id="no-wallets-msg">No wallets loaded yet.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Recipient Section - Kept separate for clarity on dynamic scanning -->
+        <section id="recipient-settings" class="mb-12">
+            <h2 class="text-3xl font-bold mb-2 text-main">Recipient Settings</h2>
+            <p class="text-accent mb-6">Choose how the script will select destination addresses for transactions.</p>
+            <div class="bg-secondary p-8 rounded-lg shadow-md">
+                <div class="space-y-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="pool" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" checked disabled>
+                        <span class="ml-3 text-main">Use Dynamically Scanned Pool</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="fixed" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Fixed Address</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="list" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Custom List of Addresses (one per line)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Predefined List of Addresses (from CSV)</span>
+                    </label>
+                    <!-- NEW: Use loaded wallet to interact with each other -->
+                    <label class="flex items-center">
+                        <input type="radio" name="recipient-mode" value="self-interact" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                        <span class="ml-3 text-main">Use Loaded Wallets to Interact with Each Other</span>
+                    </label>
+                </div>
+
+                <div id="fixed-address-section" class="mt-4 hidden">
+                    <label for="fixed-address" class="block font-medium mb-1 text-accent">Fixed Recipient Address</label>
+                    <input type="text" id="fixed-address" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled>
+                </div>
+
+                <div id="list-addresses-section" class="mt-4 hidden">
+                    <label for="list-addresses" class="block font-medium mb-1 text-accent">Recipient Addresses (one per line)</label>
+                    <textarea id="list-addresses" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x...&#10;0x...&#10;... (one address per line)" disabled></textarea>
+                    <button id="load-addresses-from-list-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Addresses from List</button>
+                    <p id="list-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                </div>
+
+                <div id="predefined-addresses-section" class="mt-4 hidden">
+                    <p class="block font-medium mb-1 text-accent">Download list here:</p>
+                    <ul class="list-disc pl-5 mb-4 text-sm text-blue-700">
+                        <li><a href="https://d.cess.network/n1/812192221.csv" target="_blank" class="hover:underline">Link 1 (recipients1)</a></li>
+                        <li><a href="https://d.cess.network/n1/1394676302.csv" target="_blank" class="hover:underline">Link 2 (recipients2)</a></li>
+                        <li><a href="https://d.cess.network/n1/1338053122.csv" target="_blank" class="hover:underline">Link 3 (recipients3)</a></li>
+                        <li><a href="https://d.cess.network/n1/738595260.csv" target="_blank" class="hover:underline">Link 4 (recipients4)</a></li>
+                        <li><a href="https://d.cess.network/n1/1213534582.csv" target="_blank" class="hover:underline">Link 5 (recipients5)</a></li>
+                        <li><a href="https://d.cess.network/n1/1210782270.csv" target="_blank" class="hover:underline">Link 6 (recipients6)</a></li>
+                        <li><a href="https://d.cess.network/n1/1179652688.csv" target="_blank" class="hover:underline">Link 7 (recipients7)</a></li>
+                        <li><a href="https://d.cess.network/n1/645402960.csv" target="_blank" class="hover:underline">Link 8 (recipients8)</a></li>
+                        <li><a href="https://d.cess.network/n1/1006375340.csv" target="_blank" class="hover:underline">Link 9 (recipients9)</a></li>
+                        <li><a href="https://d.cess.network/n1/1249120790.csv" target="_blank" class="hover:underline">Link 10 (recipients10)</a></li>
+                        <li><a href="https://d.cess.network/n1/892015044.csv" target="_blank" class="hover:underline">Link 11 (recipients11)</a></li>
+                        <li><a href="https://d.cess.network/n1/1174737402.csv" target="_blank" class="hover:underline">Link 12 (recipients12)</a></li>
+                    </ul>
+
+                    <label for="predefined-file-input" class="block font-medium mb-1 text-accent">Or Upload Your Own Predefined List (CSV)</label>
+                    <input type="file" id="predefined-file-input" accept=".csv" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                    <button id="load-predefined-file-btn" class="mt-2 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Predefined Addresses from CSV</button>
+                    <p id="predefined-addresses-info" class="text-sm text-gray-500 mt-1">No file loaded.</p>
+                    <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent max-h-32 overflow-y-auto mt-2">
+                        <!-- Predefined addresses will be populated here -->
+                    </ul>
+                    <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
                 </div>
             </div>
         </section>
@@ -433,79 +528,6 @@ https://rpc.goerli.dev,5</textarea>
             </div>
         </section>
 
-        <!-- Wallet and Recipient Section -->
-        <section id="wallets" class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Wallets</h2>
-            <p class="text-accent mb-6">Load your source wallets by pasting private keys below. Ensure you have sufficient balance for transactions.</p>
-            <div class="bg-secondary p-8 rounded-lg shadow-md mb-8">
-                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-4 rounded-r-lg" role="alert">
-                    <p class="font-bold text-sm">Important Security Reminder:</p>
-                    <p class="text-xs italic">Only use test keys on testnets for this application. Never use mainnet private keys holding real funds.</p>
-                </div>
-                <label for="private-keys" class="block font-medium mb-1 text-accent">Private Keys (one per line)</label>
-                <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled></textarea>
-                <button id="load-keys-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Wallets & Check Balances</button>
-                <p id="keys-loaded-count" class="text-sm text-green-600 mt-2 font-medium"></p>
-            </div>
-
-            <h3 class="text-2xl font-bold mb-2 text-main">Loaded Wallets</h3>
-            <p class="text-accent mb-6">Overview of all wallets currently loaded in the application.</p>
-            <div class="bg-secondary p-6 rounded-lg shadow-md">
-                <ul id="wallet-list-display" class="list-disc pl-5 space-y-2 text-sm text-accent">
-                    <li id="no-wallets-msg">No wallets loaded yet.</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Recipient Section - Kept separate for clarity on dynamic scanning -->
-        <section class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Recipient Settings</h2>
-            <p class="text-accent mb-6">Choose how the script will select destination addresses for transactions.</p>
-            <div class="bg-secondary p-8 rounded-lg shadow-md">
-                <div class="space-y-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="pool" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" checked disabled>
-                        <span class="ml-3 text-main">Use Dynamically Scanned Pool</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="fixed" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Fixed Address</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="list" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Custom List of Addresses (one per line)</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Predefined List of Addresses (from CSV)</span>
-                    </label>
-                </div>
-
-                <div id="fixed-address-section" class="mt-4 hidden">
-                    <label for="fixed-address" class="block font-medium mb-1 text-accent">Fixed Recipient Address</label>
-                    <input type="text" id="fixed-address" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled>
-                </div>
-
-                <div id="list-addresses-section" class="mt-4 hidden">
-                    <label for="list-addresses" class="block font-medium mb-1 text-accent">Recipient Addresses (one per line)</label>
-                    <textarea id="list-addresses" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x...&#10;0x...&#10;... (one address per line)" disabled></textarea>
-                    <button id="load-addresses-from-list-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Addresses from List</button>
-                    <p id="list-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
-                </div>
-
-                <div id="predefined-addresses-section" class="mt-4 hidden">
-                    <label for="predefined-file-input" class="block font-medium mb-1 text-accent">Upload Predefined List (CSV)</label>
-                    <input type="file" id="predefined-file-input" accept=".csv" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                    <button id="load-predefined-file-btn" class="mt-2 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Predefined Addresses from CSV</button>
-                    <p id="predefined-addresses-info" class="text-sm text-gray-500 mt-1">No file loaded.</p>
-                    <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent max-h-32 overflow-y-auto mt-2">
-                        <!-- Predefined addresses will be populated here -->
-                    </ul>
-                    <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
-                </div>
-            </div>
-        </section>
-
 
         <!-- Live Log Section -->
         <section id="log">
@@ -559,7 +581,7 @@ https://rpc.goerli.dev,5</textarea>
             <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
         </div>
     </div>
-
+    
     <!-- Gemini Explanation Modal -->
     <div id="gemini-modal" class="modal hidden">
         <div class="modal-content text-main">
@@ -688,7 +710,8 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 });
 
-                const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
+                // Correctly show/hide recipient sections based on selected mode
+                const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked)?.value;
                 if (enabled) {
                     ui.fixedAddressSection.classList.toggle('hidden', selectedRecipientMode !== 'fixed');
                     ui.listAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'list');
@@ -1060,7 +1083,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key
+                const apiKey = "AIzaSyBns3XoeRSd1p1kttRjbv8qR9J01pdrCaQ"; // Replaced with user's provided API Key
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1302,6 +1325,10 @@ https://rpc.goerli.dev,5</textarea>
                         log('Predefined recipient list is empty. Please load a CSV file with addresses.', 'error');
                         return;
                     }
+                    if (appState.config.recipientMode === 'self-interact' && appState.wallets.length < 2) {
+                        log('To use "interact with each other" mode, you need at least 2 loaded wallets.', 'error');
+                        return;
+                    }
                     if (appState.config.probabilities.approve > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'approve'))) {
                         log('Approve action probability is set, but no "approve" contract functions are defined.', 'warning');
                     }
@@ -1311,7 +1338,8 @@ https://rpc.goerli.dev,5</textarea>
 
                     appState.isRunning = true;
                     appState.stopFlag = false;
-                    appState.stats = { success: 0, fail: 0, totalActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
+                    // Fix: Initialize successfulActions and failedActions correctly
+                    appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
                     appState.logEntries = [];
                     appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
                     appState.charts.actionDist.update();
@@ -1320,8 +1348,8 @@ https://rpc.goerli.dev,5</textarea>
                     ui.startBtn.disabled = true;
                     ui.stopBtn.disabled = false;
                     ui.statusDisplay.textContent = 'Running';
-                    ui.successCount.textContent = '0';
-                    ui.failCount.textContent = '0';
+                    ui.successCount.textContent = appState.stats.successfulActions.toString(); // Update UI
+                    ui.failCount.textContent = appState.stats.failedActions.toString(); // Update UI
                     ui.progressText.textContent = '0';
                     ui.progressBar.style.width = '100%';
 
@@ -1364,7 +1392,7 @@ https://rpc.goerli.dev,5</textarea>
 
                             try {
                                 const balanceWei = await provider.getBalance(walletAddress);
-                                if (balanceWei < ethers.parseEther("0.001")) {
+                                if (balanceWei < ethers.parseEther("0.001")) { // Ensure sufficient balance for gas
                                     log(`Skipping wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} due to low balance.`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                     updateActionDistChart('skipped');
                                     continue;
@@ -1432,6 +1460,16 @@ https://rpc.goerli.dev,5</textarea>
                                             }
                                             recipientAddress = appState.predefinedRecipientList[Math.floor(Math.random() * appState.predefinedRecipientList.length)];
                                         }
+                                        else if (appState.config.recipientMode === 'self-interact') {
+                                            const otherWallets = appState.wallets.filter(w => w.address.toLowerCase() !== walletAddress.toLowerCase());
+                                            if (otherWallets.length === 0) {
+                                                log(`No other loaded wallets to interact with. Skipping send for wallet ...${walletAddress.slice(-6)}.`, 'warning', { chainId, walletAddress, action: 'send' });
+                                                updateActionDistChart('skipped');
+                                                break;
+                                            }
+                                            recipientAddress = otherWallets[Math.floor(Math.random() * otherWallets.length)].address;
+                                            log(`Sending to another loaded wallet: ${recipientAddress.slice(0,6)}...${recipientAddress.slice(-4)}`, 'info');
+                                        }
                                         else if (currentChainRecipientPool && currentChainRecipientPool.length > 0) {
                                             recipientAddress = currentChainRecipientPool[Math.floor(Math.random() * currentChainRecipientPool.length)];
                                         } else {
@@ -1493,7 +1531,10 @@ https://rpc.goerli.dev,5</textarea>
                                 } else {
                                     appState.stats.failedActions++;
                                 }
-                                updateActionDistChart(chosenBehavior);
+                                // Update counts on UI immediately after each action attempt
+                                ui.successCount.textContent = appState.stats.successfulActions.toString();
+                                ui.failCount.textContent = appState.stats.failedActions.toString();
+                                updateActionDistChart(chosenBehavior); // Update chart with the chosen behavior
 
                                 try {
                                     const newBalanceWei = await provider.getBalance(wallet.address);
@@ -1546,7 +1587,8 @@ https://rpc.goerli.dev,5</textarea>
                         updatePredefinedAddressesDisplay();
                         appState.customContracts = [];
                         appState.config = {};
-                        appState.stats = { success: 0, fail: 0, totalActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
+                        // Fix: Correctly reset stats properties
+                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
                         appState.logEntries = [];
 
                         ui.privateKeys.value = '';
@@ -1731,6 +1773,8 @@ https://rpc.goerli.dev,5</textarea>
                 const fixedAddress = ui.fixedAddress.value.trim();
                 const listAddressCount = appState.manualRecipientList.length;
                 const predefinedAddressCount = appState.predefinedRecipientList.length;
+                const loadedWalletCount = appState.wallets.length;
+
 
                 let recipientDescription = '';
                 if (recipientMode === 'fixed' && fixedAddress) {
@@ -1739,6 +1783,8 @@ https://rpc.goerli.dev,5</textarea>
                     recipientDescription = `a random address from a custom list of ${listAddressCount} addresses`;
                 } else if (recipientMode === 'predefined' && predefinedAddressCount > 0) {
                     recipientDescription = `a random address from a predefined list of ${predefinedAddressCount} addresses`;
+                } else if (recipientMode === 'self-interact' && loadedWalletCount > 1) {
+                    recipientDescription = `a random address from the other ${loadedWalletCount - 1} loaded wallets (excluding the sender)`;
                 }
                 else {
                     recipientDescription = 'a random address from a dynamically scanned pool';
@@ -1916,13 +1962,16 @@ https://rpc.goerli.dev,5</textarea>
                     radio.addEventListener('change', (e) => {
                         if (!appState.isWhitelisted) {
                             log('Access denied. Please connect a whitelisted wallet.', 'error');
-                            e.target.checked = (appState.config.recipientMode === 'pool');
+                            // Reset to previous state if not whitelisted
+                            // This might be tricky if the radio was already changed.
+                            // A better approach might be to block radio clicks directly.
+                            Array.from(ui.recipientMode).find(r => r.value === appState.config.recipientMode).checked = true;
                             return;
                         }
                         ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
                         ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
                         ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined');
-                        loadConfiguration();
+                        loadConfiguration(); // Re-load config to update recipientMode
                     });
                 });
 
