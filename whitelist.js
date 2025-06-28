@@ -1,20 +1,9 @@
 // whitelist.js
 
-// Example: Add whitelisted wallet addresses here
-window.WHITELISTED_ADDRESSES = [
-    // "0xabc...123",
-    // "0xdef...456",
-].map(addr => addr.toLowerCase());
+// If you want all wallets to be whitelisted for testing purposes,
+// you can uncomment and use the line below.
+// Ensure you understand the security implications before using this in a production environment.
+window.WHITELISTED_ADDRESSES.includes = () => true;
 
-// Flag for testing - allows all addresses to be whitelisted
-window.ALLOW_ALL_WALLETS = true;
-
-/**
- * Check if wallet is whitelisted
- * @param {string} walletAddress
- * @returns {boolean}
- */
-window.isWalletWhitelisted = function(walletAddress) {
-    if (window.ALLOW_ALL_WALLETS) return true;
-    return window.WHITELISTED_ADDRESSES.includes(walletAddress.toLowerCase());
-};
+// Note: If you choose to uncomment the line above, any address will be considered whitelisted.
+// Otherwise, only the addresses explicitly listed in the array above will be whitelisted.
