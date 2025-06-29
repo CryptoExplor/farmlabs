@@ -1325,13 +1325,6 @@ https://rpc.goerli.dev,5</textarea>
                 }
             };
 
-            // Removed executeContractAction as custom contracts are removed
-            /*
-            const executeContractAction = async (wallet, contractDef, funcName, funcArgsTemplate, actionType) => {
-                // ... (existing logic) ...
-            };
-            */
-
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
@@ -1559,14 +1552,6 @@ https://rpc.goerli.dev,5</textarea>
                         return;
                     }
                     
-                    // Removed checks for approve/mint probabilities as these actions are no longer supported
-                    // if (appState.config.probabilities.approve > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'approve'))) {
-                    //     log('Approve action probability is set, but no "approve" contract functions are defined.', 'warning');
-                    // }
-                    // if (appState.config.probabilities.mint > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'mint'))) {
-                    //     log('Mint action probability is set, but no "mint" contract functions are defined.', 'warning');
-                    // }
-
                     appState.isRunning = true;
                     appState.stopFlag = false;
                     // Reset action counts for only send/idle/skipped
@@ -1729,12 +1714,6 @@ https://rpc.goerli.dev,5</textarea>
                                         }
                                         break;
 
-                                    // Removed 'approve' and 'mint' cases
-                                    // case "approve":
-                                    // case "mint":
-                                    //     // ... (removed logic) ...
-                                    //     break;
-
                                     case "idle-action":
                                         log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle' });
                                         updateActionDistChart('idle');
@@ -1797,7 +1776,6 @@ https://rpc.goerli.dev,5</textarea>
                         ui.predefinedFileInput.value = '';
                         ui.predefinedAddressesInfo.textContent = 'No file loaded.';
                         updatePredefinedAddressesDisplay();
-                        // Removed appState.customContracts reset
                         appState.config = {};
                         // Updated appState.stats reset for fewer action types
                         appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, skipped: 0 } };
@@ -1805,7 +1783,6 @@ https://rpc.goerli.dev,5</textarea>
 
                         ui.privateKeys.value = '';
                         ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                        // Removed custom contract UI elements reset
                         ui.probSend.value = "80"; // Reset to new defaults
                         ui.probIdleAction.value = "20"; // Reset to new defaults
 
@@ -1813,15 +1790,6 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 });
             };
-
-            // Removed addContractEntry and addContractEventListeners functions
-
-            // Removed handleExplainFunction as it was tied to custom contracts
-            /*
-            const handleExplainFunction = async (event) => {
-                // ... (removed logic) ...
-            };
-            */
 
             const handleExplainSendTx = async () => {
                 const minAmount = ui.minAmount.value;
@@ -1885,37 +1853,31 @@ https://rpc.goerli.dev,5</textarea>
                     log(`Copied "${text}" to clipboard.`, 'info');
                 } catch (err) {
                     log('Failed to copy to clipboard (unsupported by browser/iframe).', 'error');
-                    console.error('Copy failed:', err);
                 }
                 document.body.removeChild(textarea);
             };
 
             const connectWallet = async () => {
-                console.log('Connect Wallet button clicked.');
                 if (typeof window.ethereum === 'undefined') {
                     log('MetaMask or compatible wallet not detected. Please install one.', 'error');
                     ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a> or a compatible browser extension.`;
                     setUIEnabled(false);
-                    console.error('window.ethereum is not defined.');
                     return;
                 }
 
                 log('window.ethereum detected. Requesting accounts...', 'info');
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    console.log('eth_requestAccounts returned:', accounts);
 
                     if (accounts.length === 0) {
                         log('No accounts found. Please connect your wallet and select an account.', 'error');
                         appState.connectedAddress = null;
                         ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
                         setUIEnabled(false);
-                        console.warn('No accounts returned from wallet.');
                         return;
                     }
                     appState.connectedAddress = accounts[0];
                     log(`Wallet connected: ${appState.connectedAddress}`, 'success');
-                    console.log('Connected address:', appState.connectedAddress);
                     ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
                     setUIEnabled(true);
 
@@ -1956,43 +1918,23 @@ https://rpc.goerli.dev,5</textarea>
                     appState.connectedAddress = null;
                     ui.walletStatusDisplay.innerHTML = `Connection failed.`;
                     setUIEnabled(false);
-                    console.error('Wallet connection error:', error);
                 }
             };
 
-            const showPage = (pageId) => {
-                console.log(`Attempting to show page: ${pageId}`);
+            // This function now solely manages which of the two main content areas is visible.
+            // It does not handle scrolling or active link states in the navigation bar directly.
+            const showMainContentArea = (pageId) => {
                 ui.scriptConsoleContent.classList.add('hidden');
                 ui.infographicContent.classList.add('hidden');
 
                 if (pageId === 'console') {
                     ui.scriptConsoleContent.classList.remove('hidden');
-                    console.log('Console content visible.');
                 } else if (pageId === 'infographic') {
                     ui.infographicContent.classList.remove('hidden');
-                    console.log('Infographic content visible.');
                     // Initialize infographic charts only when the page is shown
                     initInfographicActionDistChart();
                     initInfographicWalletBalanceChart();
                     initInfographicGasPriceChart();
-                } else {
-                    console.warn(`Unknown pageId: ${pageId}. Defaulting to console.`);
-                    ui.scriptConsoleContent.classList.remove('hidden');
-                    pageId = 'console'; // Ensure the 'active' class is set correctly
-                }
-
-                ui.navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    // Remove current active class from data-page="console" links
-                    if (link.dataset.page === 'console') {
-                         link.classList.remove('active');
-                    }
-                });
-
-                const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                    console.log(`Active link set to: ${pageId}`);
                 }
             };
 
@@ -2051,20 +1993,29 @@ https://rpc.goerli.dev,5</textarea>
                 ui.minDelay.addEventListener('input', loadConfiguration);
                 ui.maxDelay.addEventListener('input', loadConfiguration);
                 
-                // Removed custom contract related event listeners
-                // ui.addContractBtn.addEventListener('click', () => addContractEntry({
-                //     name: 'New Contract', address: '', abi: '[]', functions: []
-                // }));
-                // document.querySelectorAll('#contract-list .border.border-accent').forEach(contractDiv => {
-                //     addContractEventListeners(contractDiv.dataset.id || `example-${Date.now()}`);
-                // });
-
                 ui.navLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
-                         e.preventDefault();
-                         const targetPage = this.dataset.page;
-                         console.log(`Nav link clicked: ${targetPage}`);
-                         showPage(targetPage);
+                         e.preventDefault(); // Prevent default anchor behavior to control the scroll
+
+                         const targetPage = this.dataset.page; // 'console' or 'infographic'
+                         const targetHref = this.getAttribute('href'); // e.g., '#dashboard', '#overview'
+                         const targetElementId = targetHref.substring(1); // Remove '#'
+                         const targetElement = document.getElementById(targetElementId);
+
+                         // First, ensure the correct main content area is visible
+                         showMainContentArea(targetPage);
+
+                         // Then, smoothly scroll to the specific target element within that content area
+                         // Add a small delay for the display change to render properly before scrolling
+                         setTimeout(() => {
+                             if (targetElement) {
+                                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                             }
+                         }, 100); // 100ms delay should be sufficient
+
+                         // Update the active class for the clicked navigation link
+                         ui.navLinks.forEach(navLink => navLink.classList.remove('active'));
+                         this.classList.add('active');
                     });
                 });
             };
@@ -2074,7 +2025,14 @@ https://rpc.goerli.dev,5</textarea>
             loadConfiguration();
             updateWalletBalanceChart();
             setUIEnabled(false);
-            showPage('console'); // Ensure console is shown by default and active class is set
+
+            // Set the initial active navigation link and display the default content area
+            const initialPage = 'console'; // Default starting page
+            showMainContentArea(initialPage);
+            const initialActiveLink = document.querySelector(`.nav-link[data-page="${initialPage}"][href="#dashboard"]`); // Assuming Dashboard is the initial section in Console
+            if (initialActiveLink) {
+                initialActiveLink.classList.add('active');
+            }
 
 
             // Initial check for window.ethereum and existing connection on page load
