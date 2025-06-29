@@ -234,8 +234,6 @@
                     <a href="#wallets" class="nav-link text-accent font-medium pb-1" data-page="console">Wallets</a>
                     <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1" data-page="console">Recipients</a>
                     <a href="#config" class="nav-link text-accent font-medium pb-1" data-page="console">Configuration</a>
-                    <a href="#contract-tools" class="nav-link text-accent font-medium pb-1" data-page="console">Deploy & Interact</a>
-                    <a href="#contracts" class="nav-link text-accent font-medium pb-1" data-page="console">Custom Contracts</a>
                     <a href="#log" class="nav-link text-accent font-medium pb-1" data-page="console">Live Log</a>
                     <a href="#overview" class="nav-link text-accent font-medium pb-1" data-page="infographic">Infographic</a>
                 </nav>
@@ -244,6 +242,7 @@
     </header>
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: #0077B6;">Farm smarter, not harder — with FarmLabs.</h2>
 
         <!-- Script Console Content -->
         <div id="script-console-content">
@@ -496,88 +495,14 @@ https://rpc.goerli.dev,5</textarea>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div>
                                 <label for="prob-send" class="block font-medium mb-1 text-accent">Send</label>
-                                <input type="number" id="prob-send" value="50" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
-                            </div>
-                            <div>
-                                <label for="prob-approve" class="block font-medium mb-1 text-accent">Approve</label>
-                                <input type="number" id="prob-approve" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
-                            </div>
-                            <div>
-                                <label for="prob-mint" class="block font-medium mb-1 text-accent">Mint</label>
-                                <input type="number" id="prob-mint" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                                <input type="number" id="prob-send" value="80" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
                             </div>
                             <div>
                                 <label for="prob-idle-action" class="block font-medium mb-1 text-accent">Idle Action</label>
-                                <input type="number" id="prob-idle-action" value="10" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                                <input type="number" id="prob-idle-action" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
                             </div>
                         </div>
                         <p id="prob-sum-warning" class="text-sm text-red-500 mt-2 hidden">Probabilities must sum to 100%!</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Contract Interaction Section -->
-            <section id="contracts" class="mb-12">
-                <h2 class="text-3xl font-bold mb-2 text-main">Custom Contract Interactions</h2>
-                <p class="text-accent mb-6">Define contracts and their functions (e.g., "approve", "mint") for the "Approve" and "Mint" actions in the behavior matrix. You can add multiple and the script will randomly pick one for the chosen action type.</p>
-
-                <div class="bg-secondary p-8 rounded-lg shadow-md">
-                    <button id="add-contract-btn" class="mb-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>➕ Add New Contract</button>
-
-                    <div id="contract-list" class="space-y-6">
-                        <!-- Contract entries will be injected here -->
-                        <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
-                                <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
-                            </div>
-                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                            <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">Address:</label>
-                            <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                            <div data-field="functions" class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <option value="approve" selected>Approve</option>
-                                        <option value="mint">Mint</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
-                                <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
-                            </div>
-                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                            <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">Address:</label>
-                            <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                            <div data-field="functions" class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <option value="approve">Approve</option>
-                                        <option value="mint" selected>Mint</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -810,7 +735,14 @@ https://rpc.goerli.dev,5</textarea>
                     </svg>
                 </button>
             </div>
-            <p class="text-sm text-gray-500 mt-8">© 2025 FarmLabs. All rights reserved.</p>
+            <p class="text-sm text-gray-500 mt-8 flex items-center justify-center">
+                &copy; 2025 FarmLabs. All rights reserved.
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="ml-4 text-gray-600 hover:text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38C13.71 14.53 16 11.54 16 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                </a>
+            </p>
         </div>
     </footer>
 
@@ -859,13 +791,12 @@ https://rpc.goerli.dev,5</textarea>
                 currentRecipientPool: {}, // {chainId: [addresses]}
                 manualRecipientList: [], // For user-provided list
                 predefinedRecipientList: [], // Now loaded from CSV
-                customContracts: [], // [{name, address, abi, functions: [{name, argsTemplate, type}]}]
                 config: {},
                 stats: {
                     totalActions: 0,
                     successfulActions: 0,
                     failedActions: 0,
-                    actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 }
+                    actionCounts: { send: 0, idle: 0, skipped: 0 } // Simplified for send/idle only
                 },
                 logEntries: [], // For CSV export
                 charts: {
@@ -877,37 +808,6 @@ https://rpc.goerli.dev,5</textarea>
                 },
                 pendingConfirmation: null, // Callback for confirmation modal
                 connectedAddress: null,
-                // Predefined contract data for the console's deploy/interact section
-                predefinedContracts: {
-                    counter: {
-                        name: "Simple Counter",
-                        bytecode: "0x6080604052348015610010575f80fd5b506004361061003f575f3560e01c806306661d4e146100445780630c7b2756146100625780638ada066e14610080575f80fd5b61004c6100a7565b60405161005991906100c5565b60405180910390f35b61006a6100ac565b60405161007791906100c5565b60405180910390f35b6100886100b1565b60405161009591906100e5565b60405180910390f35b5f80fd5b5f80fd5b5f80fd5b5f5f600080fd5b5f6000555f80fd5b5f600080fd5b5f600054905090565b5f600080fd5b5f600080fd5b5f6000545f600101905090565b5f6000545f60019003555f80fd5b5f6000545f6001555f80fd5b5f600080fd5b5f600080fd", // Placeholder bytecode for a simple Counter contract
-                        abi: [
-                            {
-                                "inputs": [],
-                                "name": "count",
-                                "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ],
-                                "stateMutability": "view",
-                                "type": "function"
-                            },
-                            {
-                                "inputs": [],
-                                "name": "increment",
-                                "outputs": [],
-                                "stateMutability": "nonpayable",
-                                "type": "function"
-                            },
-                            {
-                                "inputs": [],
-                                "name": "decrement",
-                                "outputs": [],
-                                "stateMutability": "nonpayable",
-                                "type": "function"
-                            }
-                        ],
-                        deployedAddress: null // To store the address after deployment
-                    }
-                }
             };
 
 
@@ -929,8 +829,6 @@ https://rpc.goerli.dev,5</textarea>
                 rpcUrls: document.getElementById('rpc-urls'),
                 testRpcBtn: document.getElementById('test-rpc-btn'),
                 probSend: document.getElementById('prob-send'),
-                probApprove: document.getElementById('prob-approve'),
-                probMint: document.getElementById('prob-mint'),
                 probIdleAction: document.getElementById('prob-idle-action'),
                 probSumWarning: document.getElementById('prob-sum-warning'),
                 privateKeys: document.getElementById('private-keys'),
@@ -961,8 +859,6 @@ https://rpc.goerli.dev,5</textarea>
                 gasDisplay: document.getElementById('gas-display'),
                 walletBalanceChartCanvas: document.getElementById('wallet-balance-chart'),
                 actionDistChartCanvas: document.getElementById('action-dist-chart'),
-                addContractBtn: document.getElementById('add-contract-btn'),
-                contractList: document.getElementById('contract-list'),
                 explainSendTxBtn: document.getElementById('explain-send-tx-btn'),
                 geminiModal: document.getElementById('gemini-modal'),
                 modalTitle: document.getElementById('modal-title'),
@@ -1016,64 +912,9 @@ https://rpc.goerli.dev,5</textarea>
                     appState.wallets = [];
                     updateWalletBalanceChart(); // Update console's chart
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                    // Reset contract list to initial examples when disabled
-                    ui.contractList.innerHTML = `
-                        <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
-                                <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
-                            </div>
-                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                            <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">Address:</label>
-                            <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                            <div data-field="functions" class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <option value="approve" selected>Approve</option>
-                                        <option value="mint">Mint</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
-                                <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
-                            </div>
-                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                            <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">Address:</label>
-                            <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                            <div data-field="functions" class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <option value="approve">Approve</option>
-                                        <option value="mint" selected>Mint</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
-                        addContractEventListeners(contractDiv.dataset.id);
-                    });
+                    // Reset action probabilities to default after removing 'approve' and 'mint'
+                    ui.probSend.value = "80";
+                    ui.probIdleAction.value = "20";
                 }
             };
 
@@ -1187,11 +1028,11 @@ https://rpc.goerli.dev,5</textarea>
                 appState.charts.actionDist = new Chart(ui.actionDistChartCanvas, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Send', 'Approve', 'Mint', 'Idle', 'Skipped'],
+                        labels: ['Send', 'Idle', 'Skipped'], // Updated labels
                         datasets: [{
                             label: 'Actions',
-                            data: [0, 0, 0, 0, 0],
-                            backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a8a29e', '#ef4444'],
+                            data: [0, 0, 0], // Updated data array size
+                            backgroundColor: ['#3b82f6', '#a8a29e', '#ef4444'], // Updated colors
                             borderColor: '#ffffff',
                             borderWidth: 1
                         }]
@@ -1220,8 +1061,9 @@ https://rpc.goerli.dev,5</textarea>
             const updateActionDistChart = (actionType) => {
                 appState.stats.actionCounts[actionType]++;
                 const chart = appState.charts.actionDist;
+                // Update dataMap for new labels
                 const dataMap = {
-                    send: 0, approve: 1, mint: 2, idle: 3, skipped: 4
+                    send: 0, idle: 1, skipped: 2
                 };
                 if (dataMap[actionType] !== undefined) {
                     chart.data.datasets[0].data[dataMap[actionType]] = appState.stats.actionCounts[actionType];
@@ -1233,6 +1075,10 @@ https://rpc.goerli.dev,5</textarea>
             const initInfographicActionDistChart = () => {
                 const ctx = ui.infographicActionDistChartCanvas?.getContext('2d');
                 if (!ctx) return;
+                // Destroy existing chart if it exists to prevent re-initialization errors
+                if (appState.charts.infographicActionDist) {
+                    appState.charts.infographicActionDist.destroy();
+                }
                 appState.charts.infographicActionDist = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
@@ -1264,6 +1110,10 @@ https://rpc.goerli.dev,5</textarea>
             const initInfographicWalletBalanceChart = () => {
                 const ctx = ui.infographicWalletBalanceChartCanvas?.getContext('2d');
                 if (!ctx) return;
+                // Destroy existing chart if it exists to prevent re-initialization errors
+                if (appState.charts.infographicWalletBalance) {
+                    appState.charts.infographicWalletBalance.destroy();
+                }
                 const walletLabels = ['Wallet ...a4b8', 'Wallet ...f9c1', 'Wallet ...3d2e', 'Wallet ...e6a7', 'Wallet ...b8d9'];
 
                 appState.charts.infographicWalletBalance = new Chart(ctx, {
@@ -1310,6 +1160,10 @@ https://rpc.goerli.dev,5</textarea>
             const initInfographicGasPriceChart = () => {
                 const ctx = ui.infographicGasPriceChartCanvas?.getContext('2d');
                 if (!ctx) return;
+                // Destroy existing chart if it exists to prevent re-initialization errors
+                if (appState.charts.infographicGasPrice) {
+                    appState.charts.infographicGasPrice.destroy();
+                }
 
                 const labels = ['T-10', 'T-9', 'T-8', 'T-7', 'T-6', 'T-5', 'T-4', 'T-3', 'T-2', 'T-1'];
                 const networkBaseFee = Array(10).fill(20);
@@ -1409,10 +1263,8 @@ https://rpc.goerli.dev,5</textarea>
                     recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
                     fixedAddress: ui.fixedAddress.value.trim(),
                     probabilities: {
-                        send: parseInt(ui.probSend.value) || 50,
-                        approve: parseInt(ui.probApprove.value) || 20,
-                        mint: parseInt(ui.probMint.value) || 20,
-                        idle: parseInt(ui.probIdleAction.value) || 10,
+                        send: parseInt(ui.probSend.value) || 80, // Updated default
+                        idle: parseInt(ui.probIdleAction.value) || 20, // Updated default
                     }
                 };
 
@@ -1426,37 +1278,8 @@ https://rpc.goerli.dev,5</textarea>
                     return { url, chainId: chainId };
                 }).filter(Boolean);
 
+                // Removed custom contract parsing logic
                 appState.customContracts = [];
-                ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
-                    const nameInput = contractDiv.querySelector('[data-field="name"]');
-                    const addressInput = contractDiv.querySelector('[data-field="address"]');
-                    const abiInput = contractDiv.querySelector('[data-field="abi"]');
-
-                    const name = nameInput ? nameInput.value : '';
-                    const address = addressInput ? addressInput.value : '';
-                    let abi = [];
-                    try {
-                        abi = abiInput && abiInput.value ? JSON.parse(abiInput.value) : [];
-                    } catch (e) {
-                        log(`Invalid ABI JSON for contract "${name}": ${e.message}`, 'error');
-                    }
-
-                    const functions = [];
-                    contractDiv.querySelectorAll('[data-field="functions"] > .flex').forEach(funcDiv => {
-                        const funcNameInput = funcDiv.querySelector('[data-func-field="name"]');
-                        const argsTemplateInput = funcDiv.querySelector('[data-func-field="argsTemplate"]');
-                        const typeSelect = funcDiv.querySelector('[data-func-field="type"]');
-
-                        if (funcNameInput && argsTemplateInput && typeSelect) {
-                            functions.push({
-                                name: funcNameInput.value,
-                                argsTemplate: argsTemplateInput.value,
-                                type: typeSelect.value
-                            });
-                        }
-                    });
-                    appState.customContracts.push({ name, address, abi, functions });
-                });
 
                 return true;
             };
@@ -1470,9 +1293,7 @@ https://rpc.goerli.dev,5</textarea>
                 const probs = appState.config.probabilities;
 
                 if (rand < (cumulativeProb += probs.send)) return 'send';
-                if (rand < (cumulativeProb += probs.approve)) return 'approve';
-                if (rand < (cumulativeProb += probs.mint)) return 'mint';
-                return 'idle-action';
+                return 'idle-action'; // Only send and idle-action remain
             };
 
             const scanRecentBlocks = async (rpc, chainId) => {
@@ -1504,49 +1325,12 @@ https://rpc.goerli.dev,5</textarea>
                 }
             };
 
+            // Removed executeContractAction as custom contracts are removed
+            /*
             const executeContractAction = async (wallet, contractDef, funcName, funcArgsTemplate, actionType) => {
-                try {
-                    if (!ethers.isAddress(contractDef.address)) {
-                        throw new Error(`Invalid contract address: ${contractDef.address}`);
-                    }
-                    let contract = new ethers.Contract(contractDef.address, contractDef.abi, wallet);
-
-                    let parsedArgs = [];
-                    if (funcArgsTemplate) {
-                        const argsStrings = funcArgsTemplate.split(',').map(s => s.trim());
-                        parsedArgs = argsStrings.map(arg => {
-                            if (arg.startsWith('0x') && arg.length === 42) {
-                                return arg;
-                            }
-                            if (!isNaN(arg) && !isNaN(parseFloat(arg))) {
-                                try {
-                                    return BigInt(arg);
-                                } catch (e) {
-                                    log(`Warning: Could not parse BigInt from "${arg}". Using string.`, 'warning');
-                                    return arg;
-                                }
-                            }
-                            return arg;
-                        });
-                    }
-
-                    log(`Calling contract ${contractDef.name} (${contractDef.address.slice(0,6)}...) function "${funcName}" with args: [${parsedArgs.join(', ')}]`, 'info');
-                    const txResponse = await contract[funcName](...parsedArgs);
-                    log(`Contract action sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId: wallet.provider._network.chainId, walletAddress: wallet.address, action: actionType });
-
-                    await txResponse.wait();
-                    log(`Contract action confirmed!`, 'success');
-                    updateActionDistChart(actionType);
-                    appState.stats.successfulActions++;
-                    const balanceWei = await wallet.provider.getBalance(wallet.address);
-                    wallet.balance = parseFloat(ethers.formatEther(balanceWei)).toFixed(6);
-                    updateWalletBalanceChart();
-
-                } catch (error) {
-                    log(`Contract action (${funcName}) failed: ${error.message}`, 'error', { chainId: wallet.provider._network.chainId, walletAddress: wallet.address, action: actionType });
-                    appState.stats.failedActions++;
-                }
+                // ... (existing logic) ...
             };
+            */
 
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
@@ -1774,18 +1558,21 @@ https://rpc.goerli.dev,5</textarea>
                         log('To use "interact with each other" mode, you need at least 2 loaded wallets.', 'error');
                         return;
                     }
-                    if (appState.config.probabilities.approve > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'approve'))) {
-                        log('Approve action probability is set, but no "approve" contract functions are defined.', 'warning');
-                    }
-                    if (appState.config.probabilities.mint > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'mint'))) {
-                        log('Mint action probability is set, but no "mint" contract functions are defined.', 'warning');
-                    }
+                    
+                    // Removed checks for approve/mint probabilities as these actions are no longer supported
+                    // if (appState.config.probabilities.approve > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'approve'))) {
+                    //     log('Approve action probability is set, but no "approve" contract functions are defined.', 'warning');
+                    // }
+                    // if (appState.config.probabilities.mint > 0 && !appState.customContracts.some(c => c.functions.some(f => f.type === 'mint'))) {
+                    //     log('Mint action probability is set, but no "mint" contract functions are defined.', 'warning');
+                    // }
 
                     appState.isRunning = true;
                     appState.stopFlag = false;
-                    appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
+                    // Reset action counts for only send/idle/skipped
+                    appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, skipped: 0 } };
                     appState.logEntries = [];
-                    appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
+                    appState.charts.actionDist.data.datasets[0].data = [0, 0, 0]; // Update for 3 categories
                     appState.charts.actionDist.update();
 
 
@@ -1795,7 +1582,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.successCount.textContent = appState.stats.successfulActions.toString();
                     ui.failCount.textContent = appState.stats.failedActions.toString();
                     ui.progressText.textContent = '0';
-                    ui.progressBar.style.width = '100%';
+                    ui.progressBar.style.width = `100%`;
 
 
                     log(`Starting transaction farming process across ${appState.rpcConfigs.length} chains and ${appState.wallets.length} wallets.`, 'info');
@@ -1942,27 +1729,11 @@ https://rpc.goerli.dev,5</textarea>
                                         }
                                         break;
 
-                                    case "approve":
-                                    case "mint":
-                                        const availableContracts = appState.customContracts.filter(c =>
-                                            c.functions.some(f => f.type === chosenBehavior)
-                                        );
-                                        if (availableContracts.length > 0) {
-                                            const randomContractDef = availableContracts[Math.floor(Math.random() * availableContracts.length)];
-                                            const relevantFunctions = randomContractDef.functions.filter(f => f.type === chosenBehavior);
-                                            if (relevantFunctions.length > 0) {
-                                                const randomFunction = relevantFunctions[Math.floor(Math.random() * relevantFunctions.length)];
-                                                await executeContractAction(wallet, randomContractDef, randomFunction.name, randomFunction.argsTemplate, chosenBehavior);
-                                                actionSuccess = true;
-                                            } else {
-                                                log(`No suitable functions found for ${chosenBehavior} in defined contracts. Skipping.`, 'warning', { chainId, walletAddress, action: chosenBehavior });
-                                                updateActionDistChart('skipped');
-											}
-                                        } else {
-                                            log(`No custom contracts defined for ${chosenBehavior} actions. Skipping.`, 'warning', { chainId, walletAddress, action: chosenBehavior });
-                                            updateActionDistChart('skipped');
-                                        }
-                                        break;
+                                    // Removed 'approve' and 'mint' cases
+                                    // case "approve":
+                                    // case "mint":
+                                    //     // ... (removed logic) ...
+                                    //     break;
 
                                     case "idle-action":
                                         log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle' });
@@ -2026,181 +1797,31 @@ https://rpc.goerli.dev,5</textarea>
                         ui.predefinedFileInput.value = '';
                         ui.predefinedAddressesInfo.textContent = 'No file loaded.';
                         updatePredefinedAddressesDisplay();
-                        appState.customContracts = [];
+                        // Removed appState.customContracts reset
                         appState.config = {};
-                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
+                        // Updated appState.stats reset for fewer action types
+                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, skipped: 0 } };
                         appState.logEntries = [];
-                        appState.predefinedContracts.counter.deployedAddress = null; // Reset deployed counter
-                        ui.counterInteractionSection.classList.add('hidden'); // Hide counter interaction
-                        ui.deployedCounterAddress.textContent = '';
-                        ui.counterValueDisplay.textContent = 'Current Count: N/A';
 
                         ui.privateKeys.value = '';
                         ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                        ui.contractList.innerHTML = `
-                            <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
-                                    <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
-                                </div>
-                                <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                                <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                                <label class="block font-medium mb-1 text-accent">Address:</label>
-                                <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                                <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                                <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                                <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                                <div data-field="functions" class="space-y-2">
-                                    <div class="flex items-center space-x-2">
-                                        <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                            <option value="approve">Approve</option>
-                                            <option value="mint">Mint</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                        <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                        <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
-                                    <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
-                                </div>
-                                <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                                <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                                <label class="block font-medium mb-1 text-accent">Address:</label>
-                                <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                                <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                                <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                                <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                                <div data-field="functions" class="space-y-2">
-                                    <div class="flex items-center space-x-2">
-                                        <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                        <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                            <option value="approve">Approve</option>
-                                            <option value="mint" selected>Mint</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                        <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                        <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
-                            addContractEventListeners(contractDiv.dataset.id);
-                        });
+                        // Removed custom contract UI elements reset
+                        ui.probSend.value = "80"; // Reset to new defaults
+                        ui.probIdleAction.value = "20"; // Reset to new defaults
+
                         setUIEnabled(false);
                     }
                 });
             };
 
+            // Removed addContractEntry and addContractEventListeners functions
 
-            const addContractEntry = (contract = { name: '', address: '', abi: '[]', functions: [{ name: '', argsTemplate: '', type: 'send' }] }) => {
-                const newId = `contract-${Date.now()}`;
-                const contractHtml = `
-                    <div class="border border-accent p-4 rounded-lg" data-id="${newId}">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-bold text-lg text-main">${contract.name || 'New Contract'}</h4>
-                            <button data-id="${newId}" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️ Remove</button>
-                        </div>
-                        <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                        <input type="text" value="${contract.name}" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" >
-                        <label class="block font-medium mb-1 text-accent">Address:</label>
-                        <input type="text" value="${contract.address}" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" >
-                        <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" >${contract.abi}</textarea>
-                        <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                        <button data-id="${newId}" class="add-function-btn py-1 px-3 mb-2 rounded-lg font-semibold transition-all duration-300 btn-secondary text-sm wallet-feature-control" >➕ Add Function</button>
-                        <div data-field="functions" class="space-y-2">
-                            ${contract.functions.map(func => `
-                                <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" value="${func.name}" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                    <input type="text" placeholder="arg1,arg2" value="${func.argsTemplate}" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                        <option value="approve" ${func.type === 'approve' ? 'selected' : ''}>Approve</option>
-                                        <option value="mint" ${func.type === 'mint' ? 'selected' : ''}>Mint</option>
-                                        <option value="other" ${func.type === 'other' ? 'selected' : ''}>Other</option>
-                                    </select>
-                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" >✨ Explain</button>
-                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-                ui.contractList.insertAdjacentHTML('beforeend', contractHtml);
-                addContractEventListeners(newId);
-            };
-
-            const addContractEventListeners = (id) => {
-                const contractDiv = ui.contractList.querySelector(`[data-id="${id}"]`);
-                if (!contractDiv) return;
-
-                contractDiv.querySelector('.remove-contract-btn').addEventListener('click', (e) => {
-                    e.target.closest('.border.border-accent').remove();
-                });
-
-                const functionsContainer = contractDiv.querySelector('[data-field="functions"]');
-                const addFunctionBtn = contractDiv.querySelector('.add-function-btn');
-                if (addFunctionBtn) {
-                    addFunctionBtn.addEventListener('click', () => {
-                        const funcHtml = `
-                            <div class="flex items-center space-x-2">
-                                <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                    <option value="approve">Approve</option>
-                                    <option value="mint">Mint</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" >✨ Explain</button>
-                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️</button>
-                            </div>
-                        `;
-                        functionsContainer.insertAdjacentHTML('beforeend', funcHtml);
-                        const newFuncDiv = functionsContainer.lastElementChild;
-                        newFuncDiv.querySelector('.remove-function-btn').addEventListener('click', (e) => {
-                            e.target.closest('.flex').remove();
-                        });
-                        newFuncDiv.querySelector('.explain-func-btn').addEventListener('click', handleExplainFunction);
-                    });
-                }
-
-                functionsContainer.querySelectorAll('.remove-function-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.target.closest('.flex').remove();
-                    });
-                });
-                functionsContainer.querySelectorAll('.explain-func-btn').forEach(btn => {
-                    btn.addEventListener('click', handleExplainFunction);
-                });
-
-                 const nameInput = contractDiv.querySelector('[data-field="name"]');
-                 if (nameInput) {
-                    nameInput.addEventListener('input', (e) => {
-                        contractDiv.querySelector('h4').textContent = e.target.value || 'New Contract';
-                    });
-                 }
-            };
-
+            // Removed handleExplainFunction as it was tied to custom contracts
+            /*
             const handleExplainFunction = async (event) => {
-                const funcDiv = event.target.closest('.flex');
-                const funcName = funcDiv.querySelector('[data-func-field="name"]').value;
-                const funcArgs = funcDiv.querySelector('[data-func-field="argsTemplate"]').value;
-
-                if (!funcName) {
-                    openGeminiModal('Error', '<p class="text-red-500">Please enter a function name to explain.</p>');
-                    return;
-                }
-
-                const prompt = `Describe what the Ethereum smart contract function '${funcName}' with arguments '${funcArgs}' (if any) typically does. If it's a common ERC20/ERC721 function like 'approve' or 'mint', explain its standard behavior. Keep the explanation concise and easy to understand for a non-developer.`;
-                await callGeminiApi(prompt);
+                // ... (removed logic) ...
             };
+            */
 
             const handleExplainSendTx = async () => {
                 const minAmount = ui.minAmount.value;
@@ -2339,148 +1960,40 @@ https://rpc.goerli.dev,5</textarea>
                 }
             };
 
-            const deployPredefinedContract = async () => {
-                const selectedContractType = Array.from(ui.predefinedContractType).find(radio => radio.checked)?.value;
-
-                if (!selectedContractType || !appState.predefinedContracts[selectedContractType]) {
-                    log('Please select a valid contract type to deploy.', 'error');
-                    return;
-                }
-
-                if (appState.wallets.length === 0) {
-                    log('Please load private keys first to deploy a contract.', 'error');
-                    return;
-                }
-                if (appState.rpcConfigs.length === 0) {
-                    log('Please provide at least one RPC URL and Chain ID in Configuration.', 'error');
-                    return;
-                }
-
-                const contractData = appState.predefinedContracts[selectedContractType];
-                const deployerWalletInfo = appState.wallets[0]; // Use the first loaded wallet
-                const rpcConfig = appState.rpcConfigs[0]; // Use the first RPC config
-
-                const provider = new ethers.JsonRpcProvider(rpcConfig.url);
-                const deployerWallet = new ethers.Wallet(deployerWalletInfo.privateKey, provider);
-
-                log(`Attempting to deploy "${contractData.name}" contract on Chain ID ${rpcConfig.chainId} using wallet ...${deployerWallet.address.slice(-6)}...`, 'info');
-
-                try {
-                    const balanceWei = await provider.getBalance(deployerWallet.address);
-                    const minEthForDeployment = ethers.parseEther("0.005"); 
-
-                    if (balanceWei < minEthForDeployment) {
-                        const requiredEth = ethers.formatEther(minEthForDeployment);
-                        log(`Deployer wallet ...${deployerWallet.address.slice(-6)} has critically low balance (${ethers.formatEther(balanceWei)} ETH). At least ${requiredEth} ETH is recommended for deployment. Please fund this wallet on Chain ID ${rpcConfig.chainId}.`, 'error');
-                        return;
-                    } else if (balanceWei < ethers.parseEther("0.01")) {
-                         log(`Deployer wallet ...${deployerWallet.address.slice(-6)} has low balance (${ethers.formatEther(balanceWei)} ETH). Consider funding it to ensure successful deployment.`, 'warning');
-                    }
-
-
-                    const factory = new ethers.ContractFactory(contractData.abi, contractData.bytecode, deployerWallet);
-                    log(`Sending deployment transaction for ${contractData.name}...`, 'info');
-
-                    const contract = await factory.deploy();
-                    log(`Deployment transaction sent! Hash: <a href="https://etherscan.io/tx/${contract.deploymentTransaction().hash}" target="_blank" class="underline">${contract.deploymentTransaction().hash}</a><button class="log-copy-btn" data-tx-hash="${contract.deploymentTransaction().hash}">📋</button>`, 'success');
-
-                    await contract.waitForDeployment();
-                    const deployedAddress = await contract.getAddress();
-                    log(`"${contractData.name}" contract deployed successfully to: <a href="https://etherscan.io/address/${deployedAddress}" target="_blank" class="underline">${deployedAddress}</a><button class="log-copy-btn" data-tx-hash="${deployedAddress}">📋</button>`, 'success');
-
-                    appState.predefinedContracts[selectedContractType].deployedAddress = deployedAddress;
-                    
-                    const newBalanceWei = await provider.getBalance(deployerWallet.address);
-                    deployerWalletInfo.balance = parseFloat(ethers.formatEther(newBalanceWei)).toFixed(6);
-                    updateWalletBalanceChart();
-
-                    if (selectedContractType === 'counter') {
-                        ui.deployedCounterAddress.textContent = deployedAddress;
-                        ui.counterInteractionSection.classList.remove('hidden');
-                        await getCounterValue();
-                    }
-
-                } catch (error) {
-                    log(`Contract deployment for "${contractData.name}" failed: ${error.message}. Please check your RPC URL, Chain ID, and ensure the deploying wallet has sufficient funds.`, 'error');
-                    console.error("Deployment Error:", error);
-                }
-            };
-
-            const getCounterValue = async () => {
-                const counter = appState.predefinedContracts.counter;
-                if (!counter.deployedAddress) {
-                    log('Counter contract not yet deployed.', 'warning');
-                    ui.counterValueDisplay.textContent = 'Current Count: N/A';
-                    return;
-                }
-                const provider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
-                const counterContract = new ethers.Contract(counter.deployedAddress, counter.abi, provider);
-                try {
-                    const count = await counterContract.count(); // Changed to 'count()' as per ABI
-                    ui.counterValueDisplay.textContent = `Current Count: ${count.toString()}`;
-                    log(`Fetched count: ${count.toString()}`, 'info');
-                } catch (error) {
-                    log(`Failed to get counter value: ${error.message}`, 'error');
-                    ui.counterValueDisplay.textContent = 'Current Count: Error';
-                }
-            };
-
-            const interactWithCounter = async (method) => {
-                const counter = appState.predefinedContracts.counter;
-                if (!counter.deployedAddress) {
-                    log('Counter contract not yet deployed. Please deploy it first.', 'error');
-                    return;
-                }
-                if (appState.wallets.length === 0) {
-                    log('Please load private keys first to interact with the contract.', 'error');
-                    return;
-                }
-                if (appState.rpcConfigs.length === 0) {
-                    log('Please provide at least one RPC URL and Chain ID in Configuration.', 'error');
-                    return;
-                }
-
-                const interactingWalletInfo = appState.wallets[0]; // Use the first loaded wallet for interaction
-                const rpcConfig = appState.rpcConfigs[0];
-                const provider = new ethers.JsonRpcProvider(rpcConfig.url);
-                const interactingWallet = new ethers.Wallet(interactingWalletInfo.privateKey, provider);
-
-                const counterContract = new ethers.Contract(counter.deployedAddress, counter.abi, interactingWallet);
-
-                log(`Calling "${method}" on Counter contract at ${counter.deployedAddress.slice(0,6)}...${counter.deployedAddress.slice(-4)}...`, 'info');
-                try {
-                    const txResponse = await counterContract[method]();
-                    log(`Transaction sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success');
-                    
-                    await txResponse.wait();
-                    log(`Transaction confirmed!`, 'success');
-                    const newBalanceWei = await provider.getBalance(interactingWallet.address);
-                    interactingWalletInfo.balance = parseFloat(ethers.formatEther(newBalanceWei)).toFixed(6);
-                    updateWalletBalanceChart();
-                    await getCounterValue();
-
-                } catch (error) {
-                    log(`Failed to call "${method}" on Counter: ${error.message}`, 'error');
-                    console.error(`Counter ${method} error:`, error);
-                }
-            };
-
             const showPage = (pageId) => {
+                console.log(`Attempting to show page: ${pageId}`);
                 ui.scriptConsoleContent.classList.add('hidden');
                 ui.infographicContent.classList.add('hidden');
 
                 if (pageId === 'console') {
                     ui.scriptConsoleContent.classList.remove('hidden');
+                    console.log('Console content visible.');
                 } else if (pageId === 'infographic') {
                     ui.infographicContent.classList.remove('hidden');
+                    console.log('Infographic content visible.');
                     // Initialize infographic charts only when the page is shown
                     initInfographicActionDistChart();
                     initInfographicWalletBalanceChart();
                     initInfographicGasPriceChart();
+                } else {
+                    console.warn(`Unknown pageId: ${pageId}. Defaulting to console.`);
+                    ui.scriptConsoleContent.classList.remove('hidden');
+                    pageId = 'console'; // Ensure the 'active' class is set correctly
                 }
 
-                ui.navLinks.forEach(link => link.classList.remove('active'));
-                document.querySelector(`.nav-link[data-page="${pageId}"]`)?.classList.add('active');
+                ui.navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    // Remove current active class from data-page="console" links
+                    if (link.dataset.page === 'console') {
+                         link.classList.remove('active');
+                    }
+                });
+
+                const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                    console.log(`Active link set to: ${pageId}`);
+                }
             };
 
             const setupEventListeners = () => {
@@ -2494,18 +2007,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
                 ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
-                ui.deployPredefinedBtn.addEventListener('click', deployPredefinedContract);
-
-                // Counter Interaction Buttons
-                ui.getCountBtn.addEventListener('click', getCounterValue);
-                ui.incrementCountBtn.addEventListener('click', () => interactWithCounter('increment'));
-                ui.decrementCountBtn.addEventListener('click', () => interactWithCounter('decrement'));
-                ui.copyDeployedCounterAddressBtn.addEventListener('click', () => {
-                    if (ui.deployedCounterAddress.textContent) {
-                        copyToClipboard(ui.deployedCounterAddress.textContent);
-                    }
-                });
-
+                
                 ui.closeModalBtn.addEventListener('click', closeGeminiModal);
                 window.addEventListener('click', (event) => {
                     if (event.target === ui.geminiModal) {
@@ -2539,7 +2041,8 @@ https://rpc.goerli.dev,5</textarea>
                     });
                 });
 
-                document.querySelectorAll('.prob-input').forEach(input => {
+                // Only attach event listeners to relevant probability inputs
+                document.querySelectorAll('#prob-send, #prob-idle-action').forEach(input => {
                     input.addEventListener('input', loadConfiguration);
                 });
 
@@ -2547,20 +2050,20 @@ https://rpc.goerli.dev,5</textarea>
                 ui.maxAmount.addEventListener('input', loadConfiguration);
                 ui.minDelay.addEventListener('input', loadConfiguration);
                 ui.maxDelay.addEventListener('input', loadConfiguration);
-
-
-                ui.addContractBtn.addEventListener('click', () => addContractEntry({
-                    name: 'New Contract', address: '', abi: '[]', functions: []
-                }));
-
-                document.querySelectorAll('#contract-list .border.border-accent').forEach(contractDiv => {
-                    addContractEventListeners(contractDiv.dataset.id || `example-${Date.now()}`);
-                });
+                
+                // Removed custom contract related event listeners
+                // ui.addContractBtn.addEventListener('click', () => addContractEntry({
+                //     name: 'New Contract', address: '', abi: '[]', functions: []
+                // }));
+                // document.querySelectorAll('#contract-list .border.border-accent').forEach(contractDiv => {
+                //     addContractEventListeners(contractDiv.dataset.id || `example-${Date.now()}`);
+                // });
 
                 ui.navLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
                          e.preventDefault();
                          const targetPage = this.dataset.page;
+                         console.log(`Nav link clicked: ${targetPage}`);
                          showPage(targetPage);
                     });
                 });
@@ -2571,6 +2074,8 @@ https://rpc.goerli.dev,5</textarea>
             loadConfiguration();
             updateWalletBalanceChart();
             setUIEnabled(false);
+            showPage('console'); // Ensure console is shown by default and active class is set
+
 
             // Initial check for window.ethereum and existing connection on page load
             if (typeof window.ethereum !== 'undefined') {
