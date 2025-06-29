@@ -68,7 +68,7 @@ A lightweight, client-side app to simulate and automate blockchain transaction a
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/CryptoExplor/farmlabs.git](https://github.com/CryptoExplor/farmlabs.git)
+git clone https://github.com/CryptoExplor/farmlabs.git
 cd farmlabs
 ````
 
