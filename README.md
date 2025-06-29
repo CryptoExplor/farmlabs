@@ -1,4 +1,4 @@
-# farmlabs
+# Farmlabs
 Interactive Script Console: Transaction Farming
 This project provides a client-side web application designed to simulate and automate blockchain transaction activities for various purposes, primarily focused on "transaction farming" on Ethereum-compatible networks. It allows users to configure and execute a series of random transactions, delays, and chain interactions using loaded private keys.
 
