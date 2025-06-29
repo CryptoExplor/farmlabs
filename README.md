@@ -1,4 +1,4 @@
-````markdown
+
 # 🚜 FarmLabs: Interactive Transaction Farming Console
 
 **Farm smarter, not harder — with FarmLabs.**
@@ -164,6 +164,3 @@ If this tool helps you, consider supporting its future development:
 ```
 
 Thank you for supporting open-source innovation\!
-
-```
-```
