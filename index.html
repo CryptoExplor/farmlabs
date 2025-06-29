@@ -6,14 +6,18 @@
     <title>Interactive Script Console: Transaction Farming</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- Removed whitelist.js as the feature is no longer needed, making the app public -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f4f1eb; /* Warm Beige */
+            color: #212529; /* Dark Gray for infographic text */
         }
+        /* Console specific styles */
         .bg-primary { background-color: #f4f1eb; }
         .bg-secondary { background-color: #ffffff; }
         .text-main { color: #2d3748; } /* Slate 800 */
@@ -38,7 +42,8 @@
             color: #3b82f6;
             border-bottom-color: #3b82f6;
         }
-        .chart-container {
+        /* Chart container for console charts */
+        #script-console-content .chart-container {
             position: relative;
             width: 100%;
             max-width: 600px;
@@ -48,7 +53,7 @@
             max-height: 40vh;
         }
         @media (min-width: 768px) {
-            .chart-container {
+            #script-console-content .chart-container {
                 height: 350px;
             }
         }
@@ -169,12 +174,51 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Disabled styles for fields - now controlled by overall app state, not whitelist */
+        /* Disabled styles for fields */
         .wallet-feature-control:disabled,
         .wallet-feature-control[disabled] {
             opacity: 0.6;
             cursor: not-allowed;
             background-color: #e2e8f0; /* Light gray */
+        }
+
+        /* Infographic specific styles from original infographic html */
+        #infographic-content {
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        #infographic-content .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 600px;
+            height: 320px;
+        }
+        @media (min-width: 768px) {
+            #infographic-content .chart-container {
+                height: 400px;
+            }
+        }
+        .kpi-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .flowchart-step {
+            border: 2px solid #90E0EF;
+            background-color: white;
+            border-radius: 0.75rem; /* Added rounded corners for flowchart steps */
+        }
+        .flowchart-arrow {
+            color: #0077B6;
         }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -186,12 +230,14 @@
             <div class="flex items-center justify-between h-16">
                 <h1 class="text-xl md:text-2xl font-bold text-main">Interactive Script Console</h1>
                 <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="nav-link text-accent font-medium pb-1">Dashboard</a>
-                    <a href="#wallets" class="nav-link text-accent font-medium pb-1">Wallets</a>
-                    <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1">Recipients</a>
-                    <a href="#config" class="nav-link text-accent font-medium pb-1">Configuration</a>
-                    <a href="#contracts" class="nav-link text-accent font-medium pb-1">Contracts</a>
-                    <a href="#log" class="nav-link text-accent font-medium pb-1">Live Log</a>
+                    <a href="#dashboard" class="nav-link text-accent font-medium pb-1 active" data-page="console">Dashboard</a>
+                    <a href="#wallets" class="nav-link text-accent font-medium pb-1" data-page="console">Wallets</a>
+                    <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1" data-page="console">Recipients</a>
+                    <a href="#config" class="nav-link text-accent font-medium pb-1" data-page="console">Configuration</a>
+                    <a href="#contract-tools" class="nav-link text-accent font-medium pb-1" data-page="console">Deploy & Interact</a>
+                    <a href="#contracts" class="nav-link text-accent font-medium pb-1" data-page="console">Custom Contracts</a>
+                    <a href="#log" class="nav-link text-accent font-medium pb-1" data-page="console">Live Log</a>
+                    <a href="#overview" class="nav-link text-accent font-medium pb-1" data-page="infographic">Infographic</a>
                 </nav>
             </div>
         </div>
@@ -199,352 +245,541 @@
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8">
 
-        <div id="security-warning" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8 rounded-r-lg" role="alert">
-            <p class="font-bold">Security Warning</p>
-            <p>Pasting your private keys or sensitive contract ABIs into a website is extremely risky and can result in loss of funds. This application is a client-side tool for demonstration purposes only. Use it with test keys and on test networks. Never use it with mainnet keys holding real assets.</p>
-        </div>
-
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Dashboard</h2>
-            <p class="text-accent mb-6">Start, stop, and monitor the transaction farming process from here, with real-time updates on wallet balances and action distribution.</p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-secondary p-6 rounded-lg shadow-md flex flex-col items-center justify-center space-y-4">
-                    <button id="connect-wallet-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-success">🔗 Connect Wallet</button>
-                    <div id="wallet-status-display" class="text-center text-sm font-medium text-main">
-                        No wallet connected.
-                    </div>
-                    <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Farming</button>
-                    <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Farming</button>
-                    <button id="clear-all-data-btn" class="w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear All Data</button>
-                </div>
-                 <div class="bg-secondary p-6 rounded-lg shadow-md col-span-1 md:col-span-2">
-                    <h3 class="font-bold text-lg mb-4 text-main">Live Status</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-sm font-medium text-accent">Total Actions Performed</span>
-                                <span id="progress-text" class="text-sm font-medium text-accent">0</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4">
-                                <div id="progress-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                            <div class="p-3 bg-blue-50 rounded-lg">
-                                <div class="text-xs text-blue-500 font-bold uppercase">Status</div>
-                                <div id="status-display" class="text-lg font-semibold text-main">Idle</div>
-                            </div>
-                            <div class="p-3 bg-green-50 rounded-lg">
-                                <div class="text-xs text-green-500 font-bold uppercase">Successful Actions</div>
-                                <div id="success-count" class="text-lg font-semibold text-main">0</div>
-                            </div>
-                            <div class="p-3 bg-red-50 rounded-lg">
-                                <div class="text-xs text-red-500 font-bold uppercase">Failed Actions</div>
-                                <div id="fail-count" class="text-lg font-semibold text-main">0</div>
-                            </div>
-                            <div class="p-3 bg-gray-100 rounded-lg">
-                                <div class="text-xs text-gray-500 font-bold uppercase">Current Gas</div>
-                                <div id="gas-display" class="text-lg font-semibold text-main">N/A</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Script Console Content -->
+        <div id="script-console-content">
+            <div id="security-warning" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8 rounded-r-lg" role="alert">
+                <p class="font-bold">Security Warning</p>
+                <p>Pasting your private keys or sensitive contract ABIs into a website is extremely risky and can result in loss of funds. This application is a client-side tool for demonstration purposes only. Use it with test keys and on test networks. Never use it with mainnet keys holding real assets.</p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-secondary p-6 rounded-lg shadow-md lg:col-span-2">
-                    <h3 class="font-bold text-lg mb-4 text-main">Wallet Balances (ETH)</h3>
-                    <p class="text-sm text-accent mb-4">This chart shows the current balance of each loaded wallet, dynamically updating after transactions.</p>
-                    <div class="chart-container">
-                        <canvas id="wallet-balance-chart"></canvas>
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="mb-12">
+                <h2 class="text-3xl font-bold mb-2 text-main">Dashboard</h2>
+                <p class="text-accent mb-6">Start, stop, and monitor the transaction farming process from here, with real-time updates on wallet balances and action distribution.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-secondary p-6 rounded-lg shadow-md flex flex-col items-center justify-center space-y-4">
+                        <button id="connect-wallet-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-success">🔗 Connect Wallet</button>
+                        <div id="wallet-status-display" class="text-center text-sm font-medium text-main">
+                            No wallet connected.
+                        </div>
+                        <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Farming</button>
+                        <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Farming</button>
+                        <button id="clear-all-data-btn" class="w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear All Data</button>
+                    </div>
+                     <div class="bg-secondary p-6 rounded-lg shadow-md col-span-1 md:col-span-2">
+                        <h3 class="font-bold text-lg mb-4 text-main">Live Status</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm font-medium text-accent">Total Actions Performed</span>
+                                    <span id="progress-text" class="text-sm font-medium text-accent">0</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div id="progress-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                <div class="p-3 bg-blue-50 rounded-lg">
+                                    <div class="text-xs text-blue-500 font-bold uppercase">Status</div>
+                                    <div id="status-display" class="text-lg font-semibold text-main">Idle</div>
+                                </div>
+                                <div class="p-3 bg-green-50 rounded-lg">
+                                    <div class="text-xs text-green-500 font-bold uppercase">Successful Actions</div>
+                                    <div id="success-count" class="text-lg font-semibold text-main">0</div>
+                                </div>
+                                <div class="p-3 bg-red-50 rounded-lg">
+                                    <div class="text-xs text-red-500 font-bold uppercase">Failed Actions</div>
+                                    <div id="fail-count" class="text-lg font-semibold text-main">0</div>
+                                </div>
+                                <div class="p-3 bg-gray-100 rounded-lg">
+                                    <div class="text-xs text-gray-500 font-bold uppercase">Current Gas</div>
+                                    <div id="gas-display" class="text-lg font-semibold text-main">N/A</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-secondary p-6 rounded-lg shadow-md lg:col-span-2">
+                        <h3 class="font-bold text-lg mb-4 text-main">Wallet Balances (ETH)</h3>
+                        <p class="text-sm text-accent mb-4">This chart shows the current balance of each loaded wallet, dynamically updating after transactions.</p>
+                        <div class="chart-container">
+                            <canvas id="wallet-balance-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-secondary p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-lg mb-4 text-main">Action Distribution</h3>
+                        <p class="text-sm text-accent mb-4">Visualizes the types of actions performed (send, approve, mint, idle).</p>
+                        <div class="chart-container">
+                            <canvas id="action-dist-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wallet Section -->
+            <section id="wallets" class="mb-12">
+                <h2 class="text-3xl font-bold mb-2 text-main">Wallets</h2>
+                <p class="text-accent mb-6">Load your source wallets by pasting private keys below. Ensure you have sufficient balance for transactions.</p>
+                <div class="bg-secondary p-8 rounded-lg shadow-md mb-8">
+                    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-4 rounded-r-lg" role="alert">
+                        <p class="font-bold text-sm">Important Security Reminder:</p>
+                        <p class="text-xs italic">Only use test keys on testnets for this application. Never use mainnet private keys holding real funds.</p>
+                    </div>
+                    <label for="private-keys" class="block font-medium mb-1 text-accent">Private Keys (one per line)</label>
+                    <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" disabled></textarea>
+                    <button id="load-keys-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Wallets & Check Balances</button>
+                    <p id="keys-loaded-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                </div>
+
+                <h3 class="text-2xl font-bold mb-2 text-main">Loaded Wallets</h3>
+                <p class="text-accent mb-6">Overview of all wallets currently loaded in the application.</p>
                 <div class="bg-secondary p-6 rounded-lg shadow-md">
-                    <h3 class="font-bold text-lg mb-4 text-main">Action Distribution</h3>
-                    <p class="text-sm text-accent mb-4">Visualizes the types of actions performed (send, approve, mint, idle).</p>
-                    <div class="chart-container">
-                        <canvas id="action-dist-chart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Wallet Section -->
-        <section id="wallets" class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Wallets</h2>
-            <p class="text-accent mb-6">Load your source wallets by pasting private keys below. Ensure you have sufficient balance for transactions.</p>
-            <div class="bg-secondary p-8 rounded-lg shadow-md mb-8">
-                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-4 rounded-r-lg" role="alert">
-                    <p class="font-bold text-sm">Important Security Reminder:</p>
-                    <p class="text-xs italic">Only use test keys on testnets for this application. Never use mainnet private keys holding real funds.</p>
-                </div>
-                <label for="private-keys" class="block font-medium mb-1 text-accent">Private Keys (one per line)</label>
-                <textarea id="private-keys" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" disabled></textarea>
-                <button id="load-keys-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Wallets & Check Balances</button>
-                <p id="keys-loaded-count" class="text-sm text-green-600 mt-2 font-medium"></p>
-            </div>
-
-            <h3 class="text-2xl font-bold mb-2 text-main">Loaded Wallets</h3>
-            <p class="text-accent mb-6">Overview of all wallets currently loaded in the application.</p>
-            <div class="bg-secondary p-6 rounded-lg shadow-md">
-                <ul id="wallet-list-display" class="list-disc pl-5 space-y-2 text-sm text-accent">
-                    <li id="no-wallets-msg">No wallets loaded yet.</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Recipient Section - Kept separate for clarity on dynamic scanning -->
-        <section id="recipient-settings" class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Recipient Settings</h2>
-            <p class="text-accent mb-6">Choose how the script will select destination addresses for transactions.</p>
-            <div class="bg-secondary p-8 rounded-lg shadow-md">
-                <div class="space-y-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="pool" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" checked disabled>
-                        <span class="ml-3 text-main">Use Dynamically Scanned Pool</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="fixed" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Fixed Address</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="list" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Custom List of Addresses (one per line)</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Predefined List of Addresses (from CSV)</span>
-                    </label>
-                    <!-- NEW: Use loaded wallet to interact with each other -->
-                    <label class="flex items-center">
-                        <input type="radio" name="recipient-mode" value="self-interact" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
-                        <span class="ml-3 text-main">Use Loaded Wallets to Interact with Each Other</span>
-                    </label>
-                </div>
-
-                <div id="fixed-address-section" class="mt-4 hidden">
-                    <label for="fixed-address" class="block font-medium mb-1 text-accent">Fixed Recipient Address</label>
-                    <input type="text" id="fixed-address" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled>
-                </div>
-
-                <div id="list-addresses-section" class="mt-4 hidden">
-                    <label for="list-addresses" class="block font-medium mb-1 text-accent">Recipient Addresses (one per line)</label>
-                    <textarea id="list-addresses" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x...&#10;0x...&#10;... (one address per line)" disabled></textarea>
-                    <button id="load-addresses-from-list-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Addresses from List</button>
-                    <p id="list-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
-                </div>
-
-                <div id="predefined-addresses-section" class="mt-4 hidden">
-                    <p class="block font-medium mb-1 text-accent">Download list here:</p>
-                    <ul class="list-disc pl-5 mb-4 text-sm text-blue-700">
-                        <li><a href="https://d.cess.network/n1/812192221.csv" target="_blank" class="hover:underline">Link 1 (recipients1)</a></li>
-                        <li><a href="https://d.cess.network/n1/1394676302.csv" target="_blank" class="hover:underline">Link 2 (recipients2)</a></li>
-                        <li><a href="https://d.cess.network/n1/1338053122.csv" target="_blank" class="hover:underline">Link 3 (recipients3)</a></li>
-                        <li><a href="https://d.cess.network/n1/738595260.csv" target="_blank" class="hover:underline">Link 4 (recipients4)</a></li>
-                        <li><a href="https://d.cess.network/n1/1213534582.csv" target="_blank" class="hover:underline">Link 5 (recipients5)</a></li>
-                        <li><a href="https://d.cess.network/n1/1210782270.csv" target="_blank" class="hover:underline">Link 6 (recipients6)</a></li>
-                        <li><a href="https://d.cess.network/n1/1179652688.csv" target="_blank" class="hover:underline">Link 7 (recipients7)</a></li>
-                        <li><a href="https://d.cess.network/n1/645402960.csv" target="_blank" class="hover:underline">Link 8 (recipients8)</a></li>
-                        <li><a href="https://d.cess.network/n1/1006375340.csv" target="_blank" class="hover:underline">Link 9 (recipients9)</a></li>
-                        <li><a href="https://d.cess.network/n1/1249120790.csv" target="_blank" class="hover:underline">Link 10 (recipients10)</a></li>
-                        <li><a href="https://d.cess.network/n1/892015044.csv" target="_blank" class="hover:underline">Link 11 (recipients11)</a></li>
-                        <li><a href="https://d.cess.network/n1/1174737402.csv" target="_blank" class="hover:underline">Link 12 (recipients12)</a></li>
+                    <ul id="wallet-list-display" class="list-disc pl-5 space-y-2 text-sm text-accent">
+                        <li id="no-wallets-msg">No wallets loaded yet.</li>
                     </ul>
+                </div>
+            </section>
 
-                    <label for="predefined-file-input" class="block font-medium mb-1 text-accent">Or Upload Your Own Predefined List (CSV)</label>
-                    <input type="file" id="predefined-file-input" accept=".csv" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                    <button id="load-predefined-file-btn" class="mt-2 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Predefined Addresses from CSV</button>
-                    <p id="predefined-addresses-info" class="text-sm text-gray-500 mt-1">No file loaded.</p>
-                    <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent max-h-32 overflow-y-auto mt-2">
-                        <!-- Predefined addresses will be populated here -->
-                    </ul>
-                    <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Configuration Section -->
-        <section id="config" class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
-            <p class="text-accent mb-6">Define the parameters for the transaction farming, including network settings, amounts, delays, and gas thresholds.</p>
-
-            <!-- Main configuration grid container -->
-            <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Individual configuration items -->
-                <div>
-                    <label for="max-txns-per-wallet" class="block font-medium mb-1 text-accent">Max Actions Per Wallet Session
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, approve, mint, idle) a single wallet will attempt in its session on a given blockchain network.</span></span>
-                    </label>
-                    <input type="number" id="max-txns-per-wallet" value="3" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                    <p class="text-sm text-gray-500 mt-1">Maximum actions a single wallet will perform in its session on a given chain.</p>
-                </div>
-                <div>
-                    <label for="wallet-idle-chance" class="block font-medium mb-1 text-accent">Wallet Idle Chance (%)
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The percentage chance that a specific wallet will be "idle" for an entire session on a chain, meaning it will perform no actions. This simulates unpredictable human-like behavior.</span></span>
-                    </label>
-                    <input type="number" id="wallet-idle-chance" value="25" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                    <p class="text-sm text-gray-500 mt-1">Chance for a wallet to be idle and skip its session on a chain.</p>
-                </div>
-                <div>
-                    <label for="gas-multiplier" class="block font-medium mb-1 text-accent">Max Gas Price Multiplier
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">If the current gas price on the network exceeds the average gas price by this multiplier, the script will temporarily pause activities for that wallet on that chain to avoid high fees.</span></span>
-                    </label>
-                    <input type="number" id="gas-multiplier" value="2" step="0.1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                    <p class="text-sm text-gray-500 mt-1">Skip wallet activity if current gas price exceeds average by this multiplier.</p>
-                </div>
-                <div>
-                    <label for="block-lookback" class="block font-medium mb-1 text-accent">Blocks to Scan for Addresses
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The number of recent blockchain blocks the script will scan to find and add new potential recipient addresses to its pool. A higher number means more discovery but takes longer.</span></span>
-                    </label>
-                    <input type="number" id="block-lookback" value="100" min="10" max="1000" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                    <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses.</p>
-                </div>
-
-                <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
-                <div class="md:col-span-2">
-                    <label class="block font-medium mb-1 text-accent">Transaction Amount Range (ETH)
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">When a 'send' action is chosen, a random amount of ETH will be sent within this specified minimum and maximum range.</span></span>
-                    </label>
-                    <div class="flex items-center space-x-4">
-                        <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
-                        <input type="number" id="min-amount" value="0.0001" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                        <span class="text-gray-500">to</span>
-                        <input type="number" id="max-amount" value="0.0002" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+            <!-- Recipient Section - Kept separate for clarity on dynamic scanning -->
+            <section id="recipient-settings" class="mb-12">
+                <h2 class="text-3xl font-bold mb-2 text-main">Recipient Settings</h2>
+                <p class="text-accent mb-6">Choose how the script will select destination addresses for transactions.</p>
+                <div class="bg-secondary p-8 rounded-lg shadow-md">
+                    <div class="space-y-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="recipient-mode" value="pool" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" checked disabled>
+                            <span class="ml-3 text-main">Use Dynamically Scanned Pool</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="recipient-mode" value="fixed" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                            <span class="ml-3 text-main">Use Fixed Address</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="recipient-mode" value="list" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                            <span class="ml-3 text-main">Use Custom List of Addresses (one per line)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                            <span class="ml-3 text-main">Use Predefined List of Addresses (from CSV)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="recipient-mode" value="self-interact" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                            <span class="ml-3 text-main">Use Loaded Wallets to Interact with Each Other</span>
+                        </label>
                     </div>
-                     <p class="text-sm text-gray-500 mt-1">A random ETH amount within this range will be sent for 'send' actions.</p>
-                     <button id="explain-send-tx-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Explain Send Tx</button>
-                </div>
 
-                <!-- Delay Between Actions (spans 2 columns on medium screens and up) -->
-                <div class="md:col-span-2">
-                    <label class="block font-medium mb-1 text-accent">Delay Between Actions (seconds)
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send, approve, mint, or idle), the script will pause for a random duration within this minimum and maximum second range.</span></span>
-                    </label>
-                    <div class="flex items-center space-x-4">
-                        <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
-                        <input type="number" id="min-delay" value="10" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                        <span class="text-gray-500">to</span>
-                        <input type="number" id="max-delay" value="30" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                    <div id="fixed-address-section" class="mt-4 hidden">
+                        <label for="fixed-address" class="block font-medium mb-1 text-accent">Fixed Recipient Address</label>
+                        <input type="text" id="fixed-address" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1">A random delay will be applied after each action.</p>
-                </div>
 
-                <!-- RPC Endpoints & Chain IDs (spans 2 columns on medium screens and up) -->
-                <div class="md:col-span-2">
-                    <label class="block font-medium mb-1 text-accent">RPC Endpoints & Chain IDs (Format: URL,ChainID - one per line)
-                        <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">List the RPC URLs for the blockchain networks you want to interact with, followed by their corresponding Chain ID (e.g., 'https://mainnet.infura.io/v3/YOUR_ID,1'). The script will cycle through these networks.</span></span>
-                    </label>
-                    <textarea id="rpc-urls" rows="4" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1
+                    <div id="list-addresses-section" class="mt-4 hidden">
+                        <label for="list-addresses" class="block font-medium mb-1 text-accent">Recipient Addresses (one per line)</label>
+                        <textarea id="list-addresses" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x...&#10;0x...&#10;... (one address per line)" disabled></textarea>
+                        <button id="load-addresses-from-list-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Addresses from List</button>
+                        <p id="list-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                    </div>
+
+                    <div id="predefined-addresses-section" class="mt-4 hidden">
+                        <p class="block font-medium mb-1 text-accent">Download list here:</p>
+                        <ul class="list-disc pl-5 mb-4 text-sm text-blue-700">
+                            <li><a href="https://d.cess.network/n1/812192221.csv" target="_blank" class="hover:underline">Link 1 (recipients1)</a></li>
+                            <li><a href="https://d.cess.network/n1/1394676302.csv" target="_blank" class="hover:underline">Link 2 (recipients2)</a></li>
+                            <li><a href="https://d.cess.network/n1/1338053122.csv" target="_blank" class="hover:underline">Link 3 (recipients3)</a></li>
+                            <li><a href="https://d.cess.network/n1/738595260.csv" target="_blank" class="hover:underline">Link 4 (recipients4)</a></li>
+                            <li><a href="https://d.cess.network/n1/1213534582.csv" target="_blank" class="hover:underline">Link 5 (recipients5)</a></li>
+                            <li><a href="https://d.cess.network/n1/1210782270.csv" target="_blank" class="hover:underline">Link 6 (recipients6)</a></li>
+                            <li><a href="https://d.cess.network/n1/1179652688.csv" target="_blank" class="hover:underline">Link 7 (recipients7)</a></li>
+                            <li><a href="https://d.cess.network/n1/645402960.csv" target="_blank" class="hover:underline">Link 8 (recipients8)</a></li>
+                            <li><a href="https://d.cess.network/n1/1006375340.csv" target="_blank" class="hover:underline">Link 9 (recipients9)</a></li>
+                            <li><a href="https://d.cess.network/n1/1249120790.csv" target="_blank" class="hover:underline">Link 10 (recipients10)</a></li>
+                            <li><a href="https://d.cess.network/n1/892015044.csv" target="_blank" class="hover:underline">Link 11 (recipients11)</a></li>
+                            <li><a href="https://d.cess.network/n1/1174737402.csv" target="_blank" class="hover:underline">Link 12 (recipients12)</a></li>
+                        </ul>
+
+                        <label for="predefined-file-input" class="block font-medium mb-1 text-accent">Or Upload Your Own Predefined List (CSV)</label>
+                        <input type="file" id="predefined-file-input" accept=".csv" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                        <button id="load-predefined-file-btn" class="mt-2 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Predefined Addresses from CSV</button>
+                        <p id="predefined-addresses-info" class="text-sm text-gray-500 mt-1">No file loaded.</p>
+                        <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent max-h-32 overflow-y-auto mt-2">
+                            <!-- Predefined addresses will be populated here -->
+                        </ul>
+                        <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Section -->
+            <section id="config" class="mb-12">
+                <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
+                <p class="text-accent mb-6">Define the parameters for the transaction farming, including network settings, amounts, delays, and gas thresholds.</p>
+
+                <!-- Main configuration grid container -->
+                <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Individual configuration items -->
+                    <div>
+                        <label for="max-txns-per-wallet" class="block font-medium mb-1 text-accent">Max Actions Per Wallet Session
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, approve, mint, idle) a single wallet will attempt in its session on a given blockchain network.</span></span>
+                        </label>
+                        <input type="number" id="max-txns-per-wallet" value="3" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Maximum actions a single wallet will perform in its session on a given chain.</p>
+                    </div>
+                    <div>
+                        <label for="wallet-idle-chance" class="block font-medium mb-1 text-accent">Wallet Idle Chance (%)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The percentage chance that a specific wallet will be "idle" for an entire session on a chain, meaning it will perform no actions. This simulates unpredictable human-like behavior.</span></span>
+                        </label>
+                        <input type="number" id="wallet-idle-chance" value="25" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Chance for a wallet to be idle and skip its session on a chain.</p>
+                    </div>
+                    <div>
+                        <label for="gas-multiplier" class="block font-medium mb-1 text-accent">Max Gas Price Multiplier
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">If the current gas price on the network exceeds the average gas price by this multiplier, the script will temporarily pause activities for that wallet on that chain to avoid high fees.</span></span>
+                        </label>
+                        <input type="number" id="gas-multiplier" value="2" step="0.1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Skip wallet activity if current gas price exceeds average by this multiplier.</p>
+                    </div>
+                    <div>
+                        <label for="block-lookback" class="block font-medium mb-1 text-accent">Blocks to Scan for Addresses
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The number of recent blockchain blocks the script will scan to find and add new potential recipient addresses to its pool. A higher number means more discovery but takes longer.</span></span>
+                        </label>
+                        <input type="number" id="block-lookback" value="100" min="10" max="1000" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses.</p>
+                    </div>
+
+                    <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
+                    <div class="md:col-span-2">
+                        <label class="block font-medium mb-1 text-accent">Transaction Amount Range (ETH)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">When a 'send' action is chosen, a random amount of ETH will be sent within this specified minimum and maximum range.</span></span>
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
+                            <input type="number" id="min-amount" value="0.0001" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <span class="text-gray-500">to</span>
+                            <input type="number" id="max-amount" value="0.0002" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        </div>
+                         <p class="text-sm text-gray-500 mt-1">A random ETH amount within this range will be sent for 'send' actions.</p>
+                         <button id="explain-send-tx-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Explain Send Tx</button>
+                    </div>
+
+                    <!-- Delay Between Actions (spans 2 columns on medium screens and up) -->
+                    <div class="md:col-span-2">
+                        <label class="block font-medium mb-1 text-accent">Delay Between Actions (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send, approve, mint, or idle), the script will pause for a random duration within this minimum and maximum second range.</span></span>
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
+                            <input type="number" id="min-delay" value="10" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <span class="text-gray-500">to</span>
+                            <input type="number" id="max-delay" value="30" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">A random delay will be applied after each action.</p>
+                    </div>
+
+                    <!-- RPC Endpoints & Chain IDs (spans 2 columns on medium screens and up) -->
+                    <div class="md:col-span-2">
+                        <label class="block font-medium mb-1 text-accent">RPC Endpoints & Chain IDs (Format: URL,ChainID - one per line)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">List the RPC URLs for the blockchain networks you want to interact with, followed by their corresponding Chain ID (e.g., 'https://mainnet.infura.io/v3/YOUR_ID,1'). The script will cycle through these networks.</span></span>
+                        </label>
+                        <textarea id="rpc-urls" rows="4" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1
 https://rpc.goerli.dev,5</textarea>
-                    <p class="text-sm text-gray-500 mt-1">The script will cycle through these RPCs and chains.</p>
-                    <button id="test-rpc-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>⚡ Test RPC Connections</button>
-                </div>
-
-                <!-- Action Probability Matrix (spans 2 columns on medium screens and up, contains its own grid) -->
-                <div class="md:col-span-2">
-                    <h3 class="font-bold text-lg mb-4 text-main">Action Probability Matrix (%)</h3>
-                    <p class="text-sm text-accent mb-4">Define the percentage chance for each action type. Must sum to 100.</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div>
-                            <label for="prob-send" class="block font-medium mb-1 text-accent">Send</label>
-                            <input type="number" id="prob-send" value="50" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
-                        </div>
-                        <div>
-                            <label for="prob-approve" class="block font-medium mb-1 text-accent">Approve</label>
-                            <input type="number" id="prob-approve" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
-                        </div>
-                        <div>
-                            <label for="prob-mint" class="block font-medium mb-1 text-accent">Mint</label>
-                            <input type="number" id="prob-mint" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
-                        </div>
-                        <div>
-                            <label for="prob-idle-action" class="block font-medium mb-1 text-accent">Idle Action</label>
-                            <input type="number" id="prob-idle-action" value="10" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">The script will cycle through these RPCs and chains.</p>
+                        <button id="test-rpc-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>⚡ Test RPC Connections</button>
                     </div>
-                    <p id="prob-sum-warning" class="text-sm text-red-500 mt-2 hidden">Probabilities must sum to 100%!</p>
-                </div>
-            </div>
-        </section>
 
-        <!-- Contract Interaction Section -->
-        <section id="contracts" class="mb-12">
-            <h2 class="text-3xl font-bold mb-2 text-main">Custom Contract Interactions</h2>
-            <p class="text-accent mb-6">Define contracts and their functions (e.g., "approve", "mint") for the "Approve" and "Mint" actions in the behavior matrix. You can add multiple and the script will randomly pick one for the chosen action type.</p>
-
-            <div class="bg-secondary p-8 rounded-lg shadow-md">
-                <button id="add-contract-btn" class="mb-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>➕ Add New Contract</button>
-
-                <div id="contract-list" class="space-y-6">
-                    <!-- Contract entries will be injected here -->
-                    <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
-                            <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                    <!-- Action Probability Matrix (spans 2 columns on medium screens and up, contains its own grid) -->
+                    <div class="md:col-span-2">
+                        <h3 class="font-bold text-lg mb-4 text-main">Action Probability Matrix (%)</h3>
+                        <p class="text-sm text-accent mb-4">Define the percentage chance for each action type. Must sum to 100.</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <label for="prob-send" class="block font-medium mb-1 text-accent">Send</label>
+                                <input type="number" id="prob-send" value="50" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                            </div>
+                            <div>
+                                <label for="prob-approve" class="block font-medium mb-1 text-accent">Approve</label>
+                                <input type="number" id="prob-approve" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                            </div>
+                            <div>
+                                <label for="prob-mint" class="block font-medium mb-1 text-accent">Mint</label>
+                                <input type="number" id="prob-mint" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                            </div>
+                            <div>
+                                <label for="prob-idle-action" class="block font-medium mb-1 text-accent">Idle Action</label>
+                                <input type="number" id="prob-idle-action" value="10" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                            </div>
                         </div>
-                        <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                        <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                        <label class="block font-medium mb-1 text-accent">Address:</label>
-                        <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                        <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                        <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                        <div data-field="functions" class="space-y-2">
-                            <div class="flex items-center space-x-2">
-                                <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <option value="approve" selected>Approve</option>
-                                    <option value="mint">Mint</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                        <p id="prob-sum-warning" class="text-sm text-red-500 mt-2 hidden">Probabilities must sum to 100%!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contract Interaction Section -->
+            <section id="contracts" class="mb-12">
+                <h2 class="text-3xl font-bold mb-2 text-main">Custom Contract Interactions</h2>
+                <p class="text-accent mb-6">Define contracts and their functions (e.g., "approve", "mint") for the "Approve" and "Mint" actions in the behavior matrix. You can add multiple and the script will randomly pick one for the chosen action type.</p>
+
+                <div class="bg-secondary p-8 rounded-lg shadow-md">
+                    <button id="add-contract-btn" class="mb-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>➕ Add New Contract</button>
+
+                    <div id="contract-list" class="space-y-6">
+                        <!-- Contract entries will be injected here -->
+                        <div class="border border-accent p-4 rounded-lg" data-id="example-token-approve">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-lg text-main">Example Token (ERC20 Approve)</h4>
+                                <button data-id="example-token-approve" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                            </div>
+                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                            <input type="text" value="Example Token" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">Address:</label>
+                            <input type="text" value="0x6B175474E89094C44Da98b954EedeAC495271d0F" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                            <div data-field="functions" class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <option value="approve" selected>Approve</option>
+                                        <option value="mint">Mint</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
+                                <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                            </div>
+                            <label class="block font-medium mb-1 text-accent">Contract Name:</label>
+                            <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">Address:</label>
+                            <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
+                            <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
+                            <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
+                            <div data-field="functions" class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                    <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
+                                        <option value="approve">Approve</option>
+                                        <option value="mint" selected>Mint</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
+                                    <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="border border-accent p-4 rounded-lg" data-id="example-nft-mint">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-bold text-lg text-main">Example NFT (Mint)</h4>
-                            <button data-id="example-nft-mint" class="remove-contract-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️ Remove</button>
+                </div>
+            </section>
+
+
+            <!-- Live Log Section -->
+            <section id="log">
+                 <h2 class="text-3xl font-bold mb-2 text-main">Live Log</h2>
+                 <p class="text-accent mb-6">Real-time output from the transaction farming process will appear below. You can also download the complete log.</p>
+                <div class="bg-gray-800 text-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
+                    <div id="live-log"></div>
+                </div>
+                <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
+            </section>
+        </div><!-- End script-console-content -->
+
+        <!-- Infographic Content -->
+        <div id="infographic-content" class="hidden">
+            <!-- Section 1: Introduction & Hook -->
+            <section id="infographic-overview" class="text-center my-12 md:my-16">
+                <h2 class="text-4xl md:text-5xl font-extrabold mb-4" style="color: #0077B6;">Anatomy of an Automated Transaction Farming Script</h2>
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">
+                    A deep dive into a client-side tool designed to automate blockchain interactions for testnet farming, airdrop eligibility, and protocol testing, with a focus on simulating organic, human-like activity.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="kpi-card">
+                        <span class="text-5xl font-bold block mb-2" style="color: #00B4D8;">5</span>
+                        <h3 class="text-xl font-semibold text-gray-700">Recipient Modes</h3>
+                        <p class="text-gray-500 mt-2">From dynamic address pools to self-interaction, offering diverse targeting strategies.</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-5xl font-bold block mb-2" style="color: #00B4D8;">5+</span>
+                        <h3 class="text-xl font-semibold text-gray-700">Randomization Factors</h3>
+                        <p class="text-gray-500 mt-2">Simulates human behavior by randomizing amounts, delays, wallets, chains, and gas fees.</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-5xl font-bold block mb-2" style="color: #00B4D8;">∞</span>
+                        <h3 class="text-xl font-semibold text-gray-700">Supported Wallets</h3>
+                        <p class="text-gray-500 mt-2">Load an unlimited number of private keys to scale your operations effortlessly.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: The Core Engine -->
+            <section id="infographic-how-it-works" class="my-16 md:my-24">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">The Core Engine: How It Works</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    The script follows a logical, configurable flow to execute its tasks. From initialization to the final transaction, each step is designed for automation and control.
+                </p>
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">1. Connect & Load Wallets</div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">2. Configure Settings (Recipients, Delays, Amounts)</div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">3. Start Farming Process</div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step p-6 rounded-lg w-full md:w-2/3 text-center border-dashed">
+                        <h4 class="font-bold text-lg mb-4">4. Execution Loop (Repeats)</h4>
+                        <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                            <div class="font-semibold">Select Chain</div>
+                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                            <div class="font-semibold">Select Wallet</div>
+                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                            <div class="font-semibold">Choose Action</div>
+                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                            <div class="font-semibold">Execute Tx</div>
                         </div>
-                        <label class="block font-medium mb-1 text-accent">Contract Name:</label>
-                        <input type="text" value="Example NFT" data-field="name" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                        <label class="block font-medium mb-1 text-accent">Address:</label>
-                        <input type="text" value="0xAnotherContractAddress" data-field="address" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
-                        <label class="block font-medium mb-1 text-accent">ABI (JSON):</label>
-                        <textarea rows="4" data-field="abi" class="w-full p-2 border border-accent rounded-md mb-2 font-mono text-sm wallet-feature-control" disabled>[{"inputs":[],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"}]</textarea>
-                        <h5 class="font-semibold mt-4 mb-2 text-accent">Functions for this Contract:</h5>
-                        <div data-field="functions" class="space-y-2">
-                            <div class="flex items-center space-x-2">
-                                <input type="text" placeholder="functionName" value="mint" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                <input type="text" placeholder="arg1,arg2" value="" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                    <option value="approve">Approve</option>
-                                    <option value="mint" selected>Mint</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" disabled>✨ Explain</button>
-                                <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" disabled>🗑️</button>
+                    </div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">5. Monitor via Dashboard & Logs</div>
+                </div>
+            </section>
+
+            <!-- Section 3: KPIs -->
+            <section id="infographic-kpis" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
+                 <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Key Performance Indicators</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 px-8">
+                     <div>
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Action Distribution</h3>
+                        <p class="text-center text-gray-600 mb-6">
+                            This chart shows the typical probability of the script performing a 'Send' transaction versus choosing to remain 'Idle' for an action, a key feature for simulating non-robotic behavior.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="infographicActionDistChart"></canvas>
+                        </div>
+                     </div>
+                     <div>
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Sample Wallet Balances (ETH)</h3>
+                         <p class="text-center text-gray-600 mb-6">
+                            A snapshot of balances across multiple loaded wallets. The script provides real-time updates to this data as transactions are confirmed on the network.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="infographicWalletBalanceChart"></canvas>
+                        </div>
+                     </div>
+                 </div>
+            </section>
+
+            <!-- Section 4: Humanization Engine -->
+            <section id="infographic-features" class="my-16 md:my-24">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">The 'Humanization' Engine</h2>
+                 <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    To avoid being flagged as a bot, the script incorporates several layers of randomization. This engine ensures that the script's activity appears organic and unpredictable.
+                </p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                     <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Randomized Gas Payments</h3>
+                         <p class="text-center text-gray-600 mb-6">
+                            Instead of using a fixed gas price, the script calculates a variable fee for each transaction, staying within a user-defined multiplier of the current network average to mimic human bidding behavior.
+                        </p>
+                        <div class="chart-container h-80">
+                            <canvas id="infographicGasPriceChart"></canvas>
+                        </div>
+                     </div>
+                     <div class="space-y-6">
+                        <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">⏱️</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Delays</h4>
+                                <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions.</p>
+                            </div>
+                        </div>
+                        <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">💸</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Amounts</h4>
+                                <p class="text-left text-gray-600">Sends a variable amount of ETH within a specified range.</p>
+                            </div>
+                        </div>
+                        <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">🔗</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Chain & Wallet</h4>
+                                <p class="text-left text-gray-600">Picks a random wallet and a random blockchain network for each session.</p>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Recipient Strategy -->
+            <section id="infographic-recipient-strategy" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Recipient Strategy</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    The script offers multiple modes for selecting transaction recipients, allowing for a wide range of interaction patterns.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
+                    <div class="kpi-card">
+                        <span class="text-4xl">🔍</span>
+                        <h4 class="text-lg font-bold my-2">Dynamic Pool</h4>
+                        <p class="text-gray-600 text-sm">Scans recent blocks for active wallets (EOAs) and adds them to a recipient pool.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">🎯</span>
+                        <h4 class="text-lg font-bold my-2">Fixed Address</h4>
+                        <p class="text-gray-600 text-sm">Sends all transactions to a single, predetermined address.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">📝</span>
+                        <h4 class="text-lg font-bold my-2">Custom List</h4>
+                        <p class="text-gray-600 text-sm">Uses a user-provided list of addresses for transactions.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">📄</span>
+                        <h4 class="text-lg font-bold my-2">Predefined List</h4>
+                        <p class="text-gray-600 text-sm">Loads recipients from an externally hosted or uploaded CSV file.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">🤝</span>
+                        <h4 class="text-lg font-bold my-2">Self-Interact</h4>
+                        <p class="text-gray-600 text-sm">Loaded wallets send transactions to each other, creating an internal ecosystem.</p>
+                    </div>
+                     <div class="kpi-card bg-gray-100">
+                        <span class="text-4xl">↪️</span>
+                        <h4 class="text-lg font-bold my-2">Fallback Logic</h4>
+                        <p class="text-gray-600 text-sm">If the Dynamic Pool is empty, it automatically falls back to Self-Interact mode.</p>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Section 6: Security -->
+            <section id="infographic-security" class="my-16 md:my-24">
+                <div class="max-w-4xl mx-auto p-6 rounded-lg" style="background-color: #fffbe6; border: 1px solid #fde047;">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                             <span class="text-3xl">⚠️</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-2xl font-bold" style="color: #ca8a04;">A Critical Security Notice</h3>
+                            <div class="mt-2 text-md text-yellow-800">
+                                <p>This is a client-side application. Handling private keys in a web browser is **extremely risky**. This tool is intended for educational and testing purposes **on test networks only**. Never input mainnet private keys or keys associated with wallets holding real assets. The developer assumes no responsibility for any loss of funds.</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div><!-- End infographic-content -->
 
-
-        <!-- Live Log Section -->
-        <section id="log">
-             <h2 class="text-3xl font-bold mb-2 text-main">Live Log</h2>
-             <p class="text-accent mb-6">Real-time output from the transaction farming process will appear below. You can also download the complete log.</p>
-            <div class="bg-gray-800 text-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
-                <div id="live-log"></div>
-            </div>
-            <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
-        </section>
     </main>
 
     <!-- NEW FOOTER SECTION -->
@@ -634,12 +869,45 @@ https://rpc.goerli.dev,5</textarea>
                 },
                 logEntries: [], // For CSV export
                 charts: {
-                    walletBalance: null,
-                    actionDist: null
+                    walletBalance: null, // Console's wallet balance chart
+                    actionDist: null,    // Console's action distribution chart
+                    infographicActionDist: null, // Infographic's charts
+                    infographicWalletBalance: null,
+                    infographicGasPrice: null
                 },
                 pendingConfirmation: null, // Callback for confirmation modal
                 connectedAddress: null,
-                // Removed isWhitelisted, now public
+                // Predefined contract data for the console's deploy/interact section
+                predefinedContracts: {
+                    counter: {
+                        name: "Simple Counter",
+                        bytecode: "0x6080604052348015610010575f80fd5b506004361061003f575f3560e01c806306661d4e146100445780630c7b2756146100625780638ada066e14610080575f80fd5b61004c6100a7565b60405161005991906100c5565b60405180910390f35b61006a6100ac565b60405161007791906100c5565b60405180910390f35b6100886100b1565b60405161009591906100e5565b60405180910390f35b5f80fd5b5f80fd5b5f80fd5b5f5f600080fd5b5f6000555f80fd5b5f600080fd5b5f600054905090565b5f600080fd5b5f600080fd5b5f6000545f600101905090565b5f6000545f60019003555f80fd5b5f6000545f6001555f80fd5b5f600080fd5b5f600080fd", // Placeholder bytecode for a simple Counter contract
+                        abi: [
+                            {
+                                "inputs": [],
+                                "name": "count",
+                                "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "increment",
+                                "outputs": [],
+                                "stateMutability": "nonpayable",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "decrement",
+                                "outputs": [],
+                                "stateMutability": "nonpayable",
+                                "type": "function"
+                            }
+                        ],
+                        deployedAddress: null // To store the address after deployment
+                    }
+                }
             };
 
 
@@ -704,10 +972,20 @@ https://rpc.goerli.dev,5</textarea>
                 confirmMessage: document.getElementById('confirm-message'),
                 confirmActionBtn: document.getElementById('confirm-action-btn'),
                 cancelConfirmBtn: document.getElementById('cancel-confirm-btn'),
-                closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button')
+                closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
+
+                // New UI elements for page switching
+                scriptConsoleContent: document.getElementById('script-console-content'),
+                infographicContent: document.getElementById('infographic-content'),
+                navLinks: document.querySelectorAll('.nav-link'),
+
+                // Infographic chart canvases
+                infographicActionDistChartCanvas: document.getElementById('infographicActionDistChart'),
+                infographicWalletBalanceChartCanvas: document.getElementById('infographicWalletBalanceChart'),
+                infographicGasPriceChartCanvas: document.getElementById('infographicGasPriceChart'),
             };
 
-            // Function to enable/disable UI elements - now always enables as whitelist is removed
+            // Function to enable/disable UI elements
             const setUIEnabled = (enabled) => {
                 ui.walletFeatureControls.forEach(control => {
                     control.disabled = !enabled;
@@ -736,7 +1014,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.privateKeys.value = '';
                     ui.keysLoadedCount.textContent = '';
                     appState.wallets = [];
-                    updateWalletBalanceChart();
+                    updateWalletBalanceChart(); // Update console's chart
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
                     // Reset contract list to initial examples when disabled
                     ui.contractList.innerHTML = `
@@ -852,7 +1130,44 @@ https://rpc.goerli.dev,5</textarea>
                 });
             };
 
-            const initCharts = () => {
+            // Global utility functions for chart labels and tooltips
+            const wrapLabel = (str, maxLen = 16) => {
+                if (str.length <= maxLen) {
+                    return str;
+                }
+                const words = str.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).length > maxLen && currentLine.length > 0) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine += (currentLine.length === 0 ? '' : ' ') + word;
+                    }
+                }
+                if (currentLine.length > 0) {
+                    lines.push(currentLine);
+                }
+                return lines;
+            };
+
+            const mandatoryTooltipConfig = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                if (!item) return '';
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            };
+
+            const initConsoleCharts = () => {
                 const chartOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -913,6 +1228,148 @@ https://rpc.goerli.dev,5</textarea>
                     chart.update();
                 }
             };
+
+            // Infographic Chart Initialization Functions
+            const initInfographicActionDistChart = () => {
+                const ctx = ui.infographicActionDistChartCanvas?.getContext('2d');
+                if (!ctx) return;
+                appState.charts.infographicActionDist = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Send Transaction', 'Idle (No Action)'],
+                        datasets: [{
+                            label: 'Action Probability',
+                            data: [80, 20],
+                            backgroundColor: ['#00B4D8', '#90E0EF'],
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                             ...mandatoryTooltipConfig.plugins,
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#212529' // Infographic text color
+                                }
+                            },
+                        }
+                    }
+                });
+            };
+            
+            const initInfographicWalletBalanceChart = () => {
+                const ctx = ui.infographicWalletBalanceChartCanvas?.getContext('2d');
+                if (!ctx) return;
+                const walletLabels = ['Wallet ...a4b8', 'Wallet ...f9c1', 'Wallet ...3d2e', 'Wallet ...e6a7', 'Wallet ...b8d9'];
+
+                appState.charts.infographicWalletBalance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: walletLabels.map(label => wrapLabel(label)),
+                        datasets: [{
+                            label: 'Balance (ETH)',
+                            data: [1.2, 0.8, 2.5, 0.5, 1.9],
+                            backgroundColor: '#00B4D8',
+                            borderColor: '#0077B6',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                         ...mandatoryTooltipConfig,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#4a5568' // Infographic text accent
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#4a5568' // Infographic text accent
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#212529'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+            
+            const initInfographicGasPriceChart = () => {
+                const ctx = ui.infographicGasPriceChartCanvas?.getContext('2d');
+                if (!ctx) return;
+
+                const labels = ['T-10', 'T-9', 'T-8', 'T-7', 'T-6', 'T-5', 'T-4', 'T-3', 'T-2', 'T-1'];
+                const networkBaseFee = Array(10).fill(20);
+                const randomGasPrice = Array.from({length: 10}, () => Math.random() * 30 + 20);
+
+                appState.charts.infographicGasPrice = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Network Base Fee (Gwei)',
+                                data: networkBaseFee,
+                                borderColor: '#90E0EF',
+                                borderWidth: 2,
+                                tension: 0.1,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: 'Script\'s Randomized Gas (Gwei)',
+                                data: randomGasPrice,
+                                borderColor: '#0077B6',
+                                backgroundColor: 'rgba(0, 119, 182, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        ...mandatoryTooltipConfig,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + ' Gwei'
+                                    },
+                                    color: '#4a5568' // Infographic text accent
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#4a5568' // Infographic text accent
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#212529'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
 
             const loadConfiguration = () => {
                 const probInputs = document.querySelectorAll('.prob-input');
@@ -1094,7 +1551,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
+                const apiKey = "AIzaSyBns3XoeRSd1p1kttRjbv8qR9J01pdrCaQ"; // Added Gemini API Key here
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1129,7 +1586,6 @@ https://rpc.goerli.dev,5</textarea>
 
 
             const loadWallets = async () => {
-                // No whitelist check needed anymore
                 const keys = ui.privateKeys.value.split('\n').map(k => k.trim()).filter(Boolean);
                 if (keys.length === 0) {
                     log('No private keys provided.', 'error');
@@ -1168,7 +1624,6 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const testRpcConnections = async () => {
-                // No whitelist check needed anymore
                 loadConfiguration();
                 if (appState.rpcConfigs.length === 0) {
                     log('No RPC URLs configured to test.', 'warning');
@@ -1195,7 +1650,6 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const loadAddressesFromList = () => {
-                // No whitelist check needed anymore
                 const addressesInput = ui.listAddresses.value.split('\n').map(addr => addr.trim()).filter(Boolean);
                 const validAddresses = [];
                 let invalidCount = 0;
@@ -1219,7 +1673,6 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const loadPredefinedListFromFile = () => {
-                // No whitelist check needed anymore
                 const file = ui.predefinedFileInput.files[0];
                 if (!file) {
                     log('No file selected for predefined list.', 'warning');
@@ -1286,7 +1739,6 @@ https://rpc.goerli.dev,5</textarea>
 
 
             const startFarming = async () => {
-                // No whitelist check needed anymore
                 openConfirmationModal('Are you sure you want to start transaction farming? Ensure your settings and keys are for test purposes only, as this involves real blockchain interactions.', async (confirmed) => {
                     if (!confirmed) {
                         log('Farming start cancelled by user.', 'info');
@@ -1331,7 +1783,6 @@ https://rpc.goerli.dev,5</textarea>
 
                     appState.isRunning = true;
                     appState.stopFlag = false;
-                    // Fix: Initialize successfulActions and failedActions correctly
                     appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
                     appState.logEntries = [];
                     appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0, 0];
@@ -1341,8 +1792,8 @@ https://rpc.goerli.dev,5</textarea>
                     ui.startBtn.disabled = true;
                     ui.stopBtn.disabled = false;
                     ui.statusDisplay.textContent = 'Running';
-                    ui.successCount.textContent = appState.stats.successfulActions.toString(); // Update UI
-                    ui.failCount.textContent = appState.stats.failedActions.toString(); // Update UI
+                    ui.successCount.textContent = appState.stats.successfulActions.toString();
+                    ui.failCount.textContent = appState.stats.failedActions.toString();
                     ui.progressText.textContent = '0';
                     ui.progressBar.style.width = '100%';
 
@@ -1367,6 +1818,7 @@ https://rpc.goerli.dev,5</textarea>
                         if (appState.config.recipientMode === 'pool' && (!currentChainRecipientPool || currentChainRecipientPool.length === 0)) {
                             log(`Recipient pool for chain ${chainId} is empty. Cannot perform 'send' actions on this chain.`, 'warning');
                         }
+
 
                         const shuffledWallets = [...appState.wallets].sort(() => Math.random() - 0.5);
 
@@ -1560,7 +2012,6 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const clearAllData = () => {
-                // No whitelist check needed anymore
                 openConfirmationModal('Are you sure you want to clear ALL configurations, loaded wallets, and log data? This action cannot be undone.', (confirmed) => {
                     if (confirmed) {
                         appState.isRunning = false;
@@ -1577,9 +2028,12 @@ https://rpc.goerli.dev,5</textarea>
                         updatePredefinedAddressesDisplay();
                         appState.customContracts = [];
                         appState.config = {};
-                        // Fix: Correctly reset stats properties
                         appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, approve: 0, mint: 0, idle: 0, skipped: 0 } };
                         appState.logEntries = [];
+                        appState.predefinedContracts.counter.deployedAddress = null; // Reset deployed counter
+                        ui.counterInteractionSection.classList.add('hidden'); // Hide counter interaction
+                        ui.deployedCounterAddress.textContent = '';
+                        ui.counterValueDisplay.textContent = 'Current Count: N/A';
 
                         ui.privateKeys.value = '';
                         ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
@@ -1601,7 +2055,7 @@ https://rpc.goerli.dev,5</textarea>
                                         <input type="text" placeholder="functionName" value="approve" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
                                         <input type="text" placeholder="arg1,arg2" value="0xYourSpenderAddress,1000000000000000000000000" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
                                         <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" disabled>
-                                            <option value="approve" selected>Approve</option>
+                                            <option value="approve">Approve</option>
                                             <option value="mint">Mint</option>
                                             <option value="other">Other</option>
                                         </select>
@@ -1640,7 +2094,7 @@ https://rpc.goerli.dev,5</textarea>
                         ui.contractList.querySelectorAll('.border.border-accent').forEach(contractDiv => {
                             addContractEventListeners(contractDiv.dataset.id);
                         });
-                        setUIEnabled(false); // Re-disable controls after clearing, as wallet isn't yet connected for public features
+                        setUIEnabled(false);
                     }
                 });
             };
@@ -1665,12 +2119,12 @@ https://rpc.goerli.dev,5</textarea>
                         <div data-field="functions" class="space-y-2">
                             ${contract.functions.map(func => `
                                 <div class="flex items-center space-x-2">
-                                    <input type="text" placeholder="functionName" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                    <input type="text" placeholder="arg1,arg2" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
+                                    <input type="text" placeholder="functionName" value="${func.name}" data-func-field="name" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
+                                    <input type="text" placeholder="arg1,arg2" value="${func.argsTemplate}" data-func-field="argsTemplate" class="w-1/2 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
                                     <select data-func-field="type" class="w-1/4 p-2 border border-accent rounded-md text-sm wallet-feature-control" >
-                                        <option value="approve">Approve</option>
-                                        <option value="mint">Mint</option>
-                                        <option value="other">Other</option>
+                                        <option value="approve" ${func.type === 'approve' ? 'selected' : ''}>Approve</option>
+                                        <option value="mint" ${func.type === 'mint' ? 'selected' : ''}>Mint</option>
+                                        <option value="other" ${func.type === 'other' ? 'selected' : ''}>Other</option>
                                     </select>
                                     <button class="explain-func-btn py-1 px-2 rounded-md btn-llm text-xs wallet-feature-control" >✨ Explain</button>
                                     <button class="remove-function-btn text-red-500 hover:text-red-700 wallet-feature-control" >🗑️</button>
@@ -1735,7 +2189,6 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const handleExplainFunction = async (event) => {
-                // No whitelist check needed anymore
                 const funcDiv = event.target.closest('.flex');
                 const funcName = funcDiv.querySelector('[data-func-field="name"]').value;
                 const funcArgs = funcDiv.querySelector('[data-func-field="argsTemplate"]').value;
@@ -1750,7 +2203,6 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const handleExplainSendTx = async () => {
-                // No whitelist check needed anymore
                 const minAmount = ui.minAmount.value;
                 const maxAmount = ui.maxAmount.value;
                 const recipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
@@ -1780,9 +2232,7 @@ https://rpc.goerli.dev,5</textarea>
 
 
             const downloadLog = () => {
-                // No whitelist check needed anymore
                 if (appState.logEntries.length === 0) {
-                    // Changed alert to custom modal message
                     openGeminiModal('No Data', '<p class="text-accent">No log data to download.</p>');
                     return;
                 }
@@ -1819,15 +2269,12 @@ https://rpc.goerli.dev,5</textarea>
                 document.body.removeChild(textarea);
             };
 
-            // Removed checkWhitelistStatus function as it's no longer needed.
-            // All features are now public by default once a wallet is connected.
-
             const connectWallet = async () => {
                 console.log('Connect Wallet button clicked.');
                 if (typeof window.ethereum === 'undefined') {
                     log('MetaMask or compatible wallet not detected. Please install one.', 'error');
                     ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a> or a compatible browser extension.`;
-                    setUIEnabled(false); // Still disable if no wallet detected
+                    setUIEnabled(false);
                     console.error('window.ethereum is not defined.');
                     return;
                 }
@@ -1841,7 +2288,7 @@ https://rpc.goerli.dev,5</textarea>
                         log('No accounts found. Please connect your wallet and select an account.', 'error');
                         appState.connectedAddress = null;
                         ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
-                        setUIEnabled(false); // Disable features if no account selected
+                        setUIEnabled(false);
                         console.warn('No accounts returned from wallet.');
                         return;
                     }
@@ -1849,7 +2296,7 @@ https://rpc.goerli.dev,5</textarea>
                     log(`Wallet connected: ${appState.connectedAddress}`, 'success');
                     console.log('Connected address:', appState.connectedAddress);
                     ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
-                    setUIEnabled(true); // Enable features as it's now public
+                    setUIEnabled(true);
 
                     // Set up event listeners for window.ethereum
                     window.ethereum.on('accountsChanged', (newAccounts) => {
@@ -1858,12 +2305,12 @@ https://rpc.goerli.dev,5</textarea>
                             log('Wallet disconnected or no accounts selected.', 'warning');
                             appState.connectedAddress = null;
                             ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
-                            setUIEnabled(false); // Disable features on disconnect
+                            setUIEnabled(false);
                         } else if (appState.connectedAddress && newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
                             log(`Account changed to: ${newAccounts[0]}`, 'info');
                             appState.connectedAddress = newAccounts[0];
                             ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
-                            setUIEnabled(true); // Re-enable if a new account is connected
+                            setUIEnabled(true);
                         } else if (!appState.connectedAddress) {
                             log(`Wallet reconnected with account: ${newAccounts[0]}`, 'info');
                             appState.connectedAddress = newAccounts[0];
@@ -1880,18 +2327,161 @@ https://rpc.goerli.dev,5</textarea>
                         log(`Wallet disconnected: ${error.message || 'Unknown error'}`, 'error');
                         appState.connectedAddress = null;
                         ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
-                        setUIEnabled(false); // Disable features on disconnect
+                        setUIEnabled(false);
                     });
 
                 } catch (error) {
                     log(`Wallet connection failed: ${error.message}`, 'error');
                     appState.connectedAddress = null;
                     ui.walletStatusDisplay.innerHTML = `Connection failed.`;
-                    setUIEnabled(false); // Disable features on connection failure
+                    setUIEnabled(false);
                     console.error('Wallet connection error:', error);
                 }
             };
 
+            const deployPredefinedContract = async () => {
+                const selectedContractType = Array.from(ui.predefinedContractType).find(radio => radio.checked)?.value;
+
+                if (!selectedContractType || !appState.predefinedContracts[selectedContractType]) {
+                    log('Please select a valid contract type to deploy.', 'error');
+                    return;
+                }
+
+                if (appState.wallets.length === 0) {
+                    log('Please load private keys first to deploy a contract.', 'error');
+                    return;
+                }
+                if (appState.rpcConfigs.length === 0) {
+                    log('Please provide at least one RPC URL and Chain ID in Configuration.', 'error');
+                    return;
+                }
+
+                const contractData = appState.predefinedContracts[selectedContractType];
+                const deployerWalletInfo = appState.wallets[0]; // Use the first loaded wallet
+                const rpcConfig = appState.rpcConfigs[0]; // Use the first RPC config
+
+                const provider = new ethers.JsonRpcProvider(rpcConfig.url);
+                const deployerWallet = new ethers.Wallet(deployerWalletInfo.privateKey, provider);
+
+                log(`Attempting to deploy "${contractData.name}" contract on Chain ID ${rpcConfig.chainId} using wallet ...${deployerWallet.address.slice(-6)}...`, 'info');
+
+                try {
+                    const balanceWei = await provider.getBalance(deployerWallet.address);
+                    const minEthForDeployment = ethers.parseEther("0.005"); 
+
+                    if (balanceWei < minEthForDeployment) {
+                        const requiredEth = ethers.formatEther(minEthForDeployment);
+                        log(`Deployer wallet ...${deployerWallet.address.slice(-6)} has critically low balance (${ethers.formatEther(balanceWei)} ETH). At least ${requiredEth} ETH is recommended for deployment. Please fund this wallet on Chain ID ${rpcConfig.chainId}.`, 'error');
+                        return;
+                    } else if (balanceWei < ethers.parseEther("0.01")) {
+                         log(`Deployer wallet ...${deployerWallet.address.slice(-6)} has low balance (${ethers.formatEther(balanceWei)} ETH). Consider funding it to ensure successful deployment.`, 'warning');
+                    }
+
+
+                    const factory = new ethers.ContractFactory(contractData.abi, contractData.bytecode, deployerWallet);
+                    log(`Sending deployment transaction for ${contractData.name}...`, 'info');
+
+                    const contract = await factory.deploy();
+                    log(`Deployment transaction sent! Hash: <a href="https://etherscan.io/tx/${contract.deploymentTransaction().hash}" target="_blank" class="underline">${contract.deploymentTransaction().hash}</a><button class="log-copy-btn" data-tx-hash="${contract.deploymentTransaction().hash}">📋</button>`, 'success');
+
+                    await contract.waitForDeployment();
+                    const deployedAddress = await contract.getAddress();
+                    log(`"${contractData.name}" contract deployed successfully to: <a href="https://etherscan.io/address/${deployedAddress}" target="_blank" class="underline">${deployedAddress}</a><button class="log-copy-btn" data-tx-hash="${deployedAddress}">📋</button>`, 'success');
+
+                    appState.predefinedContracts[selectedContractType].deployedAddress = deployedAddress;
+                    
+                    const newBalanceWei = await provider.getBalance(deployerWallet.address);
+                    deployerWalletInfo.balance = parseFloat(ethers.formatEther(newBalanceWei)).toFixed(6);
+                    updateWalletBalanceChart();
+
+                    if (selectedContractType === 'counter') {
+                        ui.deployedCounterAddress.textContent = deployedAddress;
+                        ui.counterInteractionSection.classList.remove('hidden');
+                        await getCounterValue();
+                    }
+
+                } catch (error) {
+                    log(`Contract deployment for "${contractData.name}" failed: ${error.message}. Please check your RPC URL, Chain ID, and ensure the deploying wallet has sufficient funds.`, 'error');
+                    console.error("Deployment Error:", error);
+                }
+            };
+
+            const getCounterValue = async () => {
+                const counter = appState.predefinedContracts.counter;
+                if (!counter.deployedAddress) {
+                    log('Counter contract not yet deployed.', 'warning');
+                    ui.counterValueDisplay.textContent = 'Current Count: N/A';
+                    return;
+                }
+                const provider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
+                const counterContract = new ethers.Contract(counter.deployedAddress, counter.abi, provider);
+                try {
+                    const count = await counterContract.count(); // Changed to 'count()' as per ABI
+                    ui.counterValueDisplay.textContent = `Current Count: ${count.toString()}`;
+                    log(`Fetched count: ${count.toString()}`, 'info');
+                } catch (error) {
+                    log(`Failed to get counter value: ${error.message}`, 'error');
+                    ui.counterValueDisplay.textContent = 'Current Count: Error';
+                }
+            };
+
+            const interactWithCounter = async (method) => {
+                const counter = appState.predefinedContracts.counter;
+                if (!counter.deployedAddress) {
+                    log('Counter contract not yet deployed. Please deploy it first.', 'error');
+                    return;
+                }
+                if (appState.wallets.length === 0) {
+                    log('Please load private keys first to interact with the contract.', 'error');
+                    return;
+                }
+                if (appState.rpcConfigs.length === 0) {
+                    log('Please provide at least one RPC URL and Chain ID in Configuration.', 'error');
+                    return;
+                }
+
+                const interactingWalletInfo = appState.wallets[0]; // Use the first loaded wallet for interaction
+                const rpcConfig = appState.rpcConfigs[0];
+                const provider = new ethers.JsonRpcProvider(rpcConfig.url);
+                const interactingWallet = new ethers.Wallet(interactingWalletInfo.privateKey, provider);
+
+                const counterContract = new ethers.Contract(counter.deployedAddress, counter.abi, interactingWallet);
+
+                log(`Calling "${method}" on Counter contract at ${counter.deployedAddress.slice(0,6)}...${counter.deployedAddress.slice(-4)}...`, 'info');
+                try {
+                    const txResponse = await counterContract[method]();
+                    log(`Transaction sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success');
+                    
+                    await txResponse.wait();
+                    log(`Transaction confirmed!`, 'success');
+                    const newBalanceWei = await provider.getBalance(interactingWallet.address);
+                    interactingWalletInfo.balance = parseFloat(ethers.formatEther(newBalanceWei)).toFixed(6);
+                    updateWalletBalanceChart();
+                    await getCounterValue();
+
+                } catch (error) {
+                    log(`Failed to call "${method}" on Counter: ${error.message}`, 'error');
+                    console.error(`Counter ${method} error:`, error);
+                }
+            };
+
+            const showPage = (pageId) => {
+                ui.scriptConsoleContent.classList.add('hidden');
+                ui.infographicContent.classList.add('hidden');
+
+                if (pageId === 'console') {
+                    ui.scriptConsoleContent.classList.remove('hidden');
+                } else if (pageId === 'infographic') {
+                    ui.infographicContent.classList.remove('hidden');
+                    // Initialize infographic charts only when the page is shown
+                    initInfographicActionDistChart();
+                    initInfographicWalletBalanceChart();
+                    initInfographicGasPriceChart();
+                }
+
+                ui.navLinks.forEach(link => link.classList.remove('active'));
+                document.querySelector(`.nav-link[data-page="${pageId}"]`)?.classList.add('active');
+            };
 
             const setupEventListeners = () => {
                 ui.connectWalletBtn.addEventListener('click', connectWallet);
@@ -1904,6 +2494,17 @@ https://rpc.goerli.dev,5</textarea>
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
                 ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
+                ui.deployPredefinedBtn.addEventListener('click', deployPredefinedContract);
+
+                // Counter Interaction Buttons
+                ui.getCountBtn.addEventListener('click', getCounterValue);
+                ui.incrementCountBtn.addEventListener('click', () => interactWithCounter('increment'));
+                ui.decrementCountBtn.addEventListener('click', () => interactWithCounter('decrement'));
+                ui.copyDeployedCounterAddressBtn.addEventListener('click', () => {
+                    if (ui.deployedCounterAddress.textContent) {
+                        copyToClipboard(ui.deployedCounterAddress.textContent);
+                    }
+                });
 
                 ui.closeModalBtn.addEventListener('click', closeGeminiModal);
                 window.addEventListener('click', (event) => {
@@ -1931,11 +2532,10 @@ https://rpc.goerli.dev,5</textarea>
 
                 ui.recipientMode.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        // No whitelist check here, just update visibility based on selection
                         ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
                         ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
                         ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined');
-                        loadConfiguration(); // Re-load config to update recipientMode
+                        loadConfiguration();
                     });
                 });
 
@@ -1957,20 +2557,20 @@ https://rpc.goerli.dev,5</textarea>
                     addContractEventListeners(contractDiv.dataset.id || `example-${Date.now()}`);
                 });
 
-                document.querySelectorAll('.nav-link').forEach(link => {
+                ui.navLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
-                         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                         this.classList.add('active');
+                         e.preventDefault();
+                         const targetPage = this.dataset.page;
+                         showPage(targetPage);
                     });
                 });
             };
 
-            initCharts();
+            initConsoleCharts(); // Initialize charts for the console
             setupEventListeners();
             loadConfiguration();
             updateWalletBalanceChart();
-            setUIEnabled(false); // Initially disable controls until wallet is connected (now fully public)
-            updatePredefinedAddressesDisplay();
+            setUIEnabled(false);
 
             // Initial check for window.ethereum and existing connection on page load
             if (typeof window.ethereum !== 'undefined') {
@@ -1981,7 +2581,7 @@ https://rpc.goerli.dev,5</textarea>
                             appState.connectedAddress = accounts[0];
                             log(`Existing wallet connection found: ${appState.connectedAddress}`, 'info');
                             ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
-                            setUIEnabled(true); // Enable features immediately if already connected
+                            setUIEnabled(true);
                         } else {
                              ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
                              log('No existing wallet connection found on startup.', 'info');
@@ -1992,7 +2592,6 @@ https://rpc.goerli.dev,5</textarea>
                          ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
                     });
 
-                 // Re-attach event listeners in case the page was refreshed and they were lost
                  window.ethereum.on('accountsChanged', (newAccounts) => {
                      log('Wallet accounts changed event detected (startup listener).', 'info');
                      if (newAccounts.length === 0) {
