@@ -141,7 +141,7 @@ This project is released under the [MIT License](LICENSE).
 
 If this tool helps you, consider supporting its future development:
 
-**ETH Donation Address:**
+**EVM Donation Address:**
 
 ```
 0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954
