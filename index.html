@@ -737,16 +737,6 @@ https://rpc.goerli.dev,5</textarea>
                 </div>
             </section>
 
-            <!-- NEW: Embedded Resource Section -->
-            <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
-                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Deep Dive: External Resource</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    Explore further details and documentation on transaction farming and related topics through this embedded resource.
-                </p>
-                <div class="w-full flex justify-center px-4">
-                    <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
-                </div>
-            </section>
 
             <!-- Section 6: Security -->
             <section id="infographic-security" class="my-16 md:my-24">
@@ -1222,7 +1212,7 @@ https://rpc.goerli.dev,5</textarea>
                         plugins: {
                             legend: {
                                 labels: {
-                                    color: '#212529
+                                    color: '#212529'
                                 }
                             }
                         }
@@ -1509,7 +1499,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.keysLoadedCount.textContent = `Loading 0 / ${keys.length}...`;
 
                 const defaultProvider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
-                const baseProbs = appState.config.probabilities;
+                const baseProbabilities = appState.config.probabilities;
                 const jitterFactor = appState.config.probJitterFactor / 100; // Convert % to decimal
 
                 for (let i = 0; i < keys.length; i++) {
@@ -1519,13 +1509,13 @@ https://rpc.goerli.dev,5</textarea>
                         const balanceEth = ethers.formatEther(balanceWei);
 
                         // Calculate per-wallet probabilities with jitter
-                        let sendJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
-                        let idleJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.idle;
-                        let balanceCheckJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs['balance-check'];
+                        let sendJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbabilities.send;
+                        let idleJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbabilities.idle;
+                        let balanceCheckJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbabilities['balance-check'];
 
-                        let currentSend = Math.max(0, baseProbs.send + sendJitter);
-                        let currentIdle = Math.max(0, baseProbs.idle + idleJitter);
-                        let currentBalanceCheck = Math.max(0, baseProbs['balance-check'] + balanceCheckJitter);
+                        let currentSend = Math.max(0, baseProbabilities.send + sendJitter);
+                        let currentIdle = Math.max(0, baseProbabilities.idle + idleJitter);
+                        let currentBalanceCheck = Math.max(0, baseProbabilities['balance-check'] + balanceCheckJitter);
 
                         // Normalize probabilities to sum to 100
                         const sum = currentSend + currentIdle + currentBalanceCheck;
