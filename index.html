@@ -421,7 +421,7 @@
                     <!-- Individual configuration items -->
                     <div>
                         <label for="max-txns-per-wallet" class="block font-medium mb-1 text-accent">Max Actions Per Wallet Session
-                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, idle) a single wallet will attempt in its session on a given blockchain network.</span></span>
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, idle, balance check) a single wallet will attempt in its session on a given blockchain network. The actual number of actions will be randomized up to this maximum.</span></span>
                         </label>
                         <input type="number" id="max-txns-per-wallet" value="3" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                         <p class="text-sm text-gray-500 mt-1">Maximum actions a single wallet will perform in its session on a given chain.</p>
@@ -464,6 +464,23 @@
                         <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses.</p>
                     </div>
 
+                    <!-- NEW: Probability Jitter Factor -->
+                    <div>
+                        <label for="prob-jitter-factor" class="block font-medium mb-1 text-accent">Probability Jitter Factor (%)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">A percentage range (e.g., 5 for ±5%) within which each wallet's action probabilities (Send, Idle, Balance Check) will randomly vary from the global configured probabilities. Set to 0 for no jitter.</span></span>
+                        </label>
+                        <input type="number" id="prob-jitter-factor" value="5" min="0" max="50" step="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Random variation applied to each wallet's action probabilities.</p>
+                    </div>
+                    <!-- NEW: Simulated Error Chance -->
+                    <div>
+                        <label for="simulated-error-chance" class="block font-medium mb-1 text-accent">Simulated Transaction Error Chance (%)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The percentage chance that a 'send' transaction will randomly fail, mimicking network errors. The script will then retry with exponential backoff. Set to 0 to disable.</span></span>
+                        </label>
+                        <input type="number" id="simulated-error-chance" value="0" min="0" max="100" step="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Chance for a transaction to randomly fail (simulated).</p>
+                    </div>
+
                     <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
                     <div class="md:col-span-2">
                         <label class="block font-medium mb-1 text-accent">Transaction Amount Range (ETH)
@@ -482,7 +499,7 @@
                     <!-- Delay Between Actions (spans 2 columns on medium screens and up) -->
                     <div class="md:col-span-2">
                         <label class="block font-medium mb-1 text-accent">Delay Between Actions (seconds)
-                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send or idle), the script will pause for a random duration within this minimum and maximum second range.</span></span>
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send, idle, balance check), the script will pause for a random duration, sampled from a log-normal distribution, within this minimum and maximum second range.</span></span>
                         </label>
                         <div class="flex items-center space-x-4">
                             <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
@@ -490,7 +507,7 @@
                             <span class="text-gray-500">to</span>
                             <input type="number" id="max-delay" value="30" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">A random delay will be applied after each action.</p>
+                        <p class="text-sm text-gray-500 mt-1">A log-normal random delay will be applied after each action.</p>
                     </div>
 
                     <!-- RPC Endpoints & Chain IDs (spans 2 columns on medium screens and up) -->
@@ -511,11 +528,15 @@ https://rpc.goerli.dev,5</textarea>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div>
                                 <label for="prob-send" class="block font-medium mb-1 text-accent">Send</label>
-                                <input type="number" id="prob-send" value="80" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                                <input type="number" id="prob-send" value="60" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
                             </div>
                             <div>
                                 <label for="prob-idle-action" class="block font-medium mb-1 text-accent">Idle Action</label>
                                 <input type="number" id="prob-idle-action" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                            </div>
+                            <div>
+                                <label for="prob-balance-check" class="block font-medium mb-1 text-accent">Balance Check</label>
+                                <input type="number" id="prob-balance-check" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
                             </div>
                         </div>
                         <p id="prob-sum-warning" class="text-sm text-red-500 mt-2 hidden">Probabilities must sum to 100%!</p>
@@ -640,8 +661,8 @@ https://rpc.goerli.dev,5</textarea>
                         <div class="kpi-card flex items-center space-x-4">
                             <span class="text-4xl">⏱️</span>
                             <div>
-                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Delays</h4>
-                                <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions.</p>
+                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Delays (Log-normal)</h4>
+                                <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions, drawn from a log-normal distribution for more human-like timing.</p>
                             </div>
                         </div>
                         <div class="kpi-card flex items-center space-x-4">
@@ -656,6 +677,20 @@ https://rpc.goerli.dev,5</textarea>
                             <div>
                                 <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Chain & Wallet</h4>
                                 <p class="text-left text-gray-600">Picks a random wallet and a random blockchain network for each session.</p>
+                            </div>
+                        </div>
+                         <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">🎲</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Per-Wallet Probability Jitter</h4>
+                                <p class="text-left text-gray-600">Each wallet's action probabilities (send, idle, balance check) subtly vary from global settings.</p>
+                            </div>
+                        </div>
+                         <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">⚙️</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Simulated Errors & Retries</h4>
+                                <p class="text-left text-gray-600">Introduces occasional simulated transaction failures, followed by exponential backoff retries.</p>
                             </div>
                         </div>
                      </div>
@@ -702,6 +737,16 @@ https://rpc.goerli.dev,5</textarea>
                 </div>
             </section>
 
+            <!-- NEW: Embedded Resource Section -->
+            <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Deep Dive: External Resource</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    Explore further details and documentation on transaction farming and related topics through this embedded resource.
+                </p>
+                <div class="w-full flex justify-center px-4">
+                    <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
+                </div>
+            </section>
 
             <!-- Section 6: Security -->
             <section id="infographic-security" class="my-16 md:my-24">
@@ -812,7 +857,8 @@ https://rpc.goerli.dev,5</textarea>
                     totalActions: 0,
                     successfulActions: 0,
                     failedActions: 0,
-                    actionCounts: { send: 0, idle: 0, skipped: 0 } // Simplified for send/idle only
+                    // Updated actionCounts to include 'balance-check'
+                    actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 }
                 },
                 logEntries: [], // For CSV export
                 charts: {
@@ -841,13 +887,16 @@ https://rpc.goerli.dev,5</textarea>
                 minDelay: document.getElementById('min-delay'),
                 maxDelay: document.getElementById('max-delay'),
                 gasMultiplier: document.getElementById('gas-multiplier'),
-                minGasFactor: document.getElementById('min-gas-factor'), // NEW
-                maxGasFactor: document.getElementById('max-gas-factor'), // NEW
+                minGasFactor: document.getElementById('min-gas-factor'),
+                maxGasFactor: document.getElementById('max-gas-factor'),
                 blockLookback: document.getElementById('block-lookback'),
+                probJitterFactor: document.getElementById('prob-jitter-factor'), // NEW
+                simulatedErrorChance: document.getElementById('simulated-error-chance'), // NEW
                 rpcUrls: document.getElementById('rpc-urls'),
                 testRpcBtn: document.getElementById('test-rpc-btn'),
                 probSend: document.getElementById('prob-send'),
                 probIdleAction: document.getElementById('prob-idle-action'),
+                probBalanceCheck: document.getElementById('prob-balance-check'), // NEW
                 probSumWarning: document.getElementById('prob-sum-warning'),
                 privateKeys: document.getElementById('private-keys'),
                 loadKeysBtn: document.getElementById('load-keys-btn'),
@@ -930,9 +979,10 @@ https://rpc.goerli.dev,5</textarea>
                     appState.wallets = [];
                     updateWalletBalanceChart(); // Update console's chart
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                    // Reset action probabilities to default after removing 'approve' and 'mint'
-                    ui.probSend.value = "80";
-                    ui.probIdleAction.value = "20";
+                    // Reset action probabilities to default
+                    ui.probSend.value = "60"; // New default
+                    ui.probIdleAction.value = "20"; // New default
+                    ui.probBalanceCheck.value = "20"; // New default
                 }
             };
 
@@ -1046,11 +1096,14 @@ https://rpc.goerli.dev,5</textarea>
                 appState.charts.actionDist = new Chart(ui.actionDistChartCanvas, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Send', 'Idle', 'Skipped'], // Updated labels
+                        // Updated labels for new action types
+                        labels: ['Send', 'Idle', 'Balance Check', 'Skipped'],
                         datasets: [{
                             label: 'Actions',
-                            data: [0, 0, 0], // Updated data array size
-                            backgroundColor: ['#3b82f6', '#a8a29e', '#ef4444'], // Updated colors
+                            // Updated data array size for 4 categories
+                            data: [0, 0, 0, 0],
+                            // Updated colors for consistency and new action type
+                            backgroundColor: ['#3b82f6', '#a8a29e', '#f59e0b', '#ef4444'],
                             borderColor: '#ffffff',
                             borderWidth: 1
                         }]
@@ -1081,7 +1134,7 @@ https://rpc.goerli.dev,5</textarea>
                 const chart = appState.charts.actionDist;
                 // Update dataMap for new labels
                 const dataMap = {
-                    send: 0, idle: 1, skipped: 2
+                    send: 0, idle: 1, 'balance-check': 2, skipped: 3
                 };
                 if (dataMap[actionType] !== undefined) {
                     chart.data.datasets[0].data[dataMap[actionType]] = appState.stats.actionCounts[actionType];
@@ -1100,11 +1153,13 @@ https://rpc.goerli.dev,5</textarea>
                 appState.charts.infographicActionDist = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Send Transaction', 'Idle (No Action)'],
+                        // Updated labels to reflect new action type in infographic
+                        labels: ['Send Transaction', 'Idle (No Action)', 'Balance Check'],
                         datasets: [{
                             label: 'Action Probability',
-                            data: [80, 20],
-                            backgroundColor: ['#00B4D8', '#90E0EF'],
+                            // Updated data to match new default probabilities
+                            data: [60, 20, 20],
+                            backgroundColor: ['#00B4D8', '#90E0EF', '#fcd34d'], // Added color for balance check
                             borderColor: '#ffffff',
                             borderWidth: 2,
                         }]
@@ -1167,7 +1222,7 @@ https://rpc.goerli.dev,5</textarea>
                         plugins: {
                             legend: {
                                 labels: {
-                                    color: '#212529'
+                                    color: '#212529
                                 }
                             }
                         }
@@ -1287,11 +1342,14 @@ https://rpc.goerli.dev,5</textarea>
                     minGasFactor: minGasFactor || 0.9,
                     maxGasFactor: maxGasFactor || 1.1,
                     blockLookback: parseInt(ui.blockLookback.value) || 100,
+                    probJitterFactor: parseInt(ui.probJitterFactor.value) || 5, // NEW config
+                    simulatedErrorChance: parseInt(ui.simulatedErrorChance.value) || 0, // NEW config
                     recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
                     fixedAddress: ui.fixedAddress.value.trim(),
                     probabilities: {
-                        send: parseInt(ui.probSend.value) || 80, // Updated default
+                        send: parseInt(ui.probSend.value) || 60, // Updated default
                         idle: parseInt(ui.probIdleAction.value) || 20, // Updated default
+                        'balance-check': parseInt(ui.probBalanceCheck.value) || 20, // NEW default
                     }
                 };
 
@@ -1309,15 +1367,64 @@ https://rpc.goerli.dev,5</textarea>
             };
 
             const getRandomInRange = (min, max) => Math.random() * (max - min) + min;
+
+            // Log-normal random number generator for human-like delays [41]
+            let spareRandom = null;
+            function normalRandom() {
+                let val, u, v, s, mul;
+                if(spareRandom !== null) {
+                    val = spareRandom;
+                    spareRandom = null;
+                } else {
+                    do {
+                        u = Math.random() * 2 - 1;
+                        v = Math.random() * 2 - 1;
+                        s = u * u + v * v;
+                    } while(s === 0 || s >= 1);
+                    mul = Math.sqrt(-2 * Math.log(s) / s);
+                    val = u * mul;
+                    spareRandom = v * mul;
+                }
+                return val;
+            }
+
+            // Function to generate a log-normal random number scaled to a desired mean and stddev
+            // Here, gmean is the geometric mean (or a target center), gstddev is the geometric standard deviation.
+            // For delays, we want values mostly between minDelay and maxDelay.
+            // A simple approach is to use a distribution that has its values within these bounds.
+            // For more control, min and max can act as hard clamps.
+            function lnRandomScaled(min, max) {
+                // Approximate geometric mean and stddev for the log-normal distribution
+                // This is a simplification; for precise control over min/max,
+                // you'd need to solve for mu and sigma given desired percentiles.
+                const logMin = Math.log(min);
+                const logMax = Math.log(max);
+                const mu = (logMin + logMax) / 2;
+                // A fixed standard deviation for the underlying normal distribution.
+                // Adjust this value to change the "spread" of the log-normal distribution.
+                // A higher sigma means more values further from the mean.
+                // Using a value that generally keeps outputs within a reasonable range.
+                const sigma = (logMax - logMin) / 4; // Arbitrary scaling factor to fit within range
+
+                let randomLogValue = normalRandom() * sigma + mu;
+                let result = Math.exp(randomLogValue);
+
+                // Clamp the result to be within the specified min and max
+                return Math.max(min, Math.min(max, result));
+            }
+
+
             const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-            const chooseAction = () => {
+            // Modified chooseAction to use per-wallet probabilities
+            const chooseAction = (walletSessionProbs) => {
                 const rand = Math.random() * 100;
                 let cumulativeProb = 0;
-                const probs = appState.config.probabilities;
 
-                if (rand < (cumulativeProb += probs.send)) return 'send';
-                return 'idle-action'; // Only send and idle-action remain
+                if (rand < (cumulativeProb += walletSessionProbs.send)) return 'send';
+                if (rand < (cumulativeProb += walletSessionProbs.idle)) return 'idle-action';
+                if (rand < (cumulativeProb += walletSessionProbs['balance-check'])) return 'balance-check';
+                return 'idle-action'; // Fallback, should not be reached if sum is 100
             };
 
             const scanRecentBlocks = async (rpc, chainId) => {
@@ -1402,16 +1509,37 @@ https://rpc.goerli.dev,5</textarea>
                 ui.keysLoadedCount.textContent = `Loading 0 / ${keys.length}...`;
 
                 const defaultProvider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
+                const baseProbs = appState.config.probabilities;
+                const jitterFactor = appState.config.probJitterFactor / 100; // Convert % to decimal
 
                 for (let i = 0; i < keys.length; i++) {
                     try {
                         const wallet = new ethers.Wallet(keys[i], defaultProvider);
                         const balanceWei = await defaultProvider.getBalance(wallet.address);
                         const balanceEth = ethers.formatEther(balanceWei);
+
+                        // Calculate per-wallet probabilities with jitter
+                        let sendJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
+                        let idleJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.idle;
+                        let balanceCheckJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs['balance-check'];
+
+                        let currentSend = Math.max(0, baseProbs.send + sendJitter);
+                        let currentIdle = Math.max(0, baseProbs.idle + idleJitter);
+                        let currentBalanceCheck = Math.max(0, baseProbs['balance-check'] + balanceCheckJitter);
+
+                        // Normalize probabilities to sum to 100
+                        const sum = currentSend + currentIdle + currentBalanceCheck;
+                        const walletSessionProbs = {
+                            send: (currentSend / sum) * 100,
+                            idle: (currentIdle / sum) * 100,
+                            'balance-check': (currentBalanceCheck / sum) * 100
+                        };
+
                         appState.wallets.push({
                             privateKey: keys[i],
                             address: wallet.address,
-                            balance: parseFloat(balanceEth).toFixed(6)
+                            balance: parseFloat(balanceEth).toFixed(6),
+                            sessionProbabilities: walletSessionProbs // Store per-wallet probabilities
                         });
                         ui.keysLoadedCount.textContent = `Loaded ${i + 1} / ${keys.length} wallets.`;
                     } catch (error) {
@@ -1578,10 +1706,12 @@ https://rpc.goerli.dev,5</textarea>
                     
                     appState.isRunning = true;
                     appState.stopFlag = false;
-                    // Reset action counts for only send/idle/skipped
-                    appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, skipped: 0 } };
+                    // Reset action counts for all action types
+                    appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
                     appState.logEntries = [];
-                    appState.charts.actionDist.data.datasets[0].data = [0, 0, 0]; // Update for 3 categories
+                    // Update chart with new labels and reset data
+                    appState.charts.actionDist.data.labels = ['Send', 'Idle', 'Balance Check', 'Skipped'];
+                    appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0];
                     appState.charts.actionDist.update();
 
 
@@ -1626,7 +1756,8 @@ https://rpc.goerli.dev,5</textarea>
                         if (Math.random() * 100 < appState.config.walletIdleChance) {
                             log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId}.`, 'info', { chainId, walletAddress, action: 'idle' });
                             updateActionDistChart('idle');
-                            await sleep(getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
+                            const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
+                            await sleep(delay);
                             continue; // Move to next wallet/chain session
                         }
 
@@ -1636,7 +1767,8 @@ https://rpc.goerli.dev,5</textarea>
                             if (balanceWei < ethers.parseEther("0.001")) { // Ensure sufficient balance for gas
                                 log(`Skipping wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} due to critically low balance (${ethers.formatEther(balanceWei)} ETH).`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                 updateActionDistChart('skipped');
-                                await sleep(getRandomInRange(appState.config.minDelay, appState.config.maxDelay)); // Add delay even for skipped
+                                const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
+                                await sleep(delay); // Add delay even for skipped
                                 continue; // Move to next wallet/chain session
                             } else if (balanceWei < ethers.parseEther("0.005")) { // Warning for slightly low balance
                                  log(`Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} has low balance (${ethers.formatEther(balanceWei)} ETH).`, 'warning', { chainId, walletAddress, action: 'info' });
@@ -1644,12 +1776,13 @@ https://rpc.goerli.dev,5</textarea>
                         } catch (balanceError) {
                             log(`Failed to check balance for ...${walletAddress.slice(-6)} on Chain ID ${chainId}: ${balanceError.message}`, 'error', { chainId, walletAddress, action: 'skipped' });
                             updateActionDistChart('skipped');
-                            await sleep(getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
+                            const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
+                            await sleep(delay);
                             continue; // Move to next wallet/chain session
                         }
 
-
-                        const actionsForWallet = Math.floor(getRandomInRange(1, appState.config.maxTxnsPerWallet + 0.999));
+                        // Variable session length: random number of actions between 1 and maxTxnsPerWallet
+                        const actionsForWallet = Math.floor(getRandomInRange(1, appState.config.maxTxnsPerWallet + 1));
                         log(`Wallet ...${walletAddress.slice(-6)} will perform ${actionsForWallet} action(s) on Chain ID ${chainId}.`, 'info');
 
                         for (let i = 1; i <= actionsForWallet; i++) {
@@ -1686,8 +1819,9 @@ https://rpc.goerli.dev,5</textarea>
                             } catch (gasError) {
                                 log(`Failed to get gas price for Chain ID ${chainId}: ${gasError.message}. Proceeding without high gas check.`, 'warning', { chainId, walletAddress, action: 'skipped' });
                             }
-
-                            const chosenBehavior = chooseAction();
+                            
+                            // Choose action using per-wallet probabilities
+                            const chosenBehavior = chooseAction(walletInfo.sessionProbabilities);
                             log(`[Action ${i}/${actionsForWallet}] Wallet ...${walletAddress.slice(-6)} chose to: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress, action: chosenBehavior });
 
                             let actionSuccess = false;
@@ -1774,6 +1908,11 @@ https://rpc.goerli.dev,5</textarea>
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
                                     try {
+                                        // Simulate random transaction error
+                                        if (Math.random() * 100 < appState.config.simulatedErrorChance) {
+                                            throw new Error("Simulated network error: Transaction dropped/failed.");
+                                        }
+
                                         log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}...`, 'info');
                                         const txResponse = await wallet.sendTransaction(tx);
                                         log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress, action: 'send' });
@@ -1790,6 +1929,17 @@ https://rpc.goerli.dev,5</textarea>
                                     log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle' });
                                     updateActionDistChart('idle');
                                     actionSuccess = true;
+                                    break;
+                                
+                                case "balance-check": // NEW action
+                                    try {
+                                        const currentBalanceWei = await provider.getBalance(walletAddress);
+                                        log(`Wallet ...${walletAddress.slice(-6)} checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ETH`, 'info', { chainId, walletAddress, action: 'balance-check' });
+                                        actionSuccess = true;
+                                    } catch (error) {
+                                        log(`Failed to check balance for ...${walletAddress.slice(-6)}: ${error.message}`, 'error', { chainId, walletAddress, action: 'balance-check' });
+                                    }
+                                    updateActionDistChart('balance-check');
                                     break;
                             }
 
@@ -1812,7 +1962,7 @@ https://rpc.goerli.dev,5</textarea>
                             }
 
                             if (i < actionsForWallet && !appState.stopFlag) {
-                                const delay = getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
+                                const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
                                 log(`Waiting for ${Math.round(delay/1000)} seconds before next action...`, 'info');
                                 await sleep(delay);
                             }
@@ -1821,7 +1971,7 @@ https://rpc.goerli.dev,5</textarea>
                         if (appState.stopFlag) break; // Break main loop if stop requested during inner loop
 
                         // Delay after a full wallet session on a chain
-                        const sessionDelay = getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
+                        const sessionDelay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
                         log(`Session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info');
                         await sleep(sessionDelay);
 
@@ -1855,16 +2005,20 @@ https://rpc.goerli.dev,5</textarea>
                         ui.predefinedAddressesInfo.textContent = 'No file loaded.';
                         updatePredefinedAddressesDisplay();
                         appState.config = {};
-                        // Updated appState.stats reset for fewer action types
-                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, skipped: 0 } };
+                        // Updated appState.stats reset for all action types
+                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
                         appState.logEntries = [];
 
                         ui.privateKeys.value = '';
                         ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                        ui.probSend.value = "80"; // Reset to new defaults
+                        ui.probSend.value = "60"; // Reset to new defaults
                         ui.probIdleAction.value = "20"; // Reset to new defaults
-                        ui.minGasFactor.value = "0.9"; // Reset to new defaults
-                        ui.maxGasFactor.value = "1.1"; // Reset to new defaults
+                        ui.probBalanceCheck.value = "20"; // Reset to new defaults
+                        ui.minGasFactor.value = "0.9";
+                        ui.maxGasFactor.value = "1.1";
+                        ui.probJitterFactor.value = "5"; // Reset new config
+                        ui.simulatedErrorChance.value = "0"; // Reset new config
+
 
                         setUIEnabled(false);
                     }
@@ -2064,7 +2218,7 @@ https://rpc.goerli.dev,5</textarea>
                 });
 
                 // Only attach event listeners to relevant probability inputs
-                document.querySelectorAll('#prob-send, #prob-idle-action').forEach(input => {
+                document.querySelectorAll('#prob-send, #prob-idle-action, #prob-balance-check').forEach(input => {
                     input.addEventListener('input', loadConfiguration);
                 });
 
@@ -2072,8 +2226,10 @@ https://rpc.goerli.dev,5</textarea>
                 ui.maxAmount.addEventListener('input', loadConfiguration);
                 ui.minDelay.addEventListener('input', loadConfiguration);
                 ui.maxDelay.addEventListener('input', loadConfiguration);
-                ui.minGasFactor.addEventListener('input', loadConfiguration); // NEW
-                ui.maxGasFactor.addEventListener('input', loadConfiguration); // NEW
+                ui.minGasFactor.addEventListener('input', loadConfiguration);
+                ui.maxGasFactor.addEventListener('input', loadConfiguration);
+                ui.probJitterFactor.addEventListener('input', loadConfiguration); // NEW
+                ui.simulatedErrorChance.addEventListener('input', loadConfiguration); // NEW
                 
                 ui.navLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
