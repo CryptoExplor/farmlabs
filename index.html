@@ -737,6 +737,16 @@ https://rpc.goerli.dev,5</textarea>
                 </div>
             </section>
 
+            <!-- NEW: Embedded Resource Section -->
+            <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Deep Dive: External Resource</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    Explore further details and documentation on transaction farming and related topics through this embedded resource.
+                </p>
+                <div class="w-full flex justify-center px-4">
+                    <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
+                </div>
+            </section>
 
             <!-- Section 6: Security -->
             <section id="infographic-security" class="my-16 md:my-24">
@@ -866,6 +876,7 @@ https://rpc.goerli.dev,5</textarea>
             const ui = {
                 connectWalletBtn: document.getElementById('connect-wallet-btn'),
                 walletStatusDisplay: document.getElementById('wallet-status-display'),
+                // IMPORTANT: Exclude connectWalletBtn from walletFeatureControls
                 walletFeatureControls: document.querySelectorAll('.wallet-feature-control'),
                 startBtn: document.getElementById('start-btn'),
                 stopBtn: document.getElementById('stop-btn'),
@@ -948,6 +959,10 @@ https://rpc.goerli.dev,5</textarea>
                          control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
                     }
                 });
+
+                // The connect wallet button should ALWAYS be enabled.
+                ui.connectWalletBtn.disabled = false;
+
 
                 // Correctly show/hide recipient sections based on selected mode
                 const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked)?.value;
@@ -1077,12 +1092,19 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 };
 
+                // Destroy existing charts if they exist to prevent re-initialization errors
+                if (appState.charts.walletBalance) {
+                    appState.charts.walletBalance.destroy();
+                }
                 appState.charts.walletBalance = new Chart(ui.walletBalanceChartCanvas, {
                     type: 'bar',
                     data: { labels: [], datasets: [{ label: 'ETH Balance', data: [], backgroundColor: '#60a5fa', borderColor: '#3b82f6', borderWidth: 1 }] },
                     options: { ...chartOptions, indexAxis: 'y' }
                 });
 
+                if (appState.charts.actionDist) {
+                    appState.charts.actionDist.destroy();
+                }
                 appState.charts.actionDist = new Chart(ui.actionDistChartCanvas, {
                     type: 'doughnut',
                     data: {
@@ -1392,7 +1414,6 @@ https://rpc.goerli.dev,5</textarea>
                 const mu = (logMin + logMax) / 2;
                 // A fixed standard deviation for the underlying normal distribution.
                 // Adjust this value to change the "spread" of the log-normal distribution.
-                // A higher sigma means more values further from the mean.
                 // Using a value that generally keeps outputs within a reasonable range.
                 const sigma = (logMax - logMin) / 4; // Arbitrary scaling factor to fit within range
 
@@ -1449,7 +1470,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
+                const apiKey = "AIzaSyBns3XoeRSd1p1kttRjbv8qR9J01pdrCaQ"; // API key is left blank, Canvas will provide it at runtime.
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1486,7 +1507,7 @@ https://rpc.goerli.dev,5</textarea>
             const loadWallets = async () => {
                 const keys = ui.privateKeys.value.split('\n').map(k => k.trim()).filter(Boolean);
                 if (keys.length === 0) {
-                    log('No private keys provided.', 'error');
+                    log('No private keys provided. Please paste private keys into the text area.', 'error');
                     return;
                 }
                 if (appState.rpcConfigs.length === 0) {
@@ -1499,7 +1520,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.keysLoadedCount.textContent = `Loading 0 / ${keys.length}...`;
 
                 const defaultProvider = new ethers.JsonRpcProvider(appState.rpcConfigs[0].url);
-                const baseProbabilities = appState.config.probabilities;
+                const baseProbs = appState.config.probabilities;
                 const jitterFactor = appState.config.probJitterFactor / 100; // Convert % to decimal
 
                 for (let i = 0; i < keys.length; i++) {
@@ -1509,13 +1530,13 @@ https://rpc.goerli.dev,5</textarea>
                         const balanceEth = ethers.formatEther(balanceWei);
 
                         // Calculate per-wallet probabilities with jitter
-                        let sendJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbabilities.send;
-                        let idleJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbabilities.idle;
-                        let balanceCheckJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbabilities['balance-check'];
+                        let sendJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
+                        let idleJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.idle;
+                        let balanceCheckJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs['balance-check'];
 
-                        let currentSend = Math.max(0, baseProbabilities.send + sendJitter);
-                        let currentIdle = Math.max(0, baseProbabilities.idle + idleJitter);
-                        let currentBalanceCheck = Math.max(0, baseProbabilities['balance-check'] + balanceCheckJitter);
+                        let currentSend = Math.max(0, baseProbs.send + sendJitter);
+                        let currentIdle = Math.max(0, baseProbs.idle + idleJitter);
+                        let currentBalanceCheck = Math.max(0, baseProbs['balance-check'] + balanceCheckJitter);
 
                         // Normalize probabilities to sum to 100
                         const sum = currentSend + currentIdle + currentBalanceCheck;
@@ -1911,7 +1932,11 @@ https://rpc.goerli.dev,5</textarea>
                                         log(`Tx confirmed!`, 'success');
                                         actionSuccess = true;
                                     } catch (error) {
-                                        log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send' });
+                                    if (error.message.includes("Simulated network error")) {
+                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send' });
+                                        } else {
+                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send' });
+                                        }
                                     }
                                     break;
 
@@ -1920,7 +1945,7 @@ https://rpc.goerli.dev,5</textarea>
                                     updateActionDistChart('idle');
                                     actionSuccess = true;
                                     break;
-                                
+
                                 case "balance-check": // NEW action
                                     try {
                                         const currentBalanceWei = await provider.getBalance(walletAddress);
@@ -2011,6 +2036,9 @@ https://rpc.goerli.dev,5</textarea>
 
 
                         setUIEnabled(false);
+                        // Re-initialize console charts after clearing data to ensure they reflect the empty state correctly
+                        initConsoleCharts();
+                        updateWalletBalanceChart(); // Ensure wallet balance chart is empty
                     }
                 });
             };
@@ -2085,11 +2113,12 @@ https://rpc.goerli.dev,5</textarea>
                 if (typeof window.ethereum === 'undefined') {
                     log('MetaMask or compatible wallet not detected. Please install one.', 'error');
                     ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a> or a compatible browser extension.`;
-                    setUIEnabled(false);
+                    setUIEnabled(false); // Disable other features as no wallet is connected
                     return;
                 }
 
                 log('window.ethereum detected. Requesting accounts...', 'info');
+                ui.walletStatusDisplay.innerHTML = 'Connecting... (Check your wallet extension for a pop-up)'; // Inform user to look for pop-up
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
@@ -2103,7 +2132,7 @@ https://rpc.goerli.dev,5</textarea>
                     appState.connectedAddress = accounts[0];
                     log(`Wallet connected: ${appState.connectedAddress}`, 'success');
                     ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
-                    setUIEnabled(true);
+                    setUIEnabled(true); // Enable all features now that a wallet is connected
 
                     // Set up event listeners for window.ethereum
                     window.ethereum.on('accountsChanged', (newAccounts) => {
@@ -2148,13 +2177,16 @@ https://rpc.goerli.dev,5</textarea>
             // This function now solely manages which of the two main content areas is visible.
             // It does not handle scrolling or active link states in the navigation bar directly.
             const showMainContentArea = (pageId) => {
+                console.log(`Attempting to show page: ${pageId}`); // Debug log
                 ui.scriptConsoleContent.classList.add('hidden');
                 ui.infographicContent.classList.add('hidden');
 
                 if (pageId === 'console') {
                     ui.scriptConsoleContent.classList.remove('hidden');
+                    console.log('Script console content shown.'); // Debug log
                 } else if (pageId === 'infographic') {
                     ui.infographicContent.classList.remove('hidden');
+                    console.log('Infographic content shown.'); // Debug log
                     // Initialize infographic charts only when the page is shown
                     initInfographicActionDistChart();
                     initInfographicWalletBalanceChart();
@@ -2173,7 +2205,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
                 ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
-                
+
                 ui.closeModalBtn.addEventListener('click', closeGeminiModal);
                 window.addEventListener('click', (event) => {
                     if (event.target === ui.geminiModal) {
@@ -2230,6 +2262,8 @@ https://rpc.goerli.dev,5</textarea>
                          const targetElementId = targetHref.substring(1); // Remove '#'
                          const targetElement = document.getElementById(targetElementId);
 
+                         console.log(`Nav link clicked: ${this.textContent}, targetPage: ${targetPage}, targetElementId: ${targetElementId}`); // Debug log
+
                          // First, ensure the correct main content area is visible
                          showMainContentArea(targetPage);
 
@@ -2238,6 +2272,7 @@ https://rpc.goerli.dev,5</textarea>
                          setTimeout(() => {
                              if (targetElement) {
                                  targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                 console.log(`Scrolled to: ${targetElementId}`); // Debug log
                              }
                          }, 100); // 100ms delay should be sufficient
 
@@ -2251,8 +2286,8 @@ https://rpc.goerli.dev,5</textarea>
             initConsoleCharts(); // Initialize charts for the console
             setupEventListeners();
             loadConfiguration();
-            updateWalletBalanceChart();
-            setUIEnabled(false);
+            updateWalletBalanceChart(); // Initial chart update (will be empty)
+            setUIEnabled(false); // Initially disable features, but connect wallet button remains enabled
 
             // Set the initial active navigation link and display the default content area
             const initialPage = 'console'; // Default starting page
@@ -2276,11 +2311,13 @@ https://rpc.goerli.dev,5</textarea>
                         } else {
                              ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
                              log('No existing wallet connection found on startup.', 'info');
+                             setUIEnabled(false); // Ensure features are disabled if no existing connection
                         }
                     })
                     .catch(error => {
                         log(`Error checking existing wallet connection: ${error.message}`, 'error');
                          ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
+                         setUIEnabled(false); // Ensure features are disabled on error
                     });
 
                  window.ethereum.on('accountsChanged', (newAccounts) => {
@@ -2312,6 +2349,7 @@ https://rpc.goerli.dev,5</textarea>
             } else {
                 ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
                 log('MetaMask or compatible wallet not detected on startup.', 'error');
+                setUIEnabled(false); // Ensure features are disabled if MetaMask is not detected
             }
 
             log('Console initialized. Please connect your wallet to begin.');
