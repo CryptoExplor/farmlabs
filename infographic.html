@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stealth Automation Infographic</title>
+    <!-- Google AdSense Account Meta Tag (Recommended in <head>) -->
+    <meta name="google-adsense-account" content="ca-pub-3062851685354753">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome for social media icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Base styles for the entire page, aligned with the main console's theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb; /* Warm Beige */
+            color: #212529; /* Dark Gray for main text */
+        }
+        /* Color palette variables for consistency */
+        :root {
+            --primary-bg: #f4f1eb;
+            --secondary-bg: #ffffff;
+            --main-text: #2d3748; /* Slate 800 */
+            --accent-text: #4a5568; /* Slate 600 */
+            --border-color: #e2e8f0; /* Slate 200 */
+            --blue-accent: #3b82f6; /* Tailwind blue-500 */
+            --blue-dark: #0077B6; /* Darker blue for titles/arrows */
+            --chart-cyan: #00B4D8; /* For charts, from original infographic */
+            --chart-magenta: #f472b6; /* For charts, from original infographic */
+            --chart-yellow: #fcd34d; /* For charts, from original infographic */
+        }
+
+        .bg-primary { background-color: var(--primary-bg); }
+        .bg-secondary { background-color: var(--secondary-bg); }
+        .text-main { color: var(--main-text); }
+        .text-accent { color: var(--accent-text); }
+        .border-accent { border-color: var(--border-color); }
+
+        /* Navigation link styles */
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--blue-accent);
+            border-bottom-color: var(--blue-accent);
+        }
+
+        /* Infographic specific styles */
+        #infographic-content {
+            background-color: #F8F9FA; /* Slightly lighter background for content sections */
+            color: var(--main-text);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 600px;
+            height: 320px; /* Default height */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px; /* Larger height on desktop */
+            }
+        }
+        .kpi-card {
+            background-color: var(--secondary-bg);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .flowchart-step {
+            border: 2px solid var(--blue-accent); /* Use primary blue for steps */
+            background-color: var(--secondary-bg);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .flowchart-arrow {
+            color: var(--blue-dark); /* Darker blue for arrows */
+            font-size: 2rem;
+            line-height: 1;
+            transform: rotate(90deg); /* Default for mobile */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (min-width: 1024px) {
+            .flowchart-arrow {
+                transform: rotate(0deg); /* Horizontal for desktop */
+            }
+            .flowchart-arrow-container {
+                margin: 0 1rem; /* Spacing for horizontal layout */
+            }
+        }
+
+        /* Section titles */
+        .section-title {
+          text-align: center;
+          font-size: 2.25rem; /* text-4xl */
+          line-height: 2.5rem; /* leading-10 */
+          font-weight: 800; /* font-extrabold */
+          margin-bottom: 3rem; /* mb-12 */
+          color: var(--blue-dark);
+        }
+        @media (min-width: 768px) {
+            .section-title {
+                font-size: 3rem; /* md:text-5xl */
+                line-height: 1;
+            }
+        }
+
+        /* Specific colors for infographic charts, mapped to the overall theme */
+        .text-infographic-cyan { color: var(--chart-cyan); }
+        .text-infographic-magenta { color: var(--chart-magenta); }
+        .text-infographic-yellow { color: var(--chart-yellow); }
+        .bg-infographic-cyan { background-color: var(--chart-cyan); }
+        .bg-infographic-magenta { background-color: var(--chart-magenta); }
+
+        /* Modal styles for QR code */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 90%;
+            width: 350px;
+        }
+        .close-qr-button {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-qr-button:hover,
+        .close-qr-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-primary text-main">
+    <!-- Google AdSense Script (Recommended right after <body> tag) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3062851685354753"
+     crossorigin="anonymous"></script>
+
+    <header class="bg-secondary shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-8 w-8 mr-2 rounded-full">
+                    <h1 class="text-xl md:text-2xl font-bold text-main">Stealth Automation Infographic</h1>
+                </div>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <!-- Link to the main console, renamed to index.html for Vercel deployment -->
+                    <a href="index.html" class="nav-link text-accent font-medium pb-1">Dashboard</a>
+                    <a href="#infographic-overview" class="nav-link text-accent font-medium pb-1 active">Infographic</a>
+                    <a href="https://farm-labs.blogspot.com/" target="_blank" class="nav-link text-accent font-medium pb-1" title="Farm Labs Blog">
+                        <i class="fab fa-blogger text-xl"></i>
+                    </a>
+                    <a href="https://t.me/farm_lab" target="_blank" class="nav-link text-accent font-medium pb-1" title="Farm Lab Telegram">
+                        <i class="fab fa-telegram text-xl"></i>
+                    </a>
+                    <!-- GitHub Link in Header -->
+                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Labs GitHub">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: var(--blue-dark);">Farm smarter, not harder — with FarmLabs.</h2>
+
+        <div id="infographic-content">
+            <!-- Section 1: Introduction & Hook (Combined from both) -->
+            <section id="infographic-overview" class="text-center my-12 md:my-16 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="section-title">The Blueprint of Human-like Automation</h2>
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">
+                    A deep dive into a client-side tool designed to automate blockchain interactions for Research, Development, protocol testing, testnet farming and airdrop eligibility , with a focus on simulating organic, human-like activity.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="kpi-card">
+                        <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">5</span>
+                        <h3 class="text-xl font-semibold text-gray-700">Recipient Modes</h3>
+                        <p class="text-gray-500 mt-2">From dynamic address pools to self-interaction, offering diverse targeting strategies.</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">5+</span>
+                        <h3 class="text-xl font-semibold text-gray-700">Randomization Factors</h3>
+                        <p class="text-gray-500 mt-2">Simulates human behavior by randomizing amounts, delays, wallets, chains, and gas fees.</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">∞</span>
+                        <h3 class="text-xl font-semibold text-gray-700">Supported Wallets</h3>
+                        <p class="text-gray-500 mt-2">Load an unlimited number of private keys to scale your operations effortlessly.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: The Core Engine (Combined from both) -->
+            <section id="infographic-how-it-works" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="section-title">The Core Engine: How It Works</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    The script follows a logical, configurable flow to execute its tasks. From initialization to the final transaction, each step is designed for automation and control.
+                </p>
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">1. Connect & Load Wallets</div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">2. Configure Settings (Recipients, Delays, Amounts)</div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">3. Start Farming Process</div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step p-6 w-full md:w-2/3 text-center border-dashed border-2 border-gray-300 bg-gray-50 text-gray-700">
+                        <h4 class="font-bold text-lg mb-4">4. Execution Loop (Repeats)</h4>
+                        <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                            <div class="font-semibold">Select Chain</div>
+                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                            <div class="font-semibold">Select Wallet</div>
+                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                            <div class="font-semibold">Choose Action</div>
+                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                            <div class="font-semibold">Execute Tx</div>
+                        </div>
+                    </div>
+                    <div class="text-4xl flowchart-arrow">↓</div>
+                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">5. Monitor via Dashboard & Logs</div>
+                </div>
+            </section>
+
+            <!-- Section 3: KPIs (From infographic-page) -->
+            <section id="infographic-kpis" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                 <h2 class="section-title">Key Performance Indicators</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 px-8">
+                     <div>
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Action Distribution</h3>
+                        <p class="text-center text-gray-600 mb-6">
+                            This chart shows the typical probability of the script performing a 'Send' transaction versus choosing to remain 'Idle' for an action, a key feature for simulating non-robotic behavior.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="infographicActionDistChart"></canvas>
+                        </div>
+                     </div>
+                     <div>
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Sample Wallet Balances (ETH)</h3>
+                         <p class="text-center text-gray-600 mb-6">
+                            A snapshot of balances across multiple loaded wallets. The script provides real-time updates to this data as transactions are confirmed on the network.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="infographicWalletBalanceChart"></canvas>
+                        </div>
+                     </div>
+                 </div>
+            </section>
+
+            <!-- Section: Deconstructing the Digital Fingerprint / Layer 1 (Combined & Enhanced) -->
+            <section id="infographic-fingerprinting" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="section-title">Deconstructing the Digital Fingerprint</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Platforms create a unique identity by collecting various data points from your browser and device—such as graphics capabilities, installed fonts, and system settings. This "fingerprint" is powerful because it persists even if you clear cookies. To evade detection, a script must address multiple, independent fingerprinting vectors simultaneously to create a consistent, plausible profile.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-4">
+                        <h3 class="text-2xl font-bold mb-4 text-infographic-cyan">Anatomy of a Fingerprint</h3>
+                         <div class="chart-container">
+                            <canvas id="infographicFingerprintChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">A radar chart illustrates how various data points (like Canvas, WebGL, and Fonts) contribute to a user's unique digital signature. The larger the area, the more unique the user.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="text-2xl font-bold mb-4 text-infographic-yellow">Crafting a Coherent Persona</h3>
+                        <p class="text-gray-600 mb-6">Randomizing individual attributes is not enough; modern anti-bot systems detect inconsistent profiles. The key is to build a <span class="font-bold text-main">plausible but fake identity</span>. This flowchart outlines the logic for generating a believable digital persona that can evade statistical analysis.</p>
+                        <div class="flex flex-col lg:flex-row justify-center items-stretch gap-4">
+                            <div class="flowchart-node flex flex-col justify-center">
+                                <span class="text-4xl">🖥️</span>
+                                <p class="mt-2 font-semibold">1. Select Realistic Base Profile</p>
+                                <p class="text-sm text-gray-500">(e.g., Chrome on Windows 11)</p>
+                            </div>
+                            <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
+                            <div class="flowchart-node flex flex-col justify-center">
+                                <span class="text-4xl">🛡️</span>
+                                <p class="mt-2 font-semibold">2. Choose Plausible Hardware</p>
+                                <p class="text-sm text-gray-500">(e.g., Common GPU, 4 CPU Cores)</p>
+                            </div>
+                            <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
+                            <div class="flowchart-node flex flex-col justify-center">
+                                <span class="text-4xl">🎲</span>
+                                <p class="mt-2 font-semibold">3. Randomize Attributes Logically</p>
+                                <p class="text-sm text-gray-500">(e.g., Add noise to Canvas, spoof fonts)</p>
+                            </div>
+                            <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
+                            <div class="flowchart-node bg-infographic-cyan text-white flex flex-col justify-center">
+                                <span class="text-4xl">👻</span>
+                                <p class="mt-2 font-bold">4. Output: Coherent, Spoofed Fingerprint</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: The Shifting Footprint (Proxies) (Combined & Enhanced) -->
+            <section id="proxies" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="section-title">Layer 2: The Shifting Footprint (IP Rotation)</h2>
+                 <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Your IP address is a primary tracker. Strategically rotating IPs through proxies is fundamental, but the type of proxy matters significantly. Routinely changing IP addresses is critical for bypassing IP-based blocking and rate limits. However, IP rotation alone is not a silver bullet. Anti-bot systems correlate IP changes with other persistent identifiers, like device fingerprints. True evasion requires a synergistic approach, combining IP masking with coherent fingerprint spoofing to present a genuinely human-like profile across multiple detection vectors.</p>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+                    <div class="md:col-span-3">
+                        <h3 class="text-xl font-semibold text-accent mb-2">Proxy Effectiveness Comparison</h3>
+                        <p class="text-gray-600 mb-4">Residential proxies, which use real IP addresses from ISPs, are far more effective at bypassing sophisticated anti-bot systems than datacenter proxies.</p>
+                        <div class="chart-container">
+                            <canvas id="infographicProxyChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">This chart shows the efficacy of different proxy types, highlighting why residential and mobile IPs are preferred for advanced evasion.</p>
+                    </div>
+                    <div class="md:col-span-2 text-center bg-main text-white p-8 rounded-lg">
+                         <div class="text-7xl font-black" style="color: var(--chart-yellow);">95%</div>
+                         <div class="text-2xl font-bold mt-2">Success Rate</div>
+                         <p class="mt-4 text-gray-200">High-quality residential proxies can achieve up to a 95% success rate against advanced bot detection, making them essential for high-security targets.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: The Humanization Engine / Layer 3 (Combined & Enhanced) -->
+            <section id="infographic-features" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="section-title">The 'Humanization' Engine</h2>
+                 <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    To avoid being flagged as a bot, the script incorporates several layers of randomization. This engine ensures that the script's activity appears organic and unpredictable. Bots are often caught by their unnatural timing. Human reaction times follow skewed distributions, not fixed intervals. Scripts must mimic this organic inconsistency to appear genuine.
+                </p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                     <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Randomized Gas Payments</h3>
+                         <p class="text-center text-gray-600 mb-6">
+                            Instead of using a fixed gas price, the script calculates a variable fee for each transaction, staying within a user-defined multiplier of the current network average to mimic human bidding behavior.
+                        </p>
+                        <div class="chart-container h-80">
+                            <canvas id="infographicGasPriceChart"></canvas>
+                        </div>
+                     </div>
+                     <div class="space-y-6">
+                        <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">⏱️</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Delays (Log-normal)</h4>
+                                <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions, drawn from a log-normal distribution for more human-like timing.</p>
+                            </div>
+                        </div>
+                        <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">💸</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Amounts</h4>
+                                <p class="text-left text-gray-600">Sends a variable amount of ETH within a specified range.</p>
+                            </div>
+                        </div>
+                        <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">🔗</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Chain & Wallet</h4>
+                                <p class="text-left text-gray-600">Picks a random wallet and a random blockchain network for each session.</p>
+                            </div>
+                        </div>
+                         <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">🎲</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Per-Wallet Probability Jitter</h4>
+                                <p class="text-left text-gray-600">Each wallet's action probabilities (send, idle, balance check) subtly vary from global settings.</p>
+                            </div>
+                        </div>
+                         <div class="kpi-card flex items-center space-x-4">
+                            <span class="text-4xl">⚙️</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Simulated Errors & Retries</h4>
+                                <p class="text-left text-gray-600">Introduces occasional simulated transaction failures, followed by exponential backoff retries.</p>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+                <!-- NEW CHARTS FOR HUMANIZATION ENGINE -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mt-12">
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-semibold text-center mb-4 text-infographic-yellow">Simulating Human Behavior</h3>
+                        <p class="text-center text-gray-600 mb-4">A comparison of robotic, fixed-interval delays versus human-like, log-normal distributed delays, demonstrating the importance of natural timing.</p>
+                        <div class="chart-container">
+                            <canvas id="infographicTimingChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-xl font-semibold text-accent mb-2">Natural Inputs</h3>
+                        <p class="text-gray-600 mb-4">Human mouse movements are curved and have variable speed. Typing has pauses and errors. Robotic, perfectly straight movements and constant-speed typing are dead giveaways.</p>
+                        <div class="space-y-6">
+                            <div class="p-4 bg-red-100 border-l-4 border-red-500 rounded">
+                                <h4 class="font-bold text-red-800">Robotic Mouse Path</h4>
+                                <p class="text-red-700">A direct, straight line from A to B.</p>
+                                <div class="w-full h-2 mt-2 bg-gradient-to-r from-red-500 to-red-500"></div>
+                            </div>
+                             <div class="p-4 bg-green-100 border-l-4 border-green-500 rounded">
+                                <h4 class="font-bold text-green-800">Human-like Mouse Path</h4>
+                                <p class="text-green-700">A curved, slightly erratic path using Bezier curves.</p>
+                                <div class="w-full h-20 mt-2 relative">
+                                   <div class="absolute top-1/2 left-0 w-full h-0.5 bg-green-500" style="clip-path: path('M 0 40 C 100 0, 200 80, 300 40');"></div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: The Web3 Frontier: Evading On-Chain Detection / Mastering Web3 (Combined & Enhanced) -->
+            <section id="infographic-web3-frontier" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                <h2 class="section-title">The Web3 Frontier: Evading On-Chain Detection</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">In Web3, all transactions are public. This creates a new challenge: your script's entire history is auditable on the blockchain. Evasion is not just about avoiding blocks, but about creating a plausible on-chain persona that doesn't scream "bot" through its transaction patterns.</p>
+
+                <div class="text-center mb-8">
+                     <p class="text-lg md:text-xl text-gray-600 mb-4">On the transparent world of the blockchain, your transaction *patterns* become your new fingerprint.</p>
+                     <div class="inline-block bg-main text-white p-4 rounded-lg">
+                        <span class="text-5xl font-black" style="color: var(--chart-yellow);">~80%</span>
+                        <span class="block text-xl font-semibold">of blockchain transactions are automated.</span>
+                    </div>
+                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start px-6">
+                    <div class="bg-secondary p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-infographic-magenta">Bot vs. Human NFT Trading</h3>
+                        <p class="text-gray-600 mb-4">A bot might flip the same asset repeatedly with mechanical precision. A human collector, by contrast, shows more diverse activity, accumulates assets over time, and interacts at irregular intervals, mimicking organic market behavior.</p>
+                        <div class="chart-container h-80">
+                            <canvas id="infographicNftActivityChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">A comparison of common NFT trading patterns for automated bots versus human users, emphasizing diversification and irregular timing.</p>
+                    </div>
+
+                    <div class="bg-secondary p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-infographic-magenta">Mastering Blockchain Challenges: Exponential Backoff</h3>
+                        <p class="text-gray-600 mb-6">Failed blockchain transactions can be costly due to gas fees. Instead of constant, immediate retries (a clear bot-like pattern), use <span class="font-bold text-main">Exponential Backoff</span>. This strategy significantly increases the delay after each failure, mimicking a patient human and reducing network spam, ultimately improving success rates and stealth.</p>
+                        <div class="chart-container h-80">
+                            <canvas id="infographicBackoffChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">This chart visually demonstrates the increasing wait time between retry attempts, a key human-like behavior for robust Web3 interaction.</p>
+                    </div>
+                </div>
+                <div class="mt-12 bg-secondary p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-accent mb-2 text-center">The Resilient Transaction Flow</h3>
+                    <p class="text-gray-600 mb-4 text-center">Blockchain interactions are costly and irreversible. Failed transactions still incur gas fees. Robust error handling with exponential backoff isn't just good practice—it's a financial necessity and mimics a patient human.</p>
+                    <div class="flex flex-col md:flex-row justify-center items-stretch gap-4">
+                        <div class="flowchart-step bg-blue-500 text-white">1. Build Transaction</div>
+                        <div class="flowchart-arrow">→</div>
+                        <div class="flowchart-step bg-blue-500 text-white">2. Estimate Gas & Set Slippage</div>
+                        <div class="flowchart-arrow">→</div>
+                        <div class="flowchart-step bg-blue-500 text-white">3. Sign & Send</div>
+                        <div class="flowchart-arrow">→</div>
+                        <div class="flowchart-step bg-blue-500 text-white">4. On Failure? Use Exponential Backoff & Retry</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Recipient Strategy (Combined from both) -->
+            <section id="infographic-recipient-strategy" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                <h2 class="section-title">Recipient Strategy</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    The script offers multiple modes for selecting transaction recipients, allowing for a wide range of interaction patterns.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
+                    <div class="kpi-card">
+                        <span class="text-4xl">🔍</span>
+                        <h4 class="text-lg font-bold my-2">Dynamic Pool</h4>
+                        <p class="text-gray-600 text-sm">Scans recent blocks for active wallets (EOAs) and adds them to a recipient pool.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">🎯</span>
+                        <h4 class="text-lg font-bold my-2">Fixed Address</h4>
+                        <p class="text-gray-600 text-sm">Sends all transactions to a single, predetermined address.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">📝</span>
+                        <h4 class="text-lg font-bold my-2">Custom List</h4>
+                        <p class="text-gray-600 text-sm">Uses a user-provided list of addresses for transactions.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">📄</span>
+                        <h4 class="text-lg font-bold my-2">Predefined List</h4>
+                        <p class="text-gray-600 text-sm">Loads recipients from an externally hosted or uploaded CSV file.</p>
+                    </div>
+                     <div class="kpi-card">
+                        <span class="text-4xl">🤝</span>
+                        <h4 class="text-lg font-bold my-2">Self-Interact</h4>
+                        <p class="text-gray-600 text-sm">Loaded wallets send transactions to each other, creating an internal ecosystem.</p>
+                    </div>
+                     <div class="kpi-card bg-gray-100">
+                        <span class="text-4xl">↪️</span>
+                        <h4 class="text-lg font-bold my-2">Fallback Logic</h4>
+                        <p class="text-gray-600 text-sm">If the Dynamic Pool is empty, it automatically falls back to Self-Interact mode.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Embedded Resource Section (Combined from both) -->
+            <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                <h2 class="section-title">Deep Dive: External Resource</h2>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                    Explore further details and documentation on transaction farming and related topics through this embedded resource.
+                </p>
+                <div class="w-full flex justify-center px-4">
+                    <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
+                </div>
+            </section>
+
+            <!-- Section 6: Security (Combined from both) -->
+            <section id="infographic-security" class="my-16 md:my-24">
+                <div class="max-w-4xl mx-auto p-6 rounded-lg" style="background-color: #fffbe6; border: 1px solid #fde047;">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                             <span class="text-3xl">⚠️</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-2xl font-bold" style="color: #ca8a04;">A Critical Security Notice</h3>
+                            <div class="mt-2 text-md text-yellow-800">
+                                <p>This is a client-side application. Handling private keys in a web browser is **extremely risky**. This tool is intended for educational and testing purposes **on test networks only**. Never input mainnet private keys or keys associated with wallets holding real assets. The developer assumes no responsibility for any loss of funds.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div><!-- End infographic-content -->
+
+    </main>
+
+    <!-- Footer Section (Combined from both) -->
+    <footer class="bg-secondary text-center text-accent py-8 mt-12 border-t border-accent">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-2xl font-bold text-main mb-2">We Grow Together!</h3>
+            <p class="mb-4 max-w-2xl mx-auto">
+                Consider supporting our development efforts by donating to the address below. Your contribution helps keep this project alive and continuously improving.
+            </p>
+            <div class="flex items-center justify-center bg-gray-100 p-3 rounded-lg max-w-md mx-auto mb-6">
+                <span id="donation-address" class="text-sm md:text-base text-main font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-200 transition-colors" title="Copy Address">
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-500" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-200 transition-colors" title="Show QR Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                        <path d="M2 2h2v2H2V2Z"/>
+                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                        <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mt-8 flex items-center justify-center">
+                &copy; 2025 FarmLabs. All rights reserved.
+            </p>
+            <div class="flex items-center justify-center space-x-4 mt-4">
+                <!-- Blogspot Icon -->
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-orange-500" title="Farm Labs Blog">
+                    <i class="fab fa-blogger fa-2x"></i>
+                </a>
+                <!-- Telegram Icon -->
+                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500" title="Farm Lab Telegram">
+                    <i class="fab fa-telegram fa-2x"></i>
+                </a>
+                <!-- GitHub Icon -->
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500" title="Farm Labs GitHub">
+                    <i class="fab fa-github fa-2x"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    <div id="qr-code-modal" class="modal hidden">
+        <div class="modal-content text-main flex flex-col items-center text-center">
+            <span class="close-qr-button self-end">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
+            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
+            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appState = {
+                charts: {
+                    infographicActionDist: null,
+                    infographicWalletBalance: null,
+                    infographicGasPrice: null,
+                    infographicFingerprint: null,
+                    infographicProxy: null,
+                    infographicTiming: null,
+                    infographicNftActivity: null,
+                    infographicBackoff: null,
+                    infographicBehavior: null // New chart for behavior
+                },
+            };
+
+            const copyToClipboard = (text) => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    console.log(`Copied "${text}" to clipboard.`);
+                } catch (err) {
+                    console.error('Failed to copy to clipboard (unsupported by browser/iframe).', err);
+                }
+                document.body.removeChild(textarea);
+            };
+
+            // Global utility functions for chart labels and tooltips
+            const wrapLabel = (str, maxLen = 16) => {
+                if (str.length <= maxLen) {
+                    return str;
+                }
+                const words = str.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).length > maxLen && currentLine.length > 0) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine += (currentLine.length === 0 ? '' : ' ') + word;
+                    }
+                }
+                if (currentLine.length > 0) {
+                    lines.push(currentLine);
+                }
+                return lines;
+            };
+
+            const mandatoryTooltipConfig = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                if (!item) return '';
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Infographic Chart Initialization Functions
+            const initInfographicActionDistChart = () => {
+                const ctx = document.getElementById('infographicActionDistChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicActionDist) {
+                    appState.charts.infographicActionDist.destroy();
+                }
+                appState.charts.infographicActionDist = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Send Transaction', 'Idle (No Action)', 'Balance Check'],
+                        datasets: [{
+                            label: 'Action Probability',
+                            data: [60, 20, 20],
+                            backgroundColor: ['#3b82f6', '#a8a29e', '#f59e0b'], /* Aligned with console colors */
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                         ...mandatoryTooltipConfig.plugins,
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: 'var(--main-text)'
+                                }
+                            },
+                        }
+                });
+            };
+            
+            const initInfographicWalletBalanceChart = () => {
+                const ctx = document.getElementById('infographicWalletBalanceChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicWalletBalance) {
+                    appState.charts.infographicWalletBalance.destroy();
+                }
+                const walletLabels = ['Wallet ...a4b8', 'Wallet ...f9c1', 'Wallet ...3d2e', 'Wallet ...e6a7', 'Wallet ...b8d9'];
+
+                appState.charts.infographicWalletBalance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: walletLabels.map(label => wrapLabel(label)),
+                        datasets: [{
+                            label: 'Balance (ETH)',
+                            data: [1.2, 0.8, 2.5, 0.5, 1.9],
+                            backgroundColor: '#60a5fa', /* Aligned with console colors */
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                         ...mandatoryTooltipConfig,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: 'var(--accent-text)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: 'var(--accent-text)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'var(--main-text)'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+            
+            const initInfographicGasPriceChart = () => {
+                const ctx = document.getElementById('infographicGasPriceChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicGasPrice) {
+                    appState.charts.infographicGasPrice.destroy();
+                }
+
+                const labels = ['T-10', 'T-9', 'T-8', 'T-7', 'T-6', 'T-5', 'T-4', 'T-3', 'T-2', 'T-1'];
+                const networkBaseFee = Array(10).fill(20);
+                const randomGasPrice = Array.from({length: 10}, () => Math.random() * 30 + 20);
+
+                appState.charts.infographicGasPrice = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Network Base Fee (Gwei)',
+                                data: networkBaseFee,
+                                borderColor: '#90E0EF', /* From original infographic, fits theme */
+                                borderWidth: 2,
+                                tension: 0.1,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: 'Script\'s Randomized Gas (Gwei)',
+                                data: randomGasPrice,
+                                borderColor: 'var(--blue-dark)',
+                                backgroundColor: 'rgba(0, 119, 182, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        ...mandatoryTooltipConfig,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + ' Gwei'
+                                    },
+                                    color: 'var(--accent-text)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: 'var(--accent-text)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'var(--main-text)'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const infographicChartOptions = {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--main-text)',
+                            padding: 20,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                if (!item) return '';
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        },
+                        padding: 12,
+                        boxPadding: 4,
+                        backgroundColor: '#4a5568',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        titleColor: '#ffffff',
+                        bodyColor: '#e2e8f0'
+                    }
+                },
+                scales: {
+                    r: { /* Radar specific */
+                        angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        pointLabels: { color: 'var(--main-text)', font: { size: 12 } },
+                        ticks: {
+                            color: '#ffffff',
+                            backdropColor: 'rgba(248, 249, 250, 0.8)',
+                            borderRadius: 4,
+                            display: false
+                        }
+                    },
+                    x: {
+                        ticks: { color: 'var(--accent-text)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    y: {
+                        ticks: { color: 'var(--accent-text)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    }
+                }
+            };
+
+            const initInfographicFingerprintChart = () => {
+                const ctx = document.getElementById('infographicFingerprintChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicFingerprint) {
+                    appState.charts.infographicFingerprint.destroy();
+                }
+                const data = {
+                    labels: [
+                        'Canvas', 
+                        'WebGL', 
+                        wrapLabel('Hardware Concurrency'),
+                        'Fonts', 
+                        wrapLabel('Audio Stack'), 
+                        wrapLabel('User-Agent')
+                    ],
+                    datasets: [{
+                        label: 'Uniqueness Contribution',
+                        data: [85, 90, 65, 75, 70, 50],
+                        backgroundColor: 'rgba(0, 180, 216, 0.2)', /* Using infographic cyan */
+                        borderColor: 'var(--chart-cyan)',
+                        pointBackgroundColor: 'var(--chart-cyan)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'var(--chart-cyan)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                };
+                appState.charts.infographicFingerprint = new Chart(ctx, { type: 'radar', data, options: infographicChartOptions });
+            };
+            
+            const initInfographicProxyChart = () => {
+                const ctx = document.getElementById('infographicProxyChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicProxy) {
+                    appState.charts.infographicProxy.destroy();
+                }
+                const data = {
+                    labels: ['Residential', 'Mobile', 'Datacenter'],
+                    datasets: [{
+                        data: [95, 85, 40],
+                        backgroundColor: ['var(--chart-cyan)', 'var(--chart-magenta)', '#6b7280'],
+                        borderColor: '#ffffff',
+                        borderWidth: 4
+                    }]
+                };
+                const options = { ...infographicChartOptions };
+                delete options.scales;
+                appState.charts.infographicProxy = new Chart(ctx, { type: 'doughnut', data, options });
+            };
+
+            const initInfographicTimingChart = () => {
+                const ctx = document.getElementById('infographicTimingChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicTiming) {
+                    appState.charts.infographicTiming.destroy();
+                }
+                const labels = Array.from({length: 20}, (_, i) => i + 1);
+                const humanDelays = labels.map(() => {
+                    const mu = 4.5;
+                    const sigma = 0.5;
+                    const logNormal = Math.exp(mu + sigma * Math.random() * 2 - sigma);
+                    return Math.max(50, Math.min(600, logNormal));
+                });
+
+                const data = {
+                    labels: labels.map(l => `Action ${l}`),
+                    datasets: [
+                        {
+                            label: 'Robotic Delay (Fixed)',
+                            data: Array(20).fill(100),
+                            borderColor: 'var(--chart-magenta)',
+                            backgroundColor: 'rgba(244, 114, 182, 0.1)',
+                            fill: false,
+                            tension: 0.1,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Human Delay (Variable)',
+                            data: humanDelays,
+                            borderColor: 'var(--chart-cyan)',
+                            backgroundColor: 'rgba(0, 180, 216, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                };
+                const options = { ...infographicChartOptions };
+                options.scales.x.ticks.display = false;
+                options.scales.y.title = { display: true, text: 'Delay (ms)', color: 'var(--accent-text)' };
+                appState.charts.infographicTiming = new Chart(ctx, { type: 'line', data, options });
+            };
+
+            const initInfographicNftActivityChart = () => {
+                const ctx = document.getElementById('infographicNftActivityChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicNftActivity) {
+                    appState.charts.infographicNftActivity.destroy();
+                }
+                const data = {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+                    datasets: [
+                        {
+                            label: 'Bot: Frequent Flip',
+                            data: [15, 12, 18, 14, 16],
+                            backgroundColor: 'var(--chart-magenta)',
+                        },
+                        {
+                            label: 'Human: Browse/Collect',
+                            data: [3, 7, 5, 9, 6],
+                            backgroundColor: 'rgba(0, 180, 216, 0.6)',
+                        },
+                        {
+                            label: 'Human: Hold/Long-Term',
+                            data: [1, 2, 0, 1, 3],
+                            backgroundColor: 'rgba(0, 180, 216, 0.9)',
+                        }
+                    ]
+                };
+                const options = { ...infographicChartOptions };
+                options.scales.x.stacked = true;
+                options.scales.y.stacked = true;
+                options.scales.y.title = { display: true, text: 'No. of Actions', color: 'var(--accent-text)' };
+                appState.charts.infographicNftActivity = new Chart(ctx, { type: 'bar', data, options });
+            };
+            
+            const initInfographicBackoffChart = () => {
+                const ctx = document.getElementById('infographicBackoffChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicBackoff) {
+                    appState.charts.infographicBackoff.destroy();
+                }
+                const labels = Array.from({length: 6}, (_, i) => `Attempt ${i + 1}`);
+                const backoffData = labels.map((_, i) => 1000 * Math.pow(2, i) * (0.9 + Math.random() * 0.2));
+                const data = {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Exponential Backoff Delay (ms)',
+                        data: backoffData,
+                        borderColor: 'var(--chart-magenta)',
+                        backgroundColor: 'rgba(244, 114, 182, 0.3)',
+                        fill: true,
+                        tension: 0.2,
+                        pointBackgroundColor: 'var(--chart-magenta)',
+                        pointBorderColor: '#fff'
+                    }]
+                };
+                const options = { ...infographicChartOptions };
+                options.scales.y.title = { display: true, text: 'Wait Time (ms)', color: 'var(--accent-text)' };
+                options.scales.y.type = 'logarithmic';
+                options.scales.y.ticks.callback = function(value, index, values) {
+                    if (value === 1000 || value === 2000 || value === 4000 || value === 8000 || value === 16000 || value === 32000) {
+                        return value;
+                    }
+                    return null;
+                };
+                appState.charts.infographicBackoff = new Chart(ctx, { type: 'line', data, options });
+            };
+
+            const initInfographicBehaviorChart = () => {
+                const ctx = document.getElementById('infographicBehaviorChart')?.getContext('2d');
+                if (!ctx) return;
+                if (appState.charts.infographicBehavior) {
+                    appState.charts.infographicBehavior.destroy();
+                }
+                const data = {
+                    labels: [wrapLabel('Active Users (Human-like)', 16), 'Dropouts', wrapLabel('Brief Engagers', 16)],
+                    datasets: [{
+                        label: 'On-Chain Behavior Profile',
+                        data: [45, 30, 25],
+                        backgroundColor: ['var(--blue-dark)', 'var(--chart-magenta)', 'var(--chart-yellow)'],
+                        borderColor: '#ffffff',
+                        borderWidth: 4,
+                        hoverOffset: 10
+                    }]
+                };
+                const options = { ...infographicChartOptions };
+                delete options.scales; // Doughnut chart doesn't need scales
+                options.plugins.title = {
+                    display: true,
+                    text: 'Simulating the "Active User" Profile',
+                    font: {
+                        size: 16,
+                        family: 'Inter'
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 10
+                    },
+                    color: 'var(--main-text)'
+                };
+                appState.charts.infographicBehavior = new Chart(ctx, { type: 'doughnut', data, options });
+            };
+
+
+            const setupEventListeners = () => {
+                // Handle navigation links for internal sections
+                document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href').substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                        // Update active class for internal links
+                        document.querySelectorAll('nav a[href^="#"]').forEach(navLink => navLink.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            };
+
+            // Initialize all infographic charts on page load
+            initInfographicActionDistChart();
+            initInfographicWalletBalanceChart();
+            initInfographicGasPriceChart();
+            initInfographicFingerprintChart();
+            initInfographicProxyChart();
+            initInfographicTimingChart();
+            initInfographicNftActivityChart();
+            initInfographicBackoffChart();
+            initInfographicBehaviorChart(); // Initialize the new behavior chart
+
+            setupEventListeners();
+
+            // Set the initial active navigation link for Infographic
+            const initialActiveLink = document.querySelector('nav a[href="#infographic-overview"]');
+            if (initialActiveLink) {
+                initialActiveLink.classList.add('active');
+            }
+
+            // --- FOOTER FUNCTIONALITY ---
+            const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
+            const copyBtn = document.getElementById('copy-address-btn');
+            const copyIcon = document.getElementById('copy-icon');
+            const checkIcon = document.getElementById('check-icon');
+            checkIcon.classList.add('hidden'); // Ensure check icon is hidden initially
+            const showQrBtn = document.getElementById('show-qr-btn');
+            const qrModal = document.getElementById('qr-code-modal');
+            const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrAddressDisplay = document.getElementById('qr-address-display');
+
+            // Initialize QR Code once
+            if(typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeContainer, {
+                    text: donationAddressStr,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#2d3748",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                qrAddressDisplay.textContent = donationAddressStr;
+            } else {
+                console.error("QRCode library is not loaded.")
+                qrCodeContainer.innerHTML = "QR Code library failed to load. Please check your connection.";
+            }
+
+            // Copy to clipboard
+            copyBtn.addEventListener('click', () => {
+                copyToClipboard(donationAddressStr);
+                copyIcon.classList.add('hidden');
+                checkIcon.classList.remove('hidden');
+                setTimeout(() => {
+                    copyIcon.classList.remove('hidden');
+                    checkIcon.classList.add('hidden');
+                }, 2000);
+            });
+
+            // Show QR Modal
+            showQrBtn.addEventListener('click', () => {
+                qrModal.classList.remove('hidden');
+            });
+
+            // Close QR Modal logic
+            const closeQrModal = () => {
+                qrModal.classList.add('hidden');
+            }
+            closeQrModalBtn.addEventListener('click', closeQrModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
