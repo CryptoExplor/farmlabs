@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advance Farming - Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb;
+            color: #2d3748;
+        }
+        .bg-secondary { background-color: #ffffff; }
+        .text-main { color: #2d3748; }
+        .text-accent { color: #4a5568; }
+        .feature-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .feature-card h3 {
+            color: #1d4ed8;
+        }
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .close-qr-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-qr-button:hover,
+        .close-qr-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-primary text-main">
+
+    <header class="bg-secondary shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                     <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-8 w-8 mr-3 rounded-full">
+                    <h1 class="text-xl md:text-2xl font-bold text-main">Documentation</h1>
+                </div>
+                <a href="doc.html" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to App
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-4 text-main">How to Use Advance Interactive Script Console</h2>
+            <p class="text-lg text-accent max-w-3xl mx-auto">This guide provides a detailed explanation of each feature to help you get the most out of the application.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Dashboard -->
+            <div class="feature-card">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-tachometer-alt fa-2x text-blue-600 mr-4"></i>
+                    <h3 class="text-2xl font-bold">Dashboard</h3>
+                </div>
+                <p class="text-accent">The Dashboard is your main control center. Here you can:</p>
+                <ul class="list-disc list-inside mt-4 space-y-2 text-accent">
+                    <li><strong>Connect Your Wallet:</strong> Use the "Connect Wallet" button to link your MetaMask or compatible browser wallet. This is the first step to enable all other features.</li>
+                    <li><strong>Start/Stop Farming:</strong> Once configured, use the "Start Farming" button to begin the automated process. The "Stop Farming" button will halt all activities gracefully.</li>
+                    <li><strong>Monitor Progress:</strong> View real-time statistics, including the number of successful and failed actions, the current network gas price, and charts visualizing wallet balances and the distribution of actions performed.</li>
+                </ul>
+            </div>
+
+            <!-- Wallets -->
+            <div class="feature-card">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-wallet fa-2x text-blue-600 mr-4"></i>
+                    <h3 class="text-2xl font-bold">Wallets</h3>
+                </div>
+                <p class="text-accent">This section is for managing the source wallets for farming. <strong class="text-red-600">Never use mainnet private keys with real funds.</strong></p>
+                 <ul class="list-disc list-inside mt-4 space-y-2 text-accent">
+                    <li><strong>Load Private Keys:</strong> Paste one or more private keys (one per line) into the text area.</li>
+                    <li><strong>Check Balances:</strong> After pasting keys, click "Load Wallets & Check Balances". The application will validate the keys and fetch the current ETH balance for each, displaying them in a list and on the Dashboard chart.</li>
+                </ul>
+            </div>
+
+            <!-- Recipients -->
+            <div class="feature-card">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-users fa-2x text-blue-600 mr-4"></i>
+                    <h3 class="text-2xl font-bold">Recipients</h3>
+                </div>
+                <p class="text-accent">Define where your transactions will be sent. You have several modes:</p>
+                 <ul class="list-disc list-inside mt-4 space-y-2 text-accent">
+                    <li><strong>Dynamic Pool:</strong> The script automatically finds recent addresses from the blockchain to use as recipients.</li>
+                    <li><strong>Fixed Address:</strong> Send all transactions to a single, specified address.</li>
+                    <li><strong>Custom List:</strong> Provide your own list of recipient addresses.</li>
+                    <li><strong>Predefined List:</strong> Upload a CSV file of addresses.</li>
+                    <li><strong>Self-Interact:</strong> Have your loaded wallets send transactions to each other. Requires at least two wallets to be loaded.</li>
+                </ul>
+            </div>
+
+            <!-- Configuration -->
+            <div class="feature-card">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-cogs fa-2x text-blue-600 mr-4"></i>
+                    <h3 class="text-2xl font-bold">Configuration</h3>
+                </div>
+                <p class="text-accent">Fine-tune the farming script's behavior. Key settings include:</p>
+                 <ul class="list-disc list-inside mt-4 space-y-2 text-accent">
+                    <li><strong>Stealth Profiles:</strong> Choose from presets like "Balanced", "Aggressive", or "Ultra-Slow" to quickly apply a set of parameters, or select "Custom" to set them manually.</li>
+                    <li><strong>Transaction Settings:</strong> Control the max actions per wallet, transaction amounts, and delays between actions.</li>
+                    <li><strong>Gas Control:</strong> Set a gas price multiplier to avoid transacting when network fees are too high.</li>
+                    <li><strong>RPC Endpoints:</strong> Specify the blockchain networks to interact with by providing their RPC URL and Chain ID.</li>
+                    <li><strong>Action Probabilities:</strong> Define the chance of performing a 'send', 'idle', or 'balance check' action.</li>
+                </ul>
+            </div>
+
+            <!-- Live Log -->
+            <div class="feature-card">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-stream fa-2x text-blue-600 mr-4"></i>
+                    <h3 class="text-2xl font-bold">Live Log</h3>
+                </div>
+                <p class="text-accent">The Live Log provides a real-time feed of all script activities. You can:</p>
+                 <ul class="list-disc list-inside mt-4 space-y-2 text-accent">
+                    <li><strong>Monitor Actions:</strong> See every action as it happens, including sends, idle periods, errors, and warnings.</li>
+                    <li><strong>Copy Transaction Hashes:</strong> Easily copy any transaction hash to your clipboard for verification on a block explorer.</li>
+                    <li><strong>Download Log:</strong> Save a complete record of the session as a CSV file for later analysis.</li>
+                    <li><strong>Summarize Log:</strong> Use the AI-powered summary feature to get a high-level overview of the log's key events and patterns.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-secondary text-center text-accent py-8 mt-12 border-t border-accent">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-2xl font-bold text-main mb-2">We Grow Together!</h3>
+            <p class="mb-4 max-w-2xl mx-auto">
+                Consider supporting our development efforts by donating to the address below. Your contribution helps keep this project alive and continuously improving.
+            </p>
+            <div class="flex items-center justify-center bg-gray-100 p-3 rounded-lg max-w-md mx-auto mb-6">
+                <span id="donation-address" class="text-sm md:text-base text-main font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-200 transition-colors" title="Copy Address">
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-500" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-200 transition-colors" title="Show QR Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                        <path d="M2 2h2v2H2V2Z"/>
+                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                        <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mt-8 text-center">
+                &copy; 2025 FarmLabs. All rights reserved.
+            </p>
+            <div class="flex items-center justify-center mt-4 space-x-6">
+                <!-- GitHub Icon in Footer -->
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-blue-600" title="Farm Labs GitHub">
+                    <i class="fab fa-github fa-2x"></i>
+                </a>
+                <!-- Blogspot Icon in Footer -->
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-orange-500" title="Farm Labs Blog">
+                    <i class="fab fa-blogger fa-2x"></i>
+                </a>
+                <!-- Telegram Icon in Footer -->
+                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-blue-500" title="Farm Lab Telegram">
+                    <i class="fab fa-telegram fa-2x"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    <div id="qr-code-modal" class="modal hidden">
+        <div class="modal-content text-main flex flex-col items-center text-center">
+            <span class="close-qr-button self-end">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
+            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
+            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const copyToClipboard = (text, button) => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    console.log(`Copied "${text}" to clipboard.`);
+                    // Visual feedback
+                    const copyIcon = button.querySelector('#copy-icon');
+                    const checkIcon = button.querySelector('#check-icon');
+                    if (copyIcon && checkIcon) {
+                        copyIcon.classList.add('hidden');
+                        checkIcon.classList.remove('hidden');
+                        setTimeout(() => {
+                            copyIcon.classList.remove('hidden');
+                            checkIcon.classList.add('hidden');
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error('Failed to copy to clipboard.', err);
+                }
+                document.body.removeChild(textarea);
+            };
+
+            // --- FOOTER FUNCTIONALITY ---
+            const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
+            const copyBtn = document.getElementById('copy-address-btn');
+            const showQrBtn = document.getElementById('show-qr-btn');
+            const qrModal = document.getElementById('qr-code-modal');
+            const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrAddressDisplay = document.getElementById('qr-address-display');
+
+            // Initialize QR Code
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeContainer, {
+                    text: donationAddressStr,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#2d3748",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                qrAddressDisplay.textContent = donationAddressStr;
+            } else {
+                console.error("QRCode library is not loaded.");
+                qrCodeContainer.innerHTML = "QR Code library failed to load.";
+            }
+
+            // Copy to clipboard event
+            copyBtn.addEventListener('click', (e) => {
+                copyToClipboard(donationAddressStr, e.currentTarget);
+            });
+
+            // Show QR Modal
+            showQrBtn.addEventListener('click', () => {
+                qrModal.classList.remove('hidden');
+            });
+
+            // Close QR Modal logic
+            const closeQrModal = () => {
+                qrModal.classList.add('hidden');
+            }
+            closeQrModalBtn.addEventListener('click', closeQrModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
