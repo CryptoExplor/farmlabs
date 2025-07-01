@@ -526,7 +526,7 @@
                             <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Maximum duration for a "lull" period after an activity burst.</span></span>
                         </label>
                         <input type="number" id="max-lull-time" value="900" min="60" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                        <p class="text-sm text-gray-500 mt-1">Maximum seconds for a lull period.</p>
+                        <p class="text-sm text-gray-500 mt-1">Maximum seconds for a "lull" period.</p>
                     </div>
 
                     <!-- NEW: Time-of-Day Bias -->
@@ -1257,14 +1257,17 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                // *** IMPORTANT CHANGE HERE ***
+                // Replace this with the URL of your deployed Cloudflare Worker
+                const workerApiUrl = "https://gemini-api-proxy.ravikumar699121.workers.dev/"; // Replaced with your Worker's URL
+
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
                 };
 
                 try {
-                    const response = await fetch(apiUrl, {
+                    const response = await fetch(workerApiUrl, { // Call your Worker, not direct Gemini API
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
