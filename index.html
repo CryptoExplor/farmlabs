@@ -621,7 +621,10 @@ https://rpc.goerli.dev,5</textarea>
                 <div class="bg-gray-800 text-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
                     <div id="live-log"></div>
                 </div>
-                <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
+                <div class="flex flex-wrap gap-4">
+                    <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
+                    <button id="summarize-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Summarize Log</button>
+                </div>
             </section>
         </div><!-- End script-console-content -->
 
@@ -659,6 +662,10 @@ https://rpc.goerli.dev,5</textarea>
                 &copy; 2025 FarmLabs. All rights reserved.
             </p>
             <div class="flex items-center justify-center mt-4">
+                <!-- GitHub Icon in Footer -->
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-blue-500" title="Farm Labs GitHub">
+                    <i class="fab fa-github fa-2x"></i>
+                </a>
                 <!-- Blogspot Icon in Footer -->
                 <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-orange-500" title="Farm Labs Blog">
                     <i class="fab fa-blogger fa-2x"></i>
@@ -666,10 +673,6 @@ https://rpc.goerli.dev,5</textarea>
                 <!-- Telegram Icon in Footer -->
                 <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-blue-500" title="Farm Lab Telegram">
                     <i class="fab fa-telegram fa-2x"></i>
-                </a>
-		<!-- GitHub Icon in Footer -->
-                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-blue-500" title="Farm Labs GitHub">
-                    <i class="fab fa-github fa-2x"></i>
                 </a>
             </div>
         </div>
@@ -878,6 +881,7 @@ https://rpc.goerli.dev,5</textarea>
                 predefinedAddressesCount: document.getElementById('predefined-addresses-count'),
                 liveLog: document.getElementById('live-log'),
                 downloadLogBtn: document.getElementById('download-log-btn'),
+                summarizeLogBtn: document.getElementById('summarize-log-btn'), // NEW UI element
                 progressBar: document.getElementById('progress-bar'),
                 progressText: document.getElementById('progress-text'),
                 statusDisplay: document.getElementById('status-display'),
@@ -1914,6 +1918,30 @@ https://rpc.goerli.dev,5</textarea>
                 await callGeminiApi(prompt);
             };
 
+            // NEW: handleSummarizeLog function
+            const handleSummarizeLog = async () => {
+                if (appState.logEntries.length === 0) {
+                    openGeminiModal('No Log Data', '<p class="text-accent">There are no log entries to summarize yet. Start farming to generate logs!</p>');
+                    return;
+                }
+
+                // Take the last 100 log entries to avoid sending excessively large prompts
+                const recentLogEntries = appState.logEntries.slice(-100);
+                const formattedLog = recentLogEntries.map(entry => {
+                    return `${entry.Timestamp} [${entry.Status}] ${entry.Action} - ${entry.Details}`;
+                }).join('\n');
+
+                const prompt = `Please summarize the following blockchain transaction log. Identify key events, common patterns (e.g., successful transactions, repeated errors), and any notable observations. If there are errors, categorize them if possible.
+
+                --- Log Data ---
+                ${formattedLog}
+                --- End Log Data ---
+
+                Provide a concise summary and any insights you can derive.`;
+
+                await callGeminiApi(prompt);
+            };
+
 
             const downloadLog = () => {
                 if (appState.logEntries.length === 0) {
@@ -2025,6 +2053,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.loadKeysBtn.addEventListener('click', loadWallets);
                 ui.testRpcBtn.addEventListener('click', testRpcConnections);
                 ui.downloadLogBtn.addEventListener('click', downloadLog);
+                ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog); // NEW event listener
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
                 ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
