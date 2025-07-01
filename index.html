@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Script Console: Transaction Farming</title>
+    <!-- Google AdSense Account Meta Tag (Recommended in <head>) -->
+    <meta name="google-adsense-account" content="ca-pub-3062851685354753">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -224,6 +226,9 @@
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
 <body class="bg-primary text-main">
+    <!-- Google AdSense Script (Recommended right after <body> tag) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3062851685354753"
+     crossorigin="anonymous"></script>
 
     <header class="bg-secondary shadow-md sticky top-0 z-10">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -295,6 +300,11 @@
                                     <div class="text-xs text-gray-500 font-bold uppercase">Current Gas</div>
                                     <div id="gas-display" class="text-lg font-semibold text-main">N/A</div>
                                 </div>
+                            </div>
+                            <!-- NEW: Last Human-like Spike Indicator -->
+                            <div class="p-3 bg-purple-50 rounded-lg text-center">
+                                <div class="text-xs text-purple-500 font-bold uppercase">Last Human-like Spike</div>
+                                <div id="human-spike-display" class="text-lg font-semibold text-main">Never</div>
                             </div>
                         </div>
                     </div>
@@ -480,6 +490,87 @@
                         <input type="number" id="simulated-error-chance" value="0" min="0" max="100" step="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                         <p class="text-sm text-gray-500 mt-1">Chance for a transaction to randomly fail (simulated).</p>
                     </div>
+
+                    <!-- NEW: Think Time Bursts -->
+                    <div>
+                        <label for="think-time-chance" class="block font-medium mb-1 text-accent">Think Time Chance (%)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The percentage chance that a wallet will enter a longer "think time" pause (1-2 minutes) between actions, simulating human cognitive breaks.</span></span>
+                        </label>
+                        <input type="number" id="think-time-chance" value="10" min="0" max="100" step="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Chance for a longer "think time" delay.</p>
+                    </div>
+                    <div>
+                        <label for="min-think-time" class="block font-medium mb-1 text-accent">Min Think Time (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Minimum duration for a "think time" pause.</span></span>
+                        </label>
+                        <input type="number" id="min-think-time" value="60" min="10" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Minimum seconds for a "think time" pause.</p>
+                    </div>
+                    <div>
+                        <label for="max-think-time" class="block font-medium mb-1 text-accent">Max Think Time (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Maximum duration for a "think time" pause.</span></span>
+                        </label>
+                        <input type="number" id="max-think-time" value="120" min="10" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Maximum seconds for a "think time" pause.</p>
+                    </div>
+
+                    <!-- NEW: Activity Bursts & Lulls -->
+                    <div>
+                        <label for="activity-burst-chance" class="block font-medium mb-1 text-accent">Activity Burst Chance (%)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The percentage chance that a wallet will enter an "activity burst" session, performing multiple actions in quick succession before a longer lull.</span></span>
+                        </label>
+                        <input type="number" id="activity-burst-chance" value="50" min="0" max="100" step="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Chance for a wallet to perform actions in a burst.</p>
+                    </div>
+                    <div>
+                        <label for="min-burst-actions" class="block font-medium mb-1 text-accent">Min Burst Actions
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Minimum number of actions to perform during an activity burst.</span></span>
+                        </label>
+                        <input type="number" id="min-burst-actions" value="2" min="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Minimum actions in a burst.</p>
+                    </div>
+                    <div>
+                        <label for="max-burst-actions" class="block font-medium mb-1 text-accent">Max Burst Actions
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Maximum number of actions to perform during an activity burst.</span></span>
+                        </label>
+                        <input type="number" id="max-burst-actions" value="5" min="1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Maximum actions in a burst.</p>
+                    </div>
+                    <div>
+                        <label for="min-lull-time" class="block font-medium mb-1 text-accent">Min Lull Time (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Minimum duration for a "lull" period after an activity burst.</span></span>
+                        </label>
+                        <input type="number" id="min-lull-time" value="300" min="60" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Minimum seconds for a lull period.</p>
+                    </div>
+                    <div>
+                        <label for="max-lull-time" class="block font-medium mb-1 text-accent">Max Lull Time (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Maximum duration for a "lull" period after an activity burst.</span></span>
+                        </label>
+                        <input type="number" id="max-lull-time" value="900" min="60" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Maximum seconds for a lull period.</p>
+                    </div>
+
+                    <!-- NEW: Time-of-Day Bias -->
+                    <div class="md:col-span-2">
+                        <label class="flex items-center mb-1 text-accent">
+                            <input type="checkbox" id="enable-time-of-day-bias" class="form-checkbox h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                            <span class="ml-3 text-main">Enable Time-of-Day Bias
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Adjusts activity rates to mimic human awake hours (e.g., lower activity during local night).</span></span>
+                            </span>
+                        </label>
+                        <p class="text-sm text-gray-500 mt-1">If enabled, activity will be reduced during simulated night hours (1 AM - 6 AM local time).</p>
+                    </div>
+
+                    <!-- NEW: RPC Switch Delay -->
+                    <div>
+                        <label for="rpc-switch-delay" class="block font-medium mb-1 text-accent">RPC Switch Delay (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Delay introduced when switching between different RPC endpoints to simulate network imperfection.</span></span>
+                        </label>
+                        <input type="number" id="rpc-switch-delay" value="5" min="0" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Delay when switching RPC endpoints.</p>
+                    </div>
+
 
                     <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
                     <div class="md:col-span-2">
@@ -870,7 +961,91 @@ https://rpc.goerli.dev,5</textarea>
                 },
                 pendingConfirmation: null, // Callback for confirmation modal
                 connectedAddress: null,
+                lastHumanLikeSpike: null, // To track the last "human-like" spike
             };
+
+            // --- Stealth Utility Functions ---
+            const Stealth = (() => {
+                let spareRandom = null; // For normalRandom (Box-Muller)
+
+                // Generates a standard normal (Gaussian) random number using the Box-Muller transform.
+                function normalRandom() {
+                    let val, u, v, s, mul;
+                    if (spareRandom !== null) {
+                        val = spareRandom;
+                        spareRandom = null;
+                    } else {
+                        do {
+                            u = Math.random() * 2 - 1;
+                            v = Math.random() * 2 - 1;
+                            s = u * u + v * v;
+                        } while (s === 0 || s >= 1);
+                        mul = Math.sqrt(-2 * Math.log(s) / s);
+                        val = u * mul;
+                        spareRandom = v * mul;
+                    }
+                    return val;
+                }
+
+                // Generates a log-normal random number within a clamped range.
+                // This is used for inter-action delays to mimic human variability.
+                function generateLogNormalDelay(minMs, maxMs) {
+                    const logMin = Math.log(minMs);
+                    const logMax = Math.log(maxMs);
+                    // Adjust mu and sigma to center the distribution and control spread
+                    const mu = (logMin + logMax) / 2;
+                    const sigma = (logMax - logMin) / 4; // Arbitrary scaling for spread
+
+                    let randomLogValue = normalRandom() * sigma + mu;
+                    let result = Math.exp(randomLogValue);
+
+                    // Clamp the result to be within the specified min and max
+                    return Math.max(minMs, Math.min(maxMs, result));
+                }
+
+                // Generates a random number from a Poisson distribution (approximation for events).
+                // Useful for irregular event occurrences like simulated errors or activity bursts.
+                // Lambda (λ) is the average number of occurrences in a given interval.
+                function generatePoissonRandom(lambda) {
+                    let L = Math.exp(-lambda);
+                    let k = 0;
+                    let p = 1;
+                    do {
+                        k++;
+                        p *= Math.random();
+                    } while (p > L);
+                    return k - 1;
+                }
+
+                // Selects an item from a list based on assigned weights.
+                // Useful for probabilistic RPC selection or chain selection.
+                function getWeightedRandomItem(items, weights) {
+                    let i;
+                    let sum = 0;
+                    for (i = 0; i < weights.length; i++) {
+                        sum += weights[i];
+                    }
+
+                    let r = Math.random() * sum;
+                    let cumulativeWeight = 0;
+                    for (i = 0; i < items.length; i++) {
+                        cumulativeWeight += weights[i];
+                        if (r < cumulativeWeight) {
+                            return items[i];
+                        }
+                    }
+                    return items[items.length - 1]; // Fallback
+                }
+
+                return {
+                    generateLogNormalDelay,
+                    generatePoissonRandom,
+                    getWeightedRandomItem,
+                    // Helper for general random range
+                    getRandomInRange: (min, max) => Math.random() * (max - min) + min,
+                };
+            })();
+            // --- End Stealth Utility Functions ---
 
 
             const ui = {
@@ -893,6 +1068,16 @@ https://rpc.goerli.dev,5</textarea>
                 blockLookback: document.getElementById('block-lookback'),
                 probJitterFactor: document.getElementById('prob-jitter-factor'), // NEW
                 simulatedErrorChance: document.getElementById('simulated-error-chance'), // NEW
+                thinkTimeChance: document.getElementById('think-time-chance'), // NEW
+                minThinkTime: document.getElementById('min-think-time'), // NEW
+                maxThinkTime: document.getElementById('max-think-time'), // NEW
+                activityBurstChance: document.getElementById('activity-burst-chance'), // NEW
+                minBurstActions: document.getElementById('min-burst-actions'), // NEW
+                maxBurstActions: document.getElementById('max-burst-actions'), // NEW
+                minLullTime: document.getElementById('min-lull-time'), // NEW
+                maxLullTime: document.getElementById('max-lull-time'), // NEW
+                enableTimeOfDayBias: document.getElementById('enable-time-of-day-bias'), // NEW
+                rpcSwitchDelay: document.getElementById('rpc-switch-delay'), // NEW
                 rpcUrls: document.getElementById('rpc-urls'),
                 testRpcBtn: document.getElementById('test-rpc-btn'),
                 probSend: document.getElementById('prob-send'),
@@ -947,6 +1132,7 @@ https://rpc.goerli.dev,5</textarea>
                 infographicActionDistChartCanvas: document.getElementById('infographicActionDistChart'),
                 infographicWalletBalanceChartCanvas: document.getElementById('infographicWalletBalanceChart'),
                 infographicGasPriceChartCanvas: document.getElementById('infographicGasPriceChart'),
+                humanSpikeDisplay: document.getElementById('human-spike-display'), // NEW
             };
 
             // Function to enable/disable UI elements
@@ -954,7 +1140,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.walletFeatureControls.forEach(control => {
                     control.disabled = !enabled;
                     // Adjust opacity/cursor for radio buttons based on enabled state
-                    if (control.type === 'radio') {
+                    if (control.type === 'radio' || control.type === 'checkbox') {
                          control.parentElement.style.opacity = enabled ? '1' : '0.6';
                          control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
                     }
@@ -1040,7 +1226,9 @@ https://rpc.goerli.dev,5</textarea>
                     WalletAddress: actionData.walletAddress || '',
                     Action: actionData.action || 'Log',
                     Status: type.toUpperCase(),
-                    Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';')
+                    Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';'),
+                    DelayUsedMs: actionData.delayUsedMs || '', // New log field
+                    GasFactorUsed: actionData.gasFactorUsed || '', // New log field
                 });
             };
 
@@ -1179,8 +1367,7 @@ https://rpc.goerli.dev,5</textarea>
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                             ...mandatoryTooltipConfig.plugins,
+                         ...mandatoryTooltipConfig.plugins,
                             legend: {
                                 position: 'top',
                                 labels: {
@@ -1188,7 +1375,6 @@ https://rpc.goerli.dev,5</textarea>
                                 }
                             },
                         }
-                    }
                 });
             };
             
@@ -1343,6 +1529,29 @@ https://rpc.goerli.dev,5</textarea>
                     return false;
                 }
 
+                // NEW: Think Time validation
+                const minThinkTime = parseInt(ui.minThinkTime.value);
+                const maxThinkTime = parseInt(ui.maxThinkTime.value);
+                if (minThinkTime > maxThinkTime) {
+                    log('Error: Minimum Think Time cannot be greater than maximum Think Time.', 'error');
+                    return false;
+                }
+
+                // NEW: Activity Burst/Lull validation
+                const minBurstActions = parseInt(ui.minBurstActions.value);
+                const maxBurstActions = parseInt(ui.maxBurstActions.value);
+                if (minBurstActions > maxBurstActions) {
+                    log('Error: Minimum Burst Actions cannot be greater than maximum Burst Actions.', 'error');
+                    return false;
+                }
+                const minLullTime = parseInt(ui.minLullTime.value);
+                const maxLullTime = parseInt(ui.maxLullTime.value);
+                if (minLullTime > maxLullTime) {
+                    log('Error: Minimum Lull Time cannot be greater than maximum Lull Time.', 'error');
+                    return false;
+                }
+
+
                 appState.config = {
                     maxTxnsPerWallet: parseInt(ui.maxTxnsPerWallet.value) || 3,
                     walletIdleChance: parseInt(ui.walletIdleChance.value) || 25,
@@ -1356,6 +1565,16 @@ https://rpc.goerli.dev,5</textarea>
                     blockLookback: parseInt(ui.blockLookback.value) || 100,
                     probJitterFactor: parseInt(ui.probJitterFactor.value) || 5, // NEW config
                     simulatedErrorChance: parseInt(ui.simulatedErrorChance.value) || 0, // NEW config
+                    thinkTimeChance: parseInt(ui.thinkTimeChance.value) || 10, // NEW config
+                    minThinkTime: minThinkTime * 1000 || 60000, // Convert to ms
+                    maxThinkTime: maxThinkTime * 1000 || 120000, // Convert to ms
+                    activityBurstChance: parseInt(ui.activityBurstChance.value) || 50, // NEW config
+                    minBurstActions: minBurstActions || 2, // NEW config
+                    maxBurstActions: maxBurstActions || 5, // NEW config
+                    minLullTime: minLullTime * 1000 || 300000, // Convert to ms
+                    maxLullTime: maxLullTime * 1000 || 900000, // Convert to ms
+                    enableTimeOfDayBias: ui.enableTimeOfDayBias.checked, // NEW config
+                    rpcSwitchDelay: parseInt(ui.rpcSwitchDelay.value) * 1000 || 5000, // NEW config
                     recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
                     fixedAddress: ui.fixedAddress.value.trim(),
                     probabilities: {
@@ -1377,53 +1596,6 @@ https://rpc.goerli.dev,5</textarea>
 
                 return true;
             };
-
-            const getRandomInRange = (min, max) => Math.random() * (max - min) + min;
-
-            // Log-normal random number generator for human-like delays [41]
-            let spareRandom = null;
-            function normalRandom() {
-                let val, u, v, s, mul;
-                if(spareRandom !== null) {
-                    val = spareRandom;
-                    spareRandom = null;
-                } else {
-                    do {
-                        u = Math.random() * 2 - 1;
-                        v = Math.random() * 2 - 1;
-                        s = u * u + v * v;
-                    } while(s === 0 || s >= 1);
-                    mul = Math.sqrt(-2 * Math.log(s) / s);
-                    val = u * mul;
-                    spareRandom = v * mul;
-                }
-                return val;
-            }
-
-            // Function to generate a log-normal random number scaled to a desired mean and stddev
-            // Here, gmean is the geometric mean (or a target center), gstddev is the geometric standard deviation.
-            // For delays, we want values mostly between minDelay and maxDelay.
-            // A simple approach is to use a distribution that has its values within these bounds.
-            // For more control, min and max can act as hard clamps.
-            function lnRandomScaled(min, max) {
-                // Approximate geometric mean and stddev for the log-normal distribution
-                // This is a simplification; for precise control over min/max,
-                // you'd need to solve for mu and sigma given desired percentiles.
-                const logMin = Math.log(min);
-                const logMax = Math.log(max);
-                const mu = (logMin + logMax) / 2;
-                // A fixed standard deviation for the underlying normal distribution.
-                // Adjust this value to change the "spread" of the log-normal distribution.
-                // Using a value that generally keeps outputs within a reasonable range.
-                const sigma = (logMax - logMin) / 4; // Arbitrary scaling factor to fit within range
-
-                let randomLogValue = normalRandom() * sigma + mu;
-                let result = Math.exp(randomLogValue);
-
-                // Clamp the result to be within the specified min and max
-                return Math.max(min, Math.min(max, result));
-            }
-
 
             const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -1470,7 +1642,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = "AIzaSyBns3XoeRSd1p1kttRjbv8qR9J01pdrCaQ"; // API key is left blank, Canvas will provide it at runtime.
+                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1530,9 +1702,9 @@ https://rpc.goerli.dev,5</textarea>
                         const balanceEth = ethers.formatEther(balanceWei);
 
                         // Calculate per-wallet probabilities with jitter
-                        let sendJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
-                        let idleJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.idle;
-                        let balanceCheckJitter = getRandomInRange(-jitterFactor, jitterFactor) * baseProbs['balance-check'];
+                        let sendJitter = Stealth.getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
+                        let idleJitter = Stealth.getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.idle;
+                        let balanceCheckJitter = Stealth.getRandomInRange(-jitterFactor, jitterFactor) * baseProbs['balance-check'];
 
                         let currentSend = Math.max(0, baseProbs.send + sendJitter);
                         let currentIdle = Math.max(0, baseProbs.idle + idleJitter);
@@ -1755,6 +1927,12 @@ https://rpc.goerli.dev,5</textarea>
                         const chainId = rpcConfig.chainId;
                         const provider = new ethers.JsonRpcProvider(rpcUrl);
 
+                        // NEW: RPC Switch Delay
+                        if (appState.rpcConfigs.length > 1 && appState.config.rpcSwitchDelay > 0) {
+                            log(`Pausing for RPC switch delay (${appState.config.rpcSwitchDelay / 1000}s)...`, 'info');
+                            await sleep(appState.config.rpcSwitchDelay);
+                        }
+
                         // Randomly select a wallet for this session
                         const walletInfoIndex = Math.floor(Math.random() * appState.wallets.length);
                         const walletInfo = appState.wallets[walletInfoIndex];
@@ -1767,7 +1945,7 @@ https://rpc.goerli.dev,5</textarea>
                         if (Math.random() * 100 < appState.config.walletIdleChance) {
                             log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId}.`, 'info', { chainId, walletAddress, action: 'idle' });
                             updateActionDistChart('idle');
-                            const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
+                            const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
                             await sleep(delay);
                             continue; // Move to next wallet/chain session
                         }
@@ -1778,7 +1956,7 @@ https://rpc.goerli.dev,5</textarea>
                             if (balanceWei < ethers.parseEther("0.001")) { // Ensure sufficient balance for gas
                                 log(`Skipping wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} due to critically low balance (${ethers.formatEther(balanceWei)} ETH).`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                 updateActionDistChart('skipped');
-                                const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
+                                const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
                                 await sleep(delay); // Add delay even for skipped
                                 continue; // Move to next wallet/chain session
                             } else if (balanceWei < ethers.parseEther("0.005")) { // Warning for slightly low balance
@@ -1787,14 +1965,23 @@ https://rpc.goerli.dev,5</textarea>
                         } catch (balanceError) {
                             log(`Failed to check balance for ...${walletAddress.slice(-6)} on Chain ID ${chainId}: ${balanceError.message}`, 'error', { chainId, walletAddress, action: 'skipped' });
                             updateActionDistChart('skipped');
-                            const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
+                            const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
                             await sleep(delay);
                             continue; // Move to next wallet/chain session
                         }
 
-                        // Variable session length: random number of actions between 1 and maxTxnsPerWallet
-                        const actionsForWallet = Math.floor(getRandomInRange(1, appState.config.maxTxnsPerWallet + 1));
+                        // NEW: Activity Bursts & Lulls logic
+                        let actionsForWallet;
+                        let currentSessionType = 'normal';
+                        if (Math.random() * 100 < appState.config.activityBurstChance) {
+                            actionsForWallet = Math.floor(Stealth.getRandomInRange(appState.config.minBurstActions, appState.config.maxBurstActions + 1));
+                            currentSessionType = 'burst';
+                            log(`Wallet ...${walletAddress.slice(-6)} entered an activity burst, performing ${actionsForWallet} actions.`, 'info');
+                        } else {
+                            actionsForWallet = Math.floor(Stealth.getRandomInRange(1, appState.config.maxTxnsPerWallet + 1));
+                        }
                         log(`Wallet ...${walletAddress.slice(-6)} will perform ${actionsForWallet} action(s) on Chain ID ${chainId}.`, 'info');
+
 
                         for (let i = 1; i <= actionsForWallet; i++) {
                             if (appState.stopFlag) break; // Break from inner loop if stop requested
@@ -1836,6 +2023,8 @@ https://rpc.goerli.dev,5</textarea>
                             log(`[Action ${i}/${actionsForWallet}] Wallet ...${walletAddress.slice(-6)} chose to: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress, action: chosenBehavior });
 
                             let actionSuccess = false;
+                            let delayUsed = 0; // Initialize delayUsed
+
                             switch (chosenBehavior) {
                                 case "send":
                                     let recipientAddress;
@@ -1897,14 +2086,14 @@ https://rpc.goerli.dev,5</textarea>
                                     }
 
 
-                                    const amount = getRandomInRange(appState.config.minAmount, appState.config.maxAmount);
+                                    const amount = Stealth.getRandomInRange(appState.config.minAmount, appState.config.maxAmount);
                                     const tx = {
                                         to: recipientAddress,
                                         value: ethers.parseEther(amount.toFixed(12))
                                     };
 
                                     // Apply random gas factor
-                                    const randomGasFactor = getRandomInRange(appState.config.minGasFactor, appState.config.maxGasFactor);
+                                    const randomGasFactor = Stealth.getRandomInRange(appState.config.minGasFactor, appState.config.maxGasFactor);
                                     if (maxFeePerGas && maxPriorityFeePerGas) { // EIP-1559 chain
                                         // Apply random factor to base fee and priority fee
                                         tx.maxFeePerGas = (maxFeePerGas * BigInt(Math.round(randomGasFactor * 100))) / BigInt(100);
@@ -1926,16 +2115,16 @@ https://rpc.goerli.dev,5</textarea>
 
                                         log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}...`, 'info');
                                         const txResponse = await wallet.sendTransaction(tx);
-                                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress, action: 'send' });
+                                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress, action: 'send', gasFactorUsed: randomGasFactor });
 
                                         await txResponse.wait();
                                         log(`Tx confirmed!`, 'success');
                                         actionSuccess = true;
                                     } catch (error) {
                                     if (error.message.includes("Simulated network error")) {
-                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send' });
+                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send', gasFactorUsed: randomGasFactor });
                                         } else {
-                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send' });
+                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send', gasFactorUsed: randomGasFactor });
                                         }
                                     }
                                     break;
@@ -1977,19 +2166,50 @@ https://rpc.goerli.dev,5</textarea>
                             }
 
                             if (i < actionsForWallet && !appState.stopFlag) {
-                                const delay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
-                                log(`Waiting for ${Math.round(delay/1000)} seconds before next action...`, 'info');
-                                await sleep(delay);
+                                let currentMinDelay = appState.config.minDelay;
+                                let currentMaxDelay = appState.config.maxDelay;
+
+                                // NEW: Time-of-Day Bias
+                                if (appState.config.enableTimeOfDayBias) {
+                                    const currentHour = new Date().getHours();
+                                    // Reduce activity during simulated night hours (e.g., 1 AM to 6 AM)
+                                    if (currentHour >= 1 && currentHour < 6) {
+                                        currentMinDelay *= 2; // Double min delay
+                                        currentMaxDelay *= 2; // Double max delay
+                                        log(`Applying time-of-day bias: increased delay due to night hours.`, 'info');
+                                    }
+                                }
+
+                                // NEW: Think Time Bursts
+                                if (Math.random() * 100 < appState.config.thinkTimeChance) {
+                                    delayUsed = Stealth.generateLogNormalDelay(appState.config.minThinkTime, appState.config.maxThinkTime);
+                                    log(`Waiting for a human-like "think time" burst of ${Math.round(delayUsed/1000)} seconds...`, 'info');
+                                    appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
+                                    ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
+                                    await sleep(delayUsed);
+                                } else {
+                                    delayUsed = Stealth.generateLogNormalDelay(currentMinDelay, currentMaxDelay);
+                                    log(`Waiting for ${Math.round(delayUsed/1000)} seconds before next action...`, 'info', { delayUsedMs: delayUsed });
+                                    await sleep(delayUsed);
+                                }
                             }
                         } // End of actionsForWallet loop
 
                         if (appState.stopFlag) break; // Break main loop if stop requested during inner loop
 
-                        // Delay after a full wallet session on a chain
-                        const sessionDelay = lnRandomScaled(appState.config.minDelay, appState.config.maxDelay);
-                        log(`Session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info');
-                        await sleep(sessionDelay);
-
+                        // NEW: Lull period after an activity burst
+                        if (currentSessionType === 'burst' && appState.config.minLullTime > 0) {
+                            const lullDelay = Stealth.generateLogNormalDelay(appState.config.minLullTime, appState.config.maxLullTime);
+                            log(`Activity burst completed. Entering lull period for ${Math.round(lullDelay/1000)} seconds...`, 'info');
+                            appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
+                            ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
+                            await sleep(lullDelay);
+                        } else {
+                            // Original session delay, if not a burst session
+                            const sessionDelay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
+                            log(`Session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
+                            await sleep(sessionDelay);
+                        }
                     } // End of while (appState.isRunning && !appState.stopFlag)
                     log('Farming process finished.', 'success');
                     stopFarming();
@@ -2023,6 +2243,8 @@ https://rpc.goerli.dev,5</textarea>
                         // Updated appState.stats reset for all action types
                         appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
                         appState.logEntries = [];
+                        appState.lastHumanLikeSpike = null;
+                        ui.humanSpikeDisplay.textContent = 'Never';
 
                         ui.privateKeys.value = '';
                         ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
@@ -2033,6 +2255,16 @@ https://rpc.goerli.dev,5</textarea>
                         ui.maxGasFactor.value = "1.1";
                         ui.probJitterFactor.value = "5"; // Reset new config
                         ui.simulatedErrorChance.value = "0"; // Reset new config
+                        ui.thinkTimeChance.value = "10"; // Reset new config
+                        ui.minThinkTime.value = "60"; // Reset new config
+                        ui.maxThinkTime.value = "120"; // Reset new config
+                        ui.activityBurstChance.value = "50"; // Reset new config
+                        ui.minBurstActions.value = "2"; // Reset new config
+                        ui.maxBurstActions.value = "5"; // Reset new config
+                        ui.minLullTime.value = "300"; // Reset new config
+                        ui.maxLullTime.value = "900"; // Reset new config
+                        ui.enableTimeOfDayBias.checked = false; // Reset new config
+                        ui.rpcSwitchDelay.value = "5"; // Reset new config
 
 
                         setUIEnabled(false);
@@ -2248,10 +2480,22 @@ https://rpc.goerli.dev,5</textarea>
                 ui.maxAmount.addEventListener('input', loadConfiguration);
                 ui.minDelay.addEventListener('input', loadConfiguration);
                 ui.maxDelay.addEventListener('input', loadConfiguration);
+                ui.gasMultiplier.addEventListener('input', loadConfiguration);
                 ui.minGasFactor.addEventListener('input', loadConfiguration);
                 ui.maxGasFactor.addEventListener('input', loadConfiguration);
+                ui.blockLookback.addEventListener('input', loadConfiguration);
                 ui.probJitterFactor.addEventListener('input', loadConfiguration); // NEW
                 ui.simulatedErrorChance.addEventListener('input', loadConfiguration); // NEW
+                ui.thinkTimeChance.addEventListener('input', loadConfiguration); // NEW
+                ui.minThinkTime.addEventListener('input', loadConfiguration); // NEW
+                ui.maxThinkTime.addEventListener('input', loadConfiguration); // NEW
+                ui.activityBurstChance.addEventListener('input', loadConfiguration); // NEW
+                ui.minBurstActions.addEventListener('input', loadConfiguration); // NEW
+                ui.maxBurstActions.addEventListener('input', loadConfiguration); // NEW
+                ui.minLullTime.addEventListener('input', loadConfiguration); // NEW
+                ui.maxLullTime.addEventListener('input', loadConfiguration); // NEW
+                ui.enableTimeOfDayBias.addEventListener('change', loadConfiguration); // NEW
+                ui.rpcSwitchDelay.addEventListener('input', loadConfiguration); // NEW
                 
                 ui.navLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
@@ -2358,7 +2602,7 @@ https://rpc.goerli.dev,5</textarea>
             const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
             const copyBtn = document.getElementById('copy-address-btn');
             const copyIcon = document.getElementById('copy-icon');
-            const checkIcon = document.getElementById('check-icon');
+            checkIcon.classList.add('hidden'); // Ensure check icon is hidden initially
             const showQrBtn = document.getElementById('show-qr-btn');
             const qrModal = document.getElementById('qr-code-modal');
             const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
