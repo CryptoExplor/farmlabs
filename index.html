@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Script Console: Transaction Farming</title>
+    <title>Advance Interactive Script Console</title>
     <!-- Google AdSense Account Meta Tag (Recommended in <head>) -->
     <meta name="google-adsense-account" content="ca-pub-3062851685354753">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -185,6 +185,97 @@
             cursor: not-allowed;
             background-color: #e2e8f0; /* Light gray */
         }
+
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-sizing: border-box;
+            z-index: 60;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: #2d3748;
+            border-radius: 3px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px; /* Hidden by default */
+            width: 250px;
+            height: 100%;
+            background-color: #2d3748; /* Darker background for sidebar */
+            color: white;
+            padding-top: 4rem;
+            transition: left 0.3s ease-in-out;
+            z-index: 50; /* Below modals, above main content */
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar .nav-link {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #e2e8f0; /* Light gray text */
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+            border-bottom: none; /* Remove underline for sidebar links */
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: #4a5568; /* Darker hover */
+            color: #ffffff;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        .sidebar .close-sidebar-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .sidebar .close-sidebar-btn:hover {
+            color: #ffffff;
+        }
+
+        /* Overlay for when sidebar is open */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40; /* Below sidebar, above main content */
+            display: none; /* Hidden by default */
+        }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
@@ -193,36 +284,58 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3062851685354753"
      crossorigin="anonymous"></script>
 
-    <header class="bg-secondary shadow-md sticky top-0 z-10">
+    <header class="bg-secondary shadow-md sticky top-0 z-20">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
-                    <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-8 w-8 mr-2 rounded-full">
-                    <h1 class="text-xl md:text-2xl font-bold text-main">Interactive Script Console</h1>
+                    <!-- Hamburger menu icon -->
+                    <button class="hamburger-menu" id="hamburger-menu-btn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <!-- Header Title -->
+                    <h1 class="text-xl md:text-2xl font-bold text-main ml-4">Advance Interactive Script Console</h1>
                 </div>
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="nav-link text-accent font-medium pb-1 active">Dashboard</a>
-                    <a href="#wallets" class="nav-link text-accent font-medium pb-1">Wallets</a>
-                    <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1">Recipients</a>
-                    <a href="#config" class="nav-link text-accent font-medium pb-1">Configuration</a>
-                    <a href="#log" class="nav-link text-accent font-medium pb-1">Live Log</a>
-                    <a href="infographic.html" class="nav-link text-accent font-medium pb-1">Infographic</a>
-                    <!-- Blog Link with Icon in Header -->
-                    <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Labs Blog">
+
+                <!-- Right-side icons -->
+                <div class="flex items-center space-x-4">
+                     <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs Blog">
                         <i class="fab fa-blogger text-xl"></i>
                     </a>
-                    <!-- Telegram Link with Icon in Header -->
-                    <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Lab Telegram">
+                    <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Lab Telegram">
                         <i class="fab fa-telegram text-xl"></i>
                     </a>
-                    <!-- GitHub Link in Header -->
-                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Labs GitHub">
+                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs GitHub">
                         <i class="fab fa-github text-xl"></i>
                     </a>
-                </nav>
+                </div>
             </div>
         </div>
     </header>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <button class="close-sidebar-btn" id="close-sidebar-btn">&times;</button>
+        <div class="p-4 mt-8">
+            <div class="flex items-center">
+                <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-10 w-10 mr-3 rounded-full">
+                <h2 class="text-xl font-bold text-white">Navigation</h2>
+            </div>
+        </div>
+        <nav class="flex flex-col mt-4">
+            <a href="#dashboard" class="nav-link active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+            <a href="#wallets" class="nav-link" data-section="wallets"><i class="fas fa-wallet"></i>Wallets</a>
+            <a href="#recipient-settings" class="nav-link" data-section="recipients"><i class="fas fa-users"></i>Recipients</a>
+            <a href="#config" class="nav-link" data-section="configuration"><i class="fas fa-cogs"></i>Configuration</a>
+            <a href="#log" class="nav-link" data-section="live-log"><i class="fas fa-stream"></i>Live Log</a>
+            <hr class="border-gray-600 my-2">
+            <a href="infographic.html" class="nav-link"><i class="fas fa-chart-pie"></i>Infographic</a>
+            <a href="Doc.html" class="nav-link"><i class="fas fa-file-alt"></i>Documentation</a>
+        </nav>
+    </div>
+    <!-- Overlay for sidebar -->
+    <div class="overlay" id="sidebar-overlay"></div>
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8">
         <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: #0077B6;">Farm smarter, not harder — with FarmLabs.</h2>
@@ -237,7 +350,7 @@
             <!-- Dashboard Section -->
             <section id="dashboard" class="mb-12">
                 <h2 class="text-3xl font-bold mb-2 text-main">Dashboard</h2>
-                <p class="text-accent mb-6">Start, stop, and monitor the transaction farming process from here, with real-time updates on wallet balances and action distribution.</p>
+                <p class="text-accent mb-6">Start, stop, and monitor the transaction Interaction process from here, with real-time updates on wallet balances and action distribution.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-secondary p-6 rounded-lg shadow-md flex flex-col items-center justify-center space-y-4">
@@ -245,8 +358,8 @@
                         <div id="wallet-status-display" class="text-center text-sm font-medium text-main">
                             No wallet connected.
                         </div>
-                        <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Farming</button>
-                        <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Farming</button>
+                        <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Interaction</button>
+                        <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Interaction</button>
                         <button id="clear-all-data-btn" class="w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear All Data</button>
                     </div>
                      <div class="bg-secondary p-6 rounded-lg shadow-md col-span-1 md:col-span-2">
@@ -402,7 +515,18 @@
             <!-- Configuration Section -->
             <section id="config" class="mb-12">
                 <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
-                <p class="text-accent mb-6">Define the parameters for the transaction farming, including network settings, amounts, delays, and gas thresholds.</p>
+                <p class="text-accent mb-6">Define the parameters for the transaction Interaction, including network settings, amounts, delays, and gas thresholds.</p>
+
+                <!-- NEW: Stealth Profile Preset -->
+                <div class="mb-6">
+                    <label for="stealth-profile" class="block font-medium text-accent mb-1">Stealth Profile Preset</label>
+                    <select id="stealth-profile" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <option value="balanced" selected>🧠 Balanced (Default)</option>
+                        <option value="aggressive">🚀 Aggressive Interaction</option>
+                        <option value="ultraSlow">🐢 Ultra-Slow & Stealthy</option>
+                        <option value="custom">⚙️ Manual Custom</option>
+                    </select>
+                </div>
 
                 <!-- Main configuration grid container -->
                 <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -549,6 +673,15 @@
                         <p class="text-sm text-gray-500 mt-1">Delay when switching RPC endpoints.</p>
                     </div>
 
+                    <!-- NEW: Wallet Switch Delay -->
+                    <div>
+                        <label for="wallet-switch-delay" class="block font-medium mb-1 text-accent">Wallet Switch Delay (seconds)
+                            <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Delay introduced when switching between different wallets to simulate human-like pauses.</span></span>
+                        </label>
+                        <input type="number" id="wallet-switch-delay" value="5" min="2" max="8" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                        <p class="text-sm text-gray-500 mt-1">Delay when switching between wallets (2-8 seconds).</p>
+                    </div>
+
 
                     <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
                     <div class="md:col-span-2">
@@ -617,7 +750,7 @@ https://rpc.goerli.dev,5</textarea>
             <!-- Live Log Section -->
             <section id="log">
                  <h2 class="text-3xl font-bold mb-2 text-main">Live Log</h2>
-                 <p class="text-accent mb-6">Real-time output from the transaction farming process will appear below. You can also download the complete log.</p>
+                 <p class="text-accent mb-6">Real-time output from the transaction Interaction process will appear below. You can also download the complete log.</p>
                 <div class="bg-gray-800 text-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
                     <div id="live-log"></div>
                 </div>
@@ -714,6 +847,191 @@ https://rpc.goerli.dev,5</textarea>
     </div>
 
     <script>
+        // --- Stealth Config Auto-Injector ---
+        // Helper to set values by ID
+        const setConfigValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.type === "checkbox") el.checked = value;
+            else if (el.tagName === "TEXTAREA") el.value = value.join('\n');
+            else el.value = value;
+        };
+
+        const injectStealthDefaults = () => {
+            const stealthDefaults = {
+                "max-txns-per-wallet": 5,
+                "wallet-idle-chance": 30,
+                "block-lookback": 200,
+                "simulated-error-chance": 3,
+                "enable-time-of-day-bias": true,
+                "prob-send": 60,
+                "prob-idle-action": 20,
+                "prob-balance-check": 20,
+                "min-amount": 0.0000001,
+                "max-amount": 0.0002,
+                "min-delay": 10,
+                "max-delay": 30,
+                "min-gas-factor": 0.9,
+                "max-gas-factor": 1.5,
+                "gas-multiplier": 2,
+                "prob-jitter-factor": 5,
+                "think-time-chance": 10,
+                "min-think-time": 60,
+                "max-think-time": 120,
+                "activity-burst-chance": 50,
+                "min-burst-actions": 2,
+                "max-burst-actions": 5,
+                "min-lull-time": 300,
+                "max-lull-time": 900,
+                "rpc-switch-delay": 5,
+                "wallet-switch-delay": 5, // NEW: walletSwitchDelay default
+                "rpc-urls": [
+                    "https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1",
+                    "https://rpc.goerli.dev,5"
+                ]
+            };
+
+            setConfigValue("max-txns-per-wallet", stealthDefaults["max-txns-per-wallet"]);
+            setConfigValue("wallet-idle-chance", stealthDefaults["wallet-idle-chance"]);
+            setConfigValue("block-lookback", stealthDefaults["block-lookback"]);
+            setConfigValue("simulated-error-chance", stealthDefaults["simulated-error-chance"]);
+            setConfigValue("enable-time-of-day-bias", stealthDefaults["enable-time-of-day-bias"]);
+            setConfigValue("prob-send", stealthDefaults["prob-send"]);
+            setConfigValue("prob-idle-action", stealthDefaults["prob-idle-action"]);
+            setConfigValue("prob-balance-check", stealthDefaults["prob-balance-check"]);
+            setConfigValue("min-amount", stealthDefaults["min-amount"]);
+            setConfigValue("max-amount", stealthDefaults["max-amount"]);
+            setConfigValue("min-delay", stealthDefaults["min-delay"]);
+            setConfigValue("max-delay", stealthDefaults["max-delay"]);
+            setConfigValue("min-gas-factor", stealthDefaults["min-gas-factor"]);
+            setConfigValue("max-gas-factor", stealthDefaults["max-gas-factor"]);
+            setConfigValue("gas-multiplier", stealthDefaults["gas-multiplier"]);
+            setConfigValue("prob-jitter-factor", stealthDefaults["prob-jitter-factor"]);
+            setConfigValue("think-time-chance", stealthDefaults["think-time-chance"]);
+            setConfigValue("min-think-time", stealthDefaults["min-think-time"]);
+            setConfigValue("max-think-time", stealthDefaults["max-think-time"]);
+            setConfigValue("activity-burst-chance", stealthDefaults["activity-burst-chance"]);
+            setConfigValue("min-burst-actions", stealthDefaults["min-burst-actions"]);
+            setConfigValue("max-burst-actions", stealthDefaults["max-burst-actions"]);
+            setConfigValue("min-lull-time", stealthDefaults["min-lull-time"]);
+            setConfigValue("max-lull-time", stealthDefaults["max-lull-time"]);
+            setConfigValue("rpc-switch-delay", stealthDefaults["rpc-switch-delay"]);
+            setConfigValue("wallet-switch-delay", stealthDefaults["wallet-switch-delay"]); // NEW: walletSwitchDelay
+            setConfigValue("rpc-urls", stealthDefaults["rpc-urls"]);
+        };
+
+        // --- Stealth Profile Selector ---
+        const stealthProfiles = {
+            balanced: {
+                "max-txns-per-wallet": 5,
+                "wallet-idle-chance": 30,
+                "block-lookback": 300,
+                "simulated-error-chance": 2,
+                "enable-time-of-day-bias": true,
+                "prob-send": 60,
+                "prob-idle-action": 20,
+                "prob-balance-check": 20,
+                "min-amount": 0.0001,
+                "max-amount": 0.0002,
+                "min-delay": 10,
+                "max-delay": 30,
+                "min-gas-factor": 0.9,
+                "max-gas-factor": 1.1,
+                "gas-multiplier": 2,
+                "prob-jitter-factor": 5,
+                "think-time-chance": 10,
+                "min-think-time": 60,
+                "max-think-time": 120,
+                "activity-burst-chance": 50,
+                "min-burst-actions": 2,
+                "max-burst-actions": 5,
+                "min-lull-time": 300,
+                "max-lull-time": 900,
+                "rpc-switch-delay": 5,
+                "wallet-switch-delay": 5, // NEW: walletSwitchDelay
+                "rpc-urls": [
+                    "https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1",
+                    "https://rpc.goerli.dev,5"
+                ]
+            },
+            aggressive: {
+                "max-txns-per-wallet": 8,
+                "wallet-idle-chance": 10,
+                "block-lookback": 100,
+                "simulated-error-chance": 1,
+                "enable-time-of-day-bias": false,
+                "prob-send": 80,
+                "prob-idle-action": 10,
+                "prob-balance-check": 10,
+                "min-amount": 0.0002,
+                "max-amount": 0.0004,
+                "min-delay": 5,
+                "max-delay": 15,
+                "min-gas-factor": 1.0,
+                "max-gas-factor": 1.3,
+                "gas-multiplier": 3,
+                "prob-jitter-factor": 2,
+                "think-time-chance": 2,
+                "min-think-time": 10,
+                "max-think-time": 20,
+                "activity-burst-chance": 80,
+                "min-burst-actions": 3,
+                "max-burst-actions": 8,
+                "min-lull-time": 60,
+                "max-lull-time": 180,
+                "rpc-switch-delay": 2,
+                "wallet-switch-delay": 2, // NEW: walletSwitchDelay
+                "rpc-urls": [
+                    "https://rpc.ankr.com/eth,1",
+                    "https://rpc.ankr.com/eth_goerli,5"
+                ]
+            },
+            ultraSlow: {
+                "max-txns-per-wallet": 2,
+                "wallet-idle-chance": 50,
+                "block-lookback": 500,
+                "simulated-error-chance": 5,
+                "enable-time-of-day-bias": true,
+                "prob-send": 40,
+                "prob-idle-action": 40,
+                "prob-balance-check": 20,
+                "min-amount": 0.00005,
+                "max-amount": 0.0001,
+                "min-delay": 20,
+                "max-delay": 90,
+                "min-gas-factor": 0.8,
+                "max-gas-factor": 1.0,
+                "gas-multiplier": 1.5,
+                "prob-jitter-factor": 8,
+                "think-time-chance": 25,
+                "min-think-time": 90,
+                "max-think-time": 180,
+                "activity-burst-chance": 20,
+                "min-burst-actions": 1,
+                "max-burst-actions": 3,
+                "min-lull-time": 900,
+                "max-lull-time": 1800,
+                "rpc-switch-delay": 8,
+                "wallet-switch-delay": 8, // NEW: walletSwitchDelay
+                "rpc-urls": [
+                    "https://rpc.ankr.com/eth_sepolia,11155111"
+                ]
+            }
+        };
+
+        const applyProfile = (profileName) => {
+            const profile = stealthProfiles[profileName];
+            if (!profile) return;
+            Object.entries(profile).forEach(([id, value]) => {
+                // Convert id from kebab-case to camelCase for direct mapping to HTML element IDs
+                const elementId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                setConfigValue(elementId, value);
+            });
+            // After applying a profile, re-load the configuration to update appState
+            loadConfiguration();
+        };
+
+
         document.addEventListener('DOMContentLoaded', () => {
             const appState = {
                 isRunning: false,
@@ -741,88 +1059,14 @@ https://rpc.goerli.dev,5</textarea>
                 lastHumanLikeSpike: null, // To track the last "human-like" spike
             };
 
-            // --- Stealth Utility Functions ---
-            const Stealth = (() => {
-                let spareRandom = null; // For normalRandom (Box-Muller)
+            // Inject default stealth config values on load
+            injectStealthDefaults();
 
-                // Generates a standard normal (Gaussian) random number using the Box-Muller transform.
-                function normalRandom() {
-                    let val, u, v, s, mul;
-                    if (spareRandom !== null) {
-                        val = spareRandom;
-                        spareRandom = null;
-                    } else {
-                        do {
-                            u = Math.random() * 2 - 1;
-                            v = Math.random() * 2 - 1;
-                            s = u * u + v * v;
-                        } while (s === 0 || s >= 1);
-                        mul = Math.sqrt(-2 * Math.log(s) / s);
-                        val = u * mul;
-                        spareRandom = v * mul;
-                    }
-                    return val;
-                }
-
-                // Generates a log-normal random number within a clamped range.
-                // This is used for inter-action delays to mimic human variability.
-                function generateLogNormalDelay(minMs, maxMs) {
-                    const logMin = Math.log(minMs);
-                    const logMax = Math.log(maxMs);
-                    // Adjust mu and sigma to center the distribution and control spread
-                    const mu = (logMin + logMax) / 2;
-                    const sigma = (logMax - logMin) / 4; // Arbitrary scaling for spread
-
-                    let randomLogValue = normalRandom() * sigma + mu;
-                    let result = Math.exp(randomLogValue);
-
-                    // Clamp the result to be within the specified min and max
-                    return Math.max(minMs, Math.min(maxMs, result));
-                }
-
-                // Generates a random number from a Poisson distribution (approximation for events).
-                // Useful for irregular event occurrences like simulated errors or activity bursts.
-                // Lambda (λ) is the average number of occurrences in a given interval.
-                function generatePoissonRandom(lambda) {
-                    let L = Math.exp(-lambda);
-                    let k = 0;
-                    let p = 1;
-                    do {
-                        k++;
-                        p *= Math.random();
-                    } while (p > L);
-                    return k - 1;
-                }
-
-                // Selects an item from a list based on assigned weights.
-                // Useful for probabilistic RPC selection or chain selection.
-                function getWeightedRandomItem(items, weights) {
-                    let i;
-                    let sum = 0;
-                    for (i = 0; i < weights.length; i++) {
-                        sum += weights[i];
-                    }
-
-                    let r = Math.random() * sum;
-                    let cumulativeWeight = 0;
-                    for (i = 0; i < items.length; i++) {
-                        cumulativeWeight += weights[i];
-                        if (r < cumulativeWeight) {
-                            return items[i];
-                        }
-                    }
-                    return items[items.length - 1]; // Fallback
-                }
-
-                return {
-                    generateLogNormalDelay,
-                    generatePoissonRandom,
-                    getWeightedRandomItem,
-                    // Helper for general random range
-                    getRandomInRange: (min, max) => Math.random() * (max - min) + min,
-                };
-            })();
-            // --- End Stealth Utility Functions ---
+            // UI elements for hamburger menu and sidebar
+            const hamburgerMenuBtn = document.getElementById('hamburger-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
 
 
             const ui = {
@@ -855,6 +1099,7 @@ https://rpc.goerli.dev,5</textarea>
                 maxLullTime: document.getElementById('max-lull-time'), // NEW
                 enableTimeOfDayBias: document.getElementById('enable-time-of-day-bias'), // NEW
                 rpcSwitchDelay: document.getElementById('rpc-switch-delay'), // NEW
+                walletSwitchDelay: document.getElementById('wallet-switch-delay'), // NEW UI element for walletSwitchDelay
                 rpcUrls: document.getElementById('rpc-urls'),
                 testRpcBtn: document.getElementById('test-rpc-btn'),
                 probSend: document.getElementById('prob-send'),
@@ -901,6 +1146,7 @@ https://rpc.goerli.dev,5</textarea>
                 cancelConfirmBtn: document.getElementById('cancel-confirm-btn'),
                 closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
                 humanSpikeDisplay: document.getElementById('human-spike-display'), // NEW
+                stealthProfileSelector: document.getElementById('stealth-profile'), // NEW UI element
             };
 
             // Function to enable/disable UI elements
@@ -937,11 +1183,15 @@ https://rpc.goerli.dev,5</textarea>
                     ui.keysLoadedCount.textContent = '';
                     appState.wallets = [];
                     updateWalletBalanceChart(); // Update console's chart
+                    // Reset RPC URLs to default if no wallet is connected
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
                     // Reset action probabilities to default
                     ui.probSend.value = "60"; // New default
                     ui.probIdleAction.value = "20"; // New default
                     ui.probBalanceCheck.value = "20"; // New default
+                    // Reset stealth profile to balanced
+                    ui.stealthProfileSelector.value = "balanced";
+                    injectStealthDefaults(); // Re-inject defaults to reset all fields
                 }
             };
 
@@ -1190,6 +1440,7 @@ https://rpc.goerli.dev,5</textarea>
                     maxLullTime: maxLullTime * 1000 || 900000, // Convert to ms
                     enableTimeOfDayBias: ui.enableTimeOfDayBias.checked, // NEW config
                     rpcSwitchDelay: parseInt(ui.rpcSwitchDelay.value) * 1000 || 5000, // NEW config
+                    walletSwitchDelay: parseInt(ui.walletSwitchDelay.value) * 1000 || 5000, // NEW config
                     recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
                     fixedAddress: ui.fixedAddress.value.trim(),
                     probabilities: {
@@ -1257,7 +1508,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = "AIzaSyBns3XoeRSd1p1kttRjbv8qR9J01pdrCaQ"; // API key is left blank, Canvas will provide it at runtime.
+                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1465,10 +1716,10 @@ https://rpc.goerli.dev,5</textarea>
             };
 
 
-            const startFarming = async () => {
-                openConfirmationModal('Are you sure you want to start transaction farming? Ensure your settings and keys are for test purposes only, as this involves real blockchain interactions.', async (confirmed) => {
+            const startInteraction = async () => {
+                openConfirmationModal('Are you sure you want to start transaction Interaction? Ensure your settings and keys are for test purposes only, as this involves real blockchain interactions.', async (confirmed) => {
                     if (!confirmed) {
-                        log('Farming start cancelled by user.', 'info');
+                        log('Interaction start cancelled by user.', 'info');
                         return;
                     }
 
@@ -1522,7 +1773,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.progressBar.style.width = `100%`;
 
 
-                    log(`Starting transaction farming process across ${appState.rpcConfigs.length} chains and ${appState.wallets.length} wallets.`, 'info');
+                    log(`Starting transaction Interaction process across ${appState.rpcConfigs.length} chains and ${appState.wallets.length} wallets.`, 'info');
 
                     // Pre-scan all RPCs for addresses for the 'pool' mode
                     if (appState.config.recipientMode === 'pool') {
@@ -1533,7 +1784,7 @@ https://rpc.goerli.dev,5</textarea>
                         log('Pre-scanning complete.', 'info');
                     }
 
-                    // Main farming loop: continuously runs until stop button is clicked
+                    // Main Interaction loop: continuously runs until stop button is clicked
                     while (appState.isRunning && !appState.stopFlag) {
                         // Randomly select an RPC configuration for this session
                         const rpcConfigIndex = Math.floor(Math.random() * appState.rpcConfigs.length);
@@ -1555,6 +1806,12 @@ https://rpc.goerli.dev,5</textarea>
                         let wallet = new ethers.Wallet(walletInfo.privateKey, provider);
 
                         log(`🌐 Initiating session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} (${rpcUrl})...`, 'info');
+
+                        // NEW: Wallet Switch Delay
+                        if (appState.wallets.length > 1 && appState.config.walletSwitchDelay > 0) {
+                            log(`Pausing for wallet switch delay (${appState.config.walletSwitchDelay / 1000}s)...`, 'info');
+                            await sleep(appState.config.walletSwitchDelay);
+                        }
 
                         // Check for idle chance for the wallet session
                         if (Math.random() * 100 < appState.config.walletIdleChance) {
@@ -1826,12 +2083,12 @@ https://rpc.goerli.dev,5</textarea>
                             await sleep(sessionDelay);
                         }
                     } // End of while (appState.isRunning && !appState.stopFlag)
-                    log('Farming process finished.', 'success');
-                    stopFarming();
+                    log('Interaction process finished.', 'success');
+                    stopInteraction();
                 });
             };
 
-            const stopFarming = () => {
+            const stopInteraction = () => {
                 appState.isRunning = false;
                 appState.stopFlag = true;
                 ui.startBtn.disabled = false;
@@ -1862,25 +2119,9 @@ https://rpc.goerli.dev,5</textarea>
                         ui.humanSpikeDisplay.textContent = 'Never';
 
                         ui.privateKeys.value = '';
-                        ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                        ui.probSend.value = "60"; // Reset to new defaults
-                        ui.probIdleAction.value = "20"; // Reset to new defaults
-                        ui.probBalanceCheck.value = "20"; // Reset to new defaults
-                        ui.minGasFactor.value = "0.9";
-                        ui.maxGasFactor.value = "1.1";
-                        ui.probJitterFactor.value = "5"; // Reset new config
-                        ui.simulatedErrorChance.value = "0"; // Reset new config
-                        ui.thinkTimeChance.value = "10"; // Reset new config
-                        ui.minThinkTime.value = "60"; // Reset new config
-                        ui.maxThinkTime.value = "120"; // Reset new config
-                        ui.activityBurstChance.value = "50"; // Reset new config
-                        ui.minBurstActions.value = "2"; // Reset new config
-                        ui.maxBurstActions.value = "5"; // Reset new config
-                        ui.minLullTime.value = "300"; // Reset new config
-                        ui.maxLullTime.value = "900"; // Reset new config
-                        ui.enableTimeOfDayBias.checked = false; // Reset new config
-                        ui.rpcSwitchDelay.value = "5"; // Reset new config
-
+                        // Reset all config fields by re-injecting defaults
+                        injectStealthDefaults();
+                        ui.stealthProfileSelector.value = "balanced"; // Reset profile selector
 
                         setUIEnabled(false);
                         // Re-initialize console charts after clearing data to ensure they reflect the empty state correctly
@@ -1921,7 +2162,7 @@ https://rpc.goerli.dev,5</textarea>
             // NEW: handleSummarizeLog function
             const handleSummarizeLog = async () => {
                 if (appState.logEntries.length === 0) {
-                    openGeminiModal('No Log Data', '<p class="text-accent">There are no log entries to summarize yet. Start farming to generate logs!</p>');
+                    openGeminiModal('No Log Data', '<p class="text-accent">There are no log entries to summarize yet. Start Interaction to generate logs!</p>');
                     return;
                 }
 
@@ -2047,8 +2288,8 @@ https://rpc.goerli.dev,5</textarea>
 
             const setupEventListeners = () => {
                 ui.connectWalletBtn.addEventListener('click', connectWallet);
-                ui.startBtn.addEventListener('click', startFarming);
-                ui.stopBtn.addEventListener('click', stopFarming);
+                ui.startBtn.addEventListener('click', startInteraction);
+                ui.stopBtn.addEventListener('click', stopInteraction);
                 ui.clearAllDataBtn.addEventListener('click', clearAllData);
                 ui.loadKeysBtn.addEventListener('click', loadWallets);
                 ui.testRpcBtn.addEventListener('click', testRpcConnections);
@@ -2116,31 +2357,69 @@ https://rpc.goerli.dev,5</textarea>
                 ui.maxLullTime.addEventListener('input', loadConfiguration); // NEW
                 ui.enableTimeOfDayBias.addEventListener('change', loadConfiguration); // NEW
                 ui.rpcSwitchDelay.addEventListener('input', loadConfiguration); // NEW
+                ui.walletSwitchDelay.addEventListener('input', loadConfiguration); // NEW
+
+                // Event listener for Stealth Profile Selector
+                ui.stealthProfileSelector.addEventListener("change", (e) => {
+                    const selected = e.target.value;
+                    if (selected !== "custom") {
+                        applyProfile(selected);
+                    }
+                    // If "custom" is selected, the current values in the fields are kept.
+                    // loadConfiguration() is called by applyProfile, so no need to call it here for non-custom.
+                    // For custom, the user will manually change fields, triggering their individual loadConfiguration calls.
+                });
                 
                 // Handle navigation links for internal sections
-                document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+                document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                     link.addEventListener('click', function(e) {
+                        // For external links, let the browser handle it
+                        if (this.getAttribute('href').endsWith('.html')) {
+                            return;
+                        }
                         e.preventDefault();
                         const targetId = this.getAttribute('href').substring(1);
                         const targetElement = document.getElementById(targetId);
                         if (targetElement) {
                             targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
-                        // Update active class for internal links
-                        document.querySelectorAll('nav a[href^="#"]').forEach(navLink => navLink.classList.remove('active'));
+                        // Update active class for sidebar links
+                        document.querySelectorAll('.sidebar .nav-link').forEach(navLink => navLink.classList.remove('active'));
                         this.classList.add('active');
+
+                        // Close sidebar after clicking a link
+                        sidebar.classList.remove('open');
+                        sidebarOverlay.style.display = 'none';
                     });
+                });
+
+                // Hamburger menu toggle
+                hamburgerMenuBtn.addEventListener('click', () => {
+                    sidebar.classList.add('open');
+                    sidebarOverlay.style.display = 'block';
+                });
+
+                // Close sidebar button
+                closeSidebarBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.style.display = 'none';
+                });
+
+                // Close sidebar when clicking outside (overlay)
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.style.display = 'none';
                 });
             };
 
             initConsoleCharts(); // Initialize charts for the console
             setupEventListeners();
-            loadConfiguration();
+            loadConfiguration(); // Load initial configuration values from UI elements
             updateWalletBalanceChart(); // Initial chart update (will be empty)
             setUIEnabled(false); // Initially disable features, but connect wallet button remains enabled
 
             // Set the initial active navigation link for Dashboard
-            const initialActiveLink = document.querySelector('nav a[href="#dashboard"]');
+            const initialActiveLink = document.querySelector('.sidebar a[href="#dashboard"]');
             if (initialActiveLink) {
                 initialActiveLink.classList.add('active');
             }
