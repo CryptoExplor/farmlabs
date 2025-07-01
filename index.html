@@ -13,6 +13,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -24,7 +26,7 @@
         .bg-secondary { background-color: #ffffff; }
         .text-main { color: #2d3748; } /* Slate 800 */
         .text-accent { color: #4a5568; } /* Slate 600 */
-        .border-accent { border-color: #e2e8f0; } /* Slate 200 */
+        .border-accent { border-color: #e2e8f0; /* Slate 200 */ }
         .btn-primary { background-color: #3b82f6; color: white; }
         .btn-primary:hover { background-color: #2563eb; }
         .btn-secondary { background-color: #6b7280; color: white; }
@@ -45,7 +47,7 @@
             border-bottom-color: #3b82f6;
         }
         /* Chart container for console charts */
-        #script-console-content .chart-container {
+        .chart-container {
             position: relative;
             width: 100%;
             max-width: 600px;
@@ -55,7 +57,7 @@
             max-height: 40vh;
         }
         @media (min-width: 768px) {
-            #script-console-content .chart-container {
+            .chart-container {
                 height: 350px;
             }
         }
@@ -183,45 +185,6 @@
             cursor: not-allowed;
             background-color: #e2e8f0; /* Light gray */
         }
-
-        /* Infographic specific styles from original infographic html */
-        #infographic-content {
-            background-color: #F8F9FA;
-            color: #212529;
-        }
-        #infographic-content .chart-container {
-            position: relative;
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 600px;
-            height: 320px;
-        }
-        @media (min-width: 768px) {
-            #infographic-content .chart-container {
-                height: 400px;
-            }
-        }
-        .kpi-card {
-            background-color: #ffffff;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-        .flowchart-step {
-            border: 2px solid #90E0EF;
-            background-color: white;
-            border-radius: 0.75rem; /* Added rounded corners for flowchart steps */
-        }
-        .flowchart-arrow {
-            color: #0077B6;
-        }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
@@ -233,14 +196,29 @@
     <header class="bg-secondary shadow-md sticky top-0 z-10">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <h1 class="text-xl md:text-2xl font-bold text-main">Interactive Script Console</h1>
+                <div class="flex items-center">
+                    <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-8 w-8 mr-2 rounded-full">
+                    <h1 class="text-xl md:text-2xl font-bold text-main">Interactive Script Console</h1>
+                </div>
                 <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="nav-link text-accent font-medium pb-1 active" data-page="console">Dashboard</a>
-                    <a href="#wallets" class="nav-link text-accent font-medium pb-1" data-page="console">Wallets</a>
-                    <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1" data-page="console">Recipients</a>
-                    <a href="#config" class="nav-link text-accent font-medium pb-1" data-page="console">Configuration</a>
-                    <a href="#log" class="nav-link text-accent font-medium pb-1" data-page="console">Live Log</a>
-                    <a href="#overview" class="nav-link text-accent font-medium pb-1" data-page="infographic">Infographic</a>
+                    <a href="#dashboard" class="nav-link text-accent font-medium pb-1 active">Dashboard</a>
+                    <a href="#wallets" class="nav-link text-accent font-medium pb-1">Wallets</a>
+                    <a href="#recipient-settings" class="nav-link text-accent font-medium pb-1">Recipients</a>
+                    <a href="#config" class="nav-link text-accent font-medium pb-1">Configuration</a>
+                    <a href="#log" class="nav-link text-accent font-medium pb-1">Live Log</a>
+                    <a href="infographic.html" class="nav-link text-accent font-medium pb-1">Infographic</a>
+                    <!-- Blog Link with Icon in Header -->
+                    <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Labs Blog">
+                        <i class="fab fa-blogger text-xl"></i>
+                    </a>
+                    <!-- Telegram Link with Icon in Header -->
+                    <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Lab Telegram">
+                        <i class="fab fa-telegram text-xl"></i>
+                    </a>
+                    <!-- GitHub Link in Header -->
+                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Labs GitHub">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
                 </nav>
             </div>
         </div>
@@ -647,216 +625,6 @@ https://rpc.goerli.dev,5</textarea>
             </section>
         </div><!-- End script-console-content -->
 
-        <!-- Infographic Content -->
-        <div id="infographic-content" class="hidden">
-            <!-- Section 1: Introduction & Hook -->
-            <section id="infographic-overview" class="text-center my-12 md:my-16">
-                <h2 class="text-4xl md:text-5xl font-extrabold mb-4" style="color: #0077B6;">Anatomy of an Automated Transaction Farming Script</h2>
-                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-                    A deep dive into a client-side tool designed to automate blockchain interactions for testnet farming, airdrop eligibility, and protocol testing, with a focus on simulating organic, human-like activity.
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                    <div class="kpi-card">
-                        <span class="text-5xl font-bold block mb-2" style="color: #00B4D8;">5</span>
-                        <h3 class="text-xl font-semibold text-gray-700">Recipient Modes</h3>
-                        <p class="text-gray-500 mt-2">From dynamic address pools to self-interaction, offering diverse targeting strategies.</p>
-                    </div>
-                    <div class="kpi-card">
-                        <span class="text-5xl font-bold block mb-2" style="color: #00B4D8;">5+</span>
-                        <h3 class="text-xl font-semibold text-gray-700">Randomization Factors</h3>
-                        <p class="text-gray-500 mt-2">Simulates human behavior by randomizing amounts, delays, wallets, chains, and gas fees.</p>
-                    </div>
-                    <div class="kpi-card">
-                        <span class="text-5xl font-bold block mb-2" style="color: #00B4D8;">∞</span>
-                        <h3 class="text-xl font-semibold text-gray-700">Supported Wallets</h3>
-                        <p class="text-gray-500 mt-2">Load an unlimited number of private keys to scale your operations effortlessly.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 2: The Core Engine -->
-            <section id="infographic-how-it-works" class="my-16 md:my-24">
-                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">The Core Engine: How It Works</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    The script follows a logical, configurable flow to execute its tasks. From initialization to the final transaction, each step is designed for automation and control.
-                </p>
-                <div class="flex flex-col items-center space-y-4">
-                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">1. Connect & Load Wallets</div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">2. Configure Settings (Recipients, Delays, Amounts)</div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">3. Start Farming Process</div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step p-6 rounded-lg w-full md:w-2/3 text-center border-dashed">
-                        <h4 class="font-bold text-lg mb-4">4. Execution Loop (Repeats)</h4>
-                        <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
-                            <div class="font-semibold">Select Chain</div>
-                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
-                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
-                            <div class="font-semibold">Select Wallet</div>
-                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
-                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
-                            <div class="font-semibold">Choose Action</div>
-                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
-                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
-                            <div class="font-semibold">Execute Tx</div>
-                        </div>
-                    </div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step p-4 rounded-lg w-full md:w-1/2 text-center font-semibold">5. Monitor via Dashboard & Logs</div>
-                </div>
-            </section>
-
-            <!-- Section 3: KPIs -->
-            <section id="infographic-kpis" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
-                 <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Key Performance Indicators</h2>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 px-8">
-                     <div>
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Action Distribution</h3>
-                        <p class="text-center text-gray-600 mb-6">
-                            This chart shows the typical probability of the script performing a 'Send' transaction versus choosing to remain 'Idle' for an action, a key feature for simulating non-robotic behavior.
-                        </p>
-                        <div class="chart-container">
-                            <canvas id="infographicActionDistChart"></canvas>
-                        </div>
-                     </div>
-                     <div>
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Sample Wallet Balances (ETH)</h3>
-                         <p class="text-center text-gray-600 mb-6">
-                            A snapshot of balances across multiple loaded wallets. The script provides real-time updates to this data as transactions are confirmed on the network.
-                        </p>
-                        <div class="chart-container">
-                            <canvas id="infographicWalletBalanceChart"></canvas>
-                        </div>
-                     </div>
-                 </div>
-            </section>
-
-            <!-- Section 4: Humanization Engine -->
-            <section id="infographic-features" class="my-16 md:my-24">
-                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">The 'Humanization' Engine</h2>
-                 <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    To avoid being flagged as a bot, the script incorporates several layers of randomization. This engine ensures that the script's activity appears organic and unpredictable.
-                </p>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                     <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Randomized Gas Payments</h3>
-                         <p class="text-center text-gray-600 mb-6">
-                            Instead of using a fixed gas price, the script calculates a variable fee for each transaction, staying within a user-defined multiplier of the current network average to mimic human bidding behavior.
-                        </p>
-                        <div class="chart-container h-80">
-                            <canvas id="infographicGasPriceChart"></canvas>
-                        </div>
-                     </div>
-                     <div class="space-y-6">
-                        <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">⏱️</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Delays (Log-normal)</h4>
-                                <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions, drawn from a log-normal distribution for more human-like timing.</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">💸</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Amounts</h4>
-                                <p class="text-left text-gray-600">Sends a variable amount of ETH within a specified range.</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">🔗</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Random Chain & Wallet</h4>
-                                <p class="text-left text-gray-600">Picks a random wallet and a random blockchain network for each session.</p>
-                            </div>
-                        </div>
-                         <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">🎲</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Per-Wallet Probability Jitter</h4>
-                                <p class="text-left text-gray-600">Each wallet's action probabilities (send, idle, balance check) subtly vary from global settings.</p>
-                            </div>
-                        </div>
-                         <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">⚙️</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: #0077B6;">Simulated Errors & Retries</h4>
-                                <p class="text-left text-gray-600">Introduces occasional simulated transaction failures, followed by exponential backoff retries.</p>
-                            </div>
-                        </div>
-                     </div>
-                </div>
-            </section>
-
-            <!-- Section 5: Recipient Strategy -->
-            <section id="infographic-recipient-strategy" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
-                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Recipient Strategy</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    The script offers multiple modes for selecting transaction recipients, allowing for a wide range of interaction patterns.
-                </p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
-                    <div class="kpi-card">
-                        <span class="text-4xl">🔍</span>
-                        <h4 class="text-lg font-bold my-2">Dynamic Pool</h4>
-                        <p class="text-gray-600 text-sm">Scans recent blocks for active wallets (EOAs) and adds them to a recipient pool.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">🎯</span>
-                        <h4 class="text-lg font-bold my-2">Fixed Address</h4>
-                        <p class="text-gray-600 text-sm">Sends all transactions to a single, predetermined address.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">📝</span>
-                        <h4 class="text-lg font-bold my-2">Custom List</h4>
-                        <p class="text-gray-600 text-sm">Uses a user-provided list of addresses for transactions.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">📄</span>
-                        <h4 class="text-lg font-bold my-2">Predefined List</h4>
-                        <p class="text-gray-600 text-sm">Loads recipients from an externally hosted or uploaded CSV file.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">🤝</span>
-                        <h4 class="text-lg font-bold my-2">Self-Interact</h4>
-                        <p class="text-gray-600 text-sm">Loaded wallets send transactions to each other, creating an internal ecosystem.</p>
-                    </div>
-                     <div class="kpi-card bg-gray-100">
-                        <span class="text-4xl">↪️</span>
-                        <h4 class="text-lg font-bold my-2">Fallback Logic</h4>
-                        <p class="text-gray-600 text-sm">If the Dynamic Pool is empty, it automatically falls back to Self-Interact mode.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- NEW: Embedded Resource Section -->
-            <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-white rounded-lg shadow-lg">
-                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" style="color: #0077B6;">Deep Dive: External Resource</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    Explore further details and documentation on transaction farming and related topics through this embedded resource.
-                </p>
-                <div class="w-full flex justify-center px-4">
-                    <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
-                </div>
-            </section>
-
-            <!-- Section 6: Security -->
-            <section id="infographic-security" class="my-16 md:my-24">
-                <div class="max-w-4xl mx-auto p-6 rounded-lg" style="background-color: #fffbe6; border: 1px solid #fde047;">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                             <span class="text-3xl">⚠️</span>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-2xl font-bold" style="color: #ca8a04;">A Critical Security Notice</h3>
-                            <div class="mt-2 text-md text-yellow-800">
-                                <p>This is a client-side application. Handling private keys in a web browser is **extremely risky**. This tool is intended for educational and testing purposes **on test networks only**. Never input mainnet private keys or keys associated with wallets holding real assets. The developer assumes no responsibility for any loss of funds.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div><!-- End infographic-content -->
-
     </main>
 
     <!-- NEW FOOTER SECTION -->
@@ -887,14 +655,23 @@ https://rpc.goerli.dev,5</textarea>
                     </svg>
                 </button>
             </div>
-            <p class="text-sm text-gray-500 mt-8 flex items-center justify-center">
+            <p class="text-sm text-gray-500 mt-8 text-center">
                 &copy; 2025 FarmLabs. All rights reserved.
-                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="ml-4 text-gray-600 hover:text-blue-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38C13.71 14.53 16 11.54 16 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
-                </a>
             </p>
+            <div class="flex items-center justify-center mt-4">
+                <!-- Blogspot Icon in Footer -->
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-orange-500" title="Farm Labs Blog">
+                    <i class="fab fa-blogger fa-2x"></i>
+                </a>
+                <!-- Telegram Icon in Footer -->
+                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-blue-500" title="Farm Lab Telegram">
+                    <i class="fab fa-telegram fa-2x"></i>
+                </a>
+		<!-- GitHub Icon in Footer -->
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="mx-2 text-gray-600 hover:text-blue-500" title="Farm Labs GitHub">
+                    <i class="fab fa-github fa-2x"></i>
+                </a>
+            </div>
         </div>
     </footer>
 
@@ -955,9 +732,6 @@ https://rpc.goerli.dev,5</textarea>
                 charts: {
                     walletBalance: null, // Console's wallet balance chart
                     actionDist: null,    // Console's action distribution chart
-                    infographicActionDist: null, // Infographic's charts
-                    infographicWalletBalance: null,
-                    infographicGasPrice: null
                 },
                 pendingConfirmation: null, // Callback for confirmation modal
                 connectedAddress: null,
@@ -1122,16 +896,6 @@ https://rpc.goerli.dev,5</textarea>
                 confirmActionBtn: document.getElementById('confirm-action-btn'),
                 cancelConfirmBtn: document.getElementById('cancel-confirm-btn'),
                 closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
-
-                // New UI elements for page switching
-                scriptConsoleContent: document.getElementById('script-console-content'),
-                infographicContent: document.getElementById('infographic-content'),
-                navLinks: document.querySelectorAll('.nav-link'),
-
-                // Infographic chart canvases
-                infographicActionDistChartCanvas: document.getElementById('infographicActionDistChart'),
-                infographicWalletBalanceChartCanvas: document.getElementById('infographicWalletBalanceChart'),
-                infographicGasPriceChartCanvas: document.getElementById('infographicGasPriceChart'),
                 humanSpikeDisplay: document.getElementById('human-spike-display'), // NEW
             };
 
@@ -1340,159 +1104,6 @@ https://rpc.goerli.dev,5</textarea>
                     chart.data.datasets[0].data[dataMap[actionType]] = appState.stats.actionCounts[actionType];
                     chart.update();
                 }
-            };
-
-            // Infographic Chart Initialization Functions
-            const initInfographicActionDistChart = () => {
-                const ctx = ui.infographicActionDistChartCanvas?.getContext('2d');
-                if (!ctx) return;
-                // Destroy existing chart if it exists to prevent re-initialization errors
-                if (appState.charts.infographicActionDist) {
-                    appState.charts.infographicActionDist.destroy();
-                }
-                appState.charts.infographicActionDist = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        // Updated labels to reflect new action type in infographic
-                        labels: ['Send Transaction', 'Idle (No Action)', 'Balance Check'],
-                        datasets: [{
-                            label: 'Action Probability',
-                            // Updated data to match new default probabilities
-                            data: [60, 20, 20],
-                            backgroundColor: ['#00B4D8', '#90E0EF', '#fcd34d'], // Added color for balance check
-                            borderColor: '#ffffff',
-                            borderWidth: 2,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                         ...mandatoryTooltipConfig.plugins,
-                            legend: {
-                                position: 'top',
-                                labels: {
-                                    color: '#212529' // Infographic text color
-                                }
-                            },
-                        }
-                });
-            };
-            
-            const initInfographicWalletBalanceChart = () => {
-                const ctx = ui.infographicWalletBalanceChartCanvas?.getContext('2d');
-                if (!ctx) return;
-                // Destroy existing chart if it exists to prevent re-initialization errors
-                if (appState.charts.infographicWalletBalance) {
-                    appState.charts.infographicWalletBalance.destroy();
-                }
-                const walletLabels = ['Wallet ...a4b8', 'Wallet ...f9c1', 'Wallet ...3d2e', 'Wallet ...e6a7', 'Wallet ...b8d9'];
-
-                appState.charts.infographicWalletBalance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: walletLabels.map(label => wrapLabel(label)),
-                        datasets: [{
-                            label: 'Balance (ETH)',
-                            data: [1.2, 0.8, 2.5, 0.5, 1.9],
-                            backgroundColor: '#00B4D8',
-                            borderColor: '#0077B6',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                         ...mandatoryTooltipConfig,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#4a5568' // Infographic text accent
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#4a5568' // Infographic text accent
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#212529'
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-            
-            const initInfographicGasPriceChart = () => {
-                const ctx = ui.infographicGasPriceChartCanvas?.getContext('2d');
-                if (!ctx) return;
-                // Destroy existing chart if it exists to prevent re-initialization errors
-                if (appState.charts.infographicGasPrice) {
-                    appState.charts.infographicGasPrice.destroy();
-                }
-
-                const labels = ['T-10', 'T-9', 'T-8', 'T-7', 'T-6', 'T-5', 'T-4', 'T-3', 'T-2', 'T-1'];
-                const networkBaseFee = Array(10).fill(20);
-                const randomGasPrice = Array.from({length: 10}, () => Math.random() * 30 + 20);
-
-                appState.charts.infographicGasPrice = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Network Base Fee (Gwei)',
-                                data: networkBaseFee,
-                                borderColor: '#90E0EF',
-                                borderWidth: 2,
-                                tension: 0.1,
-                                pointRadius: 0,
-                            },
-                            {
-                                label: 'Script\'s Randomized Gas (Gwei)',
-                                data: randomGasPrice,
-                                borderColor: '#0077B6',
-                                backgroundColor: 'rgba(0, 119, 182, 0.1)',
-                                borderWidth: 3,
-                                fill: true,
-                                tension: 0.4,
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        ...mandatoryTooltipConfig,
-                        scales: {
-                            y: {
-                                beginAtZero: false,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value + ' Gwei'
-                                    },
-                                    color: '#4a5568' // Infographic text accent
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#4a5568' // Infographic text accent
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#212529'
-                                }
-                            }
-                        }
-                    }
-                });
             };
 
 
@@ -2406,26 +2017,6 @@ https://rpc.goerli.dev,5</textarea>
                 }
             };
 
-            // This function now solely manages which of the two main content areas is visible.
-            // It does not handle scrolling or active link states in the navigation bar directly.
-            const showMainContentArea = (pageId) => {
-                console.log(`Attempting to show page: ${pageId}`); // Debug log
-                ui.scriptConsoleContent.classList.add('hidden');
-                ui.infographicContent.classList.add('hidden');
-
-                if (pageId === 'console') {
-                    ui.scriptConsoleContent.classList.remove('hidden');
-                    console.log('Script console content shown.'); // Debug log
-                } else if (pageId === 'infographic') {
-                    ui.infographicContent.classList.remove('hidden');
-                    console.log('Infographic content shown.'); // Debug log
-                    // Initialize infographic charts only when the page is shown
-                    initInfographicActionDistChart();
-                    initInfographicWalletBalanceChart();
-                    initInfographicGasPriceChart();
-                }
-            };
-
             const setupEventListeners = () => {
                 ui.connectWalletBtn.addEventListener('click', connectWallet);
                 ui.startBtn.addEventListener('click', startFarming);
@@ -2497,32 +2088,18 @@ https://rpc.goerli.dev,5</textarea>
                 ui.enableTimeOfDayBias.addEventListener('change', loadConfiguration); // NEW
                 ui.rpcSwitchDelay.addEventListener('input', loadConfiguration); // NEW
                 
-                ui.navLinks.forEach(link => {
+                // Handle navigation links for internal sections
+                document.querySelectorAll('nav a[href^="#"]').forEach(link => {
                     link.addEventListener('click', function(e) {
-                         e.preventDefault(); // Prevent default anchor behavior to control the scroll
-
-                         const targetPage = this.dataset.page; // 'console' or 'infographic'
-                         const targetHref = this.getAttribute('href'); // e.g., '#dashboard', '#overview'
-                         const targetElementId = targetHref.substring(1); // Remove '#'
-                         const targetElement = document.getElementById(targetElementId);
-
-                         console.log(`Nav link clicked: ${this.textContent}, targetPage: ${targetPage}, targetElementId: ${targetElementId}`); // Debug log
-
-                         // First, ensure the correct main content area is visible
-                         showMainContentArea(targetPage);
-
-                         // Then, smoothly scroll to the specific target element within that content area
-                         // Add a small delay for the display change to render properly before scrolling
-                         setTimeout(() => {
-                             if (targetElement) {
-                                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                 console.log(`Scrolled to: ${targetElementId}`); // Debug log
-                             }
-                         }, 100); // 100ms delay should be sufficient
-
-                         // Update the active class for the clicked navigation link
-                         ui.navLinks.forEach(navLink => navLink.classList.remove('active'));
-                         this.classList.add('active');
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href').substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                        // Update active class for internal links
+                        document.querySelectorAll('nav a[href^="#"]').forEach(navLink => navLink.classList.remove('active'));
+                        this.classList.add('active');
                     });
                 });
             };
@@ -2533,10 +2110,8 @@ https://rpc.goerli.dev,5</textarea>
             updateWalletBalanceChart(); // Initial chart update (will be empty)
             setUIEnabled(false); // Initially disable features, but connect wallet button remains enabled
 
-            // Set the initial active navigation link and display the default content area
-            const initialPage = 'console'; // Default starting page
-            showMainContentArea(initialPage);
-            const initialActiveLink = document.querySelector(`.nav-link[data-page="${initialPage}"][href="#dashboard"]`); // Assuming Dashboard is the initial section in Console
+            // Set the initial active navigation link for Dashboard
+            const initialActiveLink = document.querySelector('nav a[href="#dashboard"]');
             if (initialActiveLink) {
                 initialActiveLink.classList.add('active');
             }
@@ -2602,6 +2177,7 @@ https://rpc.goerli.dev,5</textarea>
             const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
             const copyBtn = document.getElementById('copy-address-btn');
             const copyIcon = document.getElementById('copy-icon');
+            const checkIcon = document.getElementById('check-icon'); // Ensure checkIcon is defined
             checkIcon.classList.add('hidden'); // Ensure check icon is hidden initially
             const showQrBtn = document.getElementById('show-qr-btn');
             const qrModal = document.getElementById('qr-code-modal');
