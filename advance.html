@@ -185,8 +185,8 @@
             left: 0;
             height: 100vh;
             width: 80px; /* Collapsed width */
-            background-color: #ffffff; /* CHANGED: White background */
-            color: #2d3748; /* CHANGED: Dark text color */
+            background-color: #ffffff; /* White background */
+            color: #2d3748; /* Dark text color */
             padding-top: 1rem;
             transition: width 0.3s ease-in-out;
             z-index: 50;
@@ -199,7 +199,6 @@
             width: 250px; /* Expanded width */
         }
         
-        /* NEW: Rule for the logo container alignment */
         #sidebar .logo-container {
             transition: justify-content 0.3s ease-in-out;
         }
@@ -207,37 +206,34 @@
             justify-content: flex-start;
         }
 
-        #sidebar .nav-link {
-            display: flex; /* Use flexbox for alignment */
-            align-items: center; /* Vertically center icon and text */
-            justify-content: center; /* NEW: Center content when collapsed */
+        #sidebar .nav-link, #sidebar .submenu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 1rem 1.5rem;
-            color: #4a5568; /* CHANGED: Darker text for better contrast on white */
+            color: #4a5568;
             font-weight: 600;
             text-decoration: none;
             transition: background-color 0.2s ease, color 0.2s ease, justify-content 0.3s ease-in-out;
-            border-bottom: none; /* Remove underline for sidebar links */
-            white-space: nowrap; /* Prevent text from wrapping */
+            white-space: nowrap;
+            cursor: pointer;
         }
         
-        /* NEW: On hover, left-align the link content */
-        #sidebar:hover .nav-link {
+        #sidebar:hover .nav-link, #sidebar:hover .submenu-toggle {
             justify-content: flex-start;
         }
 
-        #sidebar .nav-link:hover,
-        #sidebar .nav-link.active {
-            background-color: #f1f5f9; /* CHANGED: Light gray hover */
-            color: #1e40af; /* CHANGED: Darker blue for active/hover text */
+        #sidebar .nav-link:hover, #sidebar .nav-link.active, #sidebar .submenu-toggle:hover, #sidebar .submenu-toggle.active {
+            background-color: #f1f5f9;
+            color: #1e40af;
         }
         
-        #sidebar .nav-link i {
-            min-width: 24px; /* Ensure icon has a fixed width */
+        #sidebar .nav-link i, #sidebar .submenu-toggle i {
+            min-width: 24px;
             text-align: center;
-            font-size: 1.25rem; /* Slightly larger icons */
+            font-size: 1.25rem;
         }
 
-        /* MODIFIED: CSS for nav-text to fix alignment */
         #sidebar .nav-text {
             opacity: 0;
             max-width: 0;
@@ -250,21 +246,46 @@
 
         #sidebar:hover .nav-text {
             opacity: 1;
-            max-width: 200px;
+            max-width: 200px; /* Allow text to appear */
             margin-left: 0.75rem;
         }
 
-        /* --- MODIFIED: Adjust main content and header to make space for the sidebar --- */
-        header, main, footer { /* ADDED footer to the rule */
-            margin-left: 80px; /* Match collapsed sidebar width */
+        /* Submenu styles */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            background-color: #f8fafc; /* Slightly different bg for submenu */
+        }
+        
+        .submenu.open {
+            max-height: 500px; /* Large enough to show all items */
+        }
+
+        .submenu .nav-link {
+            padding-left: 3.5rem; /* Indent submenu items */
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .submenu-toggle .fa-chevron-down {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .submenu-toggle.active .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        header, main, footer {
+            margin-left: 80px;
             transition: margin-left 0.3s ease-in-out;
         }
 
-        /* Push content over when sidebar expands */
         #sidebar:hover ~ header,
         #sidebar:hover ~ main,
-        #sidebar:hover ~ footer { /* ADDED footer to the rule */
-            margin-left: 250px; /* Match expanded sidebar width */
+        #sidebar:hover ~ footer {
+            margin-left: 250px;
         }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -276,18 +297,32 @@
 
     <!-- Sidebar Navigation -->
     <div id="sidebar">
-        <!-- MODIFIED: Logo container for better alignment -->
         <div class="p-4 mt-8 flex items-center justify-center logo-container">
             <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-10 w-10 rounded-full">
-            <!-- MODIFIED: Removed ml-3, CSS will handle margin on hover -->
-            <h2 class="text-xl font-bold text-gray-800 nav-text">Navigation</h2>
+            <h2 class="text-xl font-bold text-gray-800 nav-text">Control Panel</h2>
         </div>
         <nav class="flex flex-col mt-4">
-            <a href="#dashboard" class="nav-link active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span></a>
-            <a href="#wallets" class="nav-link" data-section="wallets"><i class="fas fa-wallet"></i><span class="nav-text">Wallets</span></a>
-            <a href="#recipient-settings" class="nav-link" data-section="recipients"><i class="fas fa-users"></i><span class="nav-text">Recipients</span></a>
-            <a href="#config" class="nav-link" data-section="configuration"><i class="fas fa-cogs"></i><span class="nav-text">Configuration</span></a>
-            <a href="#log" class="nav-link" data-section="live-log"><i class="fas fa-stream"></i><span class="nav-text">Live Log</span></a>
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
+            
+            <!-- Basic Console (Placeholder) -->
+            <a href="#" class="nav-link text-gray-400 cursor-not-allowed" title="Coming Soon!"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
+
+            <!-- Advanced Console Submenu -->
+            <div>
+                <div id="advanced-console-toggle" class="submenu-toggle">
+                    <i class="fas fa-tools"></i>
+                    <span class="nav-text">Advanced Console</span>
+                    <i class="fas fa-chevron-down text-xs nav-text"></i>
+                </div>
+                <div id="advanced-console-submenu" class="submenu">
+                    <a href="#dashboard" class="nav-link" data-section="dashboard"><i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span></a>
+                    <a href="#wallets" class="nav-link" data-section="wallets"><i class="fas fa-wallet"></i><span class="nav-text">Wallets</span></a>
+                    <a href="#recipient-settings" class="nav-link" data-section="recipients"><i class="fas fa-users"></i><span class="nav-text">Recipients</span></a>
+                    <a href="#config" class="nav-link" data-section="configuration"><i class="fas fa-cogs"></i><span class="nav-text">Configuration</span></a>
+                    <a href="#log" class="nav-link" data-section="live-log"><i class="fas fa-stream"></i><span class="nav-text">Live Log</span></a>
+                </div>
+            </div>
+
             <hr class="border-gray-300 my-2 mx-4">
             <a href="infographic.html" class="nav-link"><i class="fas fa-chart-pie"></i><span class="nav-text">Infographic</span></a>
             <a href="Doc.html" class="nav-link"><i class="fas fa-file-alt"></i><span class="nav-text">Documentation</span></a>
@@ -318,9 +353,7 @@
         </div>
     </header>
 
-    <!-- MODIFIED: main tag no longer has container classes -->
     <main class="p-4 sm:p-6 lg:p-8">
-        <!-- NEW: Wrapper div to provide the container/centering logic -->
         <div class="container mx-auto">
             <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: #0077B6;">Farm smarter, not harder — with FarmLabs.</h2>
 
@@ -1127,6 +1160,8 @@ https://rpc.goerli.dev,5</textarea>
                 closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
                 humanSpikeDisplay: document.getElementById('human-spike-display'), // NEW
                 stealthProfileSelector: document.getElementById('stealth-profile'), // NEW UI element
+                advancedConsoleToggle: document.getElementById('advanced-console-toggle'),
+                advancedConsoleSubmenu: document.getElementById('advanced-console-submenu'),
             };
 
             // Function to enable/disable UI elements
@@ -2345,27 +2380,40 @@ https://rpc.goerli.dev,5</textarea>
                     if (selected !== "custom") {
                         applyProfile(selected);
                     }
-                    // If "custom" is selected, the current values in the fields are kept.
-                    // loadConfiguration() is called by applyProfile, so no need to call it here for non-custom.
-                    // For custom, the user will manually change fields, triggering their individual loadConfiguration calls.
                 });
                 
+                // Submenu toggle functionality
+                ui.advancedConsoleToggle.addEventListener('click', () => {
+                    ui.advancedConsoleToggle.classList.toggle('active');
+                    ui.advancedConsoleSubmenu.classList.toggle('open');
+                });
+
                 // Handle navigation links for internal sections
                 document.querySelectorAll('#sidebar .nav-link').forEach(link => {
                     link.addEventListener('click', function(e) {
                         // For external links, let the browser handle it
-                        if (this.getAttribute('href').endsWith('.html')) {
+                        if (this.getAttribute('href') && !this.getAttribute('href').startsWith('#')) {
                             return;
                         }
                         e.preventDefault();
+                        
+                        // Handle active states
+                        document.querySelectorAll('#sidebar .nav-link, #sidebar .submenu-toggle').forEach(el => el.classList.remove('active'));
+                        
+                        const parentSubmenu = this.closest('.submenu');
+                        if (parentSubmenu) {
+                            // It's a submenu link, make the toggle active
+                            parentSubmenu.previousElementSibling.classList.add('active');
+                        } else {
+                            // It's a top-level link
+                             this.classList.add('active');
+                        }
+                        
                         const targetId = this.getAttribute('href').substring(1);
                         const targetElement = document.getElementById(targetId);
                         if (targetElement) {
                             targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
-                        // Update active class for sidebar links
-                        document.querySelectorAll('#sidebar .nav-link').forEach(navLink => navLink.classList.remove('active'));
-                        this.classList.add('active');
                     });
                 });
 
@@ -2377,11 +2425,10 @@ https://rpc.goerli.dev,5</textarea>
             updateWalletBalanceChart(); // Initial chart update (will be empty)
             setUIEnabled(false); // Initially disable features, but connect wallet button remains enabled
 
-            // Set the initial active navigation link for Dashboard
-            const initialActiveLink = document.querySelector('#sidebar a[href="#dashboard"]');
-            if (initialActiveLink) {
-                initialActiveLink.classList.add('active');
-            }
+            // Set the initial active navigation link for Dashboard by default
+            const initialActiveToggle = document.getElementById('advanced-console-toggle');
+            initialActiveToggle.classList.add('active');
+            initialActiveToggle.nextElementSibling.classList.add('open');
 
 
             // Initial check for window.ethereum and existing connection on page load
