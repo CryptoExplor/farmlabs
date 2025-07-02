@@ -1670,7 +1670,8 @@ https://rpc.goerli.dev,5</textarea>
                             });
                             log(`Successfully switched to Chain ID ${chainId}.`, 'success');
                             showToast(`Switched to Chain ID ${chainId}.`, 'success');
-                            appState.signer = await provider.getSigner();
+                            // Re-get signer after chain switch as it might change
+                            appState.signer = await (new ethers.BrowserProvider(window.ethereum)).getSigner();
                         } catch (switchError) {
                             log(`Failed to switch chain to ${chainId}: ${switchError.message}. Skipping session.`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
                             showToast(`Failed to switch to Chain ID ${chainId}.`, 'error');
@@ -2210,7 +2211,8 @@ https://rpc.goerli.dev,5</textarea>
                     ui.chainName.textContent = chainInfo.name;
                     ui.chainSymbol.textContent = chainInfo.symbol;
                     ui.chainId.textContent = chainId;
-                    ui.chainRpc.textContent = provider.connection.url;
+                    // Safely get RPC URL
+                    ui.chainRpc.textContent = provider?.connection?.url || 'N/A';
                     ui.chainExplorer.textContent = chainInfo.explorer;
                     ui.chainExplorer.href = chainInfo.explorer;
                     ui.connectedChainDetails.classList.remove('hidden');
@@ -2259,10 +2261,11 @@ https://rpc.goerli.dev,5</textarea>
                     // Auto-fill RPC + ChainID if missing
                     const currentNetwork = await provider.getNetwork();
                     const currentChainId = Number(currentNetwork.chainId);
-                    const currentRpcUrl = provider.connection.url;
+                    // Safely get RPC URL from provider or window.ethereum
+                    const currentRpcUrl = provider?.connection?.url || window.ethereum?.rpcUrl || 'N/A';
                     const rpcEntry = `${currentRpcUrl},${currentChainId}`;
 
-                    if (!ui.rpcUrls.value.includes(rpcEntry)) {
+                    if (currentRpcUrl !== 'N/A' && !ui.rpcUrls.value.includes(rpcEntry)) {
                         ui.rpcUrls.value += `\n${rpcEntry}`;
                         loadConfiguration(); // Reload config to include new RPC
                         log(`Added current RPC ${rpcEntry} to configuration.`, 'info');
@@ -2344,6 +2347,15 @@ https://rpc.goerli.dev,5</textarea>
                             ui.gasDetails.classList.add('hidden');
                         }
                         ui.connectedChainDetails.classList.add('hidden');
+                        // Clear appState on disconnect as suggested by the user
+                        appState.rpcConfigs = [];
+                        appState.currentRecipientPool = {};
+                        appState.manualRecipientList = [];
+                        appState.predefinedRecipientList = [];
+                        appState.config = {};
+                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
+                        appState.logEntries = [];
+                        appState.lastHumanLikeSpike = null;
                     });
 
                 } catch (error) {
