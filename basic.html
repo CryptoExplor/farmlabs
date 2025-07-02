@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Interactive Script Console</title>
+    <!-- Google AdSense Account Meta Tag (Recommended in <head>) -->
+    <meta name="google-adsense-account" content="ca-pub-3062851685354753">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb; /* Warm Beige */
+            color: #212529; /* Dark Gray for infographic text */
+        }
+        /* Dark mode styles */
+        html.dark body {
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        html.dark .bg-primary { background-color: #1a202c; }
+        html.dark .bg-secondary { background-color: #2d3748; }
+        html.dark .text-main { color: #e2e8f0; }
+        html.dark .text-accent { color: #a0aec0; }
+        html.dark .border-accent { border-color: #4a5568; }
+        html.dark .btn-llm { background-color: #2a698d; color: #e0f2fe; }
+        html.dark .btn-llm:hover { background-color: #215a7a; }
+        html.dark .bg-gray-800 { background-color: #1a202c; } /* Footer background */
+        html.dark .text-white { color: #e2e8f0; } /* Footer text */
+        html.dark .text-gray-300 { color: #a0aec0; }
+        html.dark .text-gray-400 { color: #718096; }
+        html.dark .text-gray-500 { color: #718096; }
+        html.dark .text-gray-700 { background-color: #4a5568; } /* Donation address background */
+        html.dark .hover\:bg-gray-600:hover { background-color: #4a5568; } /* Donation button hover */
+        html.dark .bg-blue-50 { background-color: #2a698d; } /* Status box */
+        html.dark .bg-green-50 { background-color: #2a8d6a; } /* Status box */
+        html.dark .bg-red-50 { background-color: #8d2a2a; } /* Status box */
+        html.dark .bg-purple-50 { background-color: #5a2a8d; } /* Status box */
+        html.dark .bg-gray-100 { background-color: #4a5568; } /* Status box */
+        html.dark .text-blue-500 { color: #60a5fa; }
+        html.dark .text-green-500 { color: #48bb78; }
+        html.dark .text-red-500 { color: #fc8181; }
+        html.dark .text-purple-500 { color: #a78bfa; }
+        html.dark .bg-gray-200 { background-color: #4a5568; } /* Progress bar track */
+        html.dark .bg-blue-500 { background-color: #60a5fa; } /* Progress bar fill */
+        html.dark .bg-red-100 { background-color: #8d2a2a; } /* Warning box */
+        html.dark .border-red-500 { border-color: #fc8181; }
+        html.dark .text-red-700 { color: #fc8181; }
+        html.dark .bg-blue-100 { background-color: #2a698d; }
+        html.dark .border-blue-500 { border-color: #60a5fa; }
+        html.dark .text-blue-700 { color: #60a5fa; }
+        html.dark .bg-gray-800 { background-color: #2d3748; } /* Live log background */
+        html.dark .text-white { color: #e2e8f0; } /* Live log text */
+        html.dark .modal-content { background-color: #2d3748; }
+        html.dark .close-button, html.dark .close-qr-button { color: #a0aec0; }
+        html.dark .close-button:hover, html.dark .close-qr-button:hover { color: #e2e8f0; }
+        html.dark .modal-loader { border-top-color: #60a5fa; }
+        html.dark .bg-white { background-color: #2d3748; } /* QR Code container background */
+        html.dark .text-gray-800 { color: #e2e8f0; } /* Sidebar logo text */
+
+        /* Console specific styles */
+        .bg-primary { background-color: #f4f1eb; }
+        .bg-secondary { background-color: #ffffff; }
+        .text-main { color: #2d3748; } /* Slate 800 */
+        .text-accent { color: #4a5568; } /* Slate 600 */
+        .border-accent { border-color: #e2e8f0; /* Slate 200 */ }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-secondary { background-color: #6b7280; color: white; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-success { background-color: #22c55e; color: white; }
+        .btn-success:hover { background-color: #16a34a; }
+        .btn-llm { background-color: #e0f2fe; color: #0284c7; } /* Light blue for LLM buttons */
+        .btn-llm:hover { background-color: #bae6fd; }
+
+        /* Chart container for console charts */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        #live-log {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+        .log-warning { color: #f59e0b; }
+        .log-skipped { color: #a8a29e; }
+        .log-copy-btn {
+            background: none;
+            border: none;
+            color: #a8a29e; /* Gray */
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 5px;
+            padding: 0 3px;
+            vertical-align: middle;
+            transition: color 0.2s;
+        }
+        .log-copy-btn:hover {
+            color: #e2e8f0; /* Lighter gray on hover */
+        }
+
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-container .tooltip-text {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the text */
+            left: 50%;
+            margin-left: -75px; /* Center the tooltip */
+            opacity: 0;
+            transition: opacity 0.3s;
+            width: 150px;
+        }
+
+        .tooltip-container .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%; /* At the bottom of the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .close-button, .close-qr-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus,
+        .close-qr-button:hover,
+        .close-qr-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Disabled styles for fields */
+        .wallet-feature-control:disabled,
+        .wallet-feature-control[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #e2e8f0; /* Light gray */
+        }
+
+        /* --- MODIFIED: Hover-expanding Sidebar Navigation --- */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 80px; /* Collapsed width */
+            background-color: #ffffff; /* White background */
+            color: #2d3748; /* Dark text color */
+            padding-top: 1rem;
+            transition: width 0.3s ease-in-out;
+            z-index: 50;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Softer shadow */
+            overflow-x: hidden; /* Hide overflowing content */
+            border-right: 1px solid #e2e8f0; /* Add a subtle border */
+        }
+
+        #sidebar:hover {
+            width: 250px; /* Expanded width */
+        }
+        
+        #sidebar .logo-container {
+            transition: justify-content 0.3s ease-in-out;
+        }
+        #sidebar:hover .logo-container {
+            justify-content: flex-start;
+        }
+
+        #sidebar .nav-link, #sidebar .submenu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            color: #4a5568;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, justify-content 0.3s ease-in-out;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        #sidebar:hover .nav-link, #sidebar:hover .submenu-toggle {
+            justify-content: flex-start;
+        }
+
+        #sidebar .nav-link i, #sidebar .submenu-toggle i {
+            min-width: 24px;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        #sidebar .nav-text {
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            margin-left: 0;
+            transition: opacity 0.2s ease-in-out, max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+            transition-delay: 0.1s;
+        }
+
+        #sidebar:hover .nav-text {
+            opacity: 1;
+            max-width: 200px; /* Allow text to appear */
+            margin-left: 0.75rem;
+        }
+
+        /* Submenu styles (removed for basic.html, but keeping for general styling consistency) */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            background-color: #f8fafc; /* Slightly different bg for submenu */
+        }
+        
+        .submenu.open {
+            max-height: 500px; /* Large enough to show all items */
+        }
+
+        .submenu .nav-link {
+            padding-left: 3.5rem; /* Indent submenu items */
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .submenu-toggle .fa-chevron-down {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .submenu-toggle.active .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        header, main, footer {
+            margin-left: 80px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        #sidebar:hover ~ header,
+        #sidebar:hover ~ main,
+        #sidebar:hover ~ footer {
+            margin-left: 250px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-primary text-main">
+    <!-- Google AdSense Script (Recommended right after <body> tag) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3062851685354753"
+     crossorigin="anonymous"></script>
+
+    <!-- Sidebar Navigation -->
+    <div id="sidebar">
+        <div class="p-4 mt-8 flex items-center justify-center logo-container">
+            <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-10 w-10 rounded-full">
+            <h2 class="text-xl font-bold text-gray-800 nav-text">Control Panel</h2>
+        </div>
+        <nav class="flex flex-col mt-4">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
+            
+            <!-- Basic Console -->
+            <a href="basic.html" class="nav-link active"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
+
+            <!-- Advanced Console (now a direct link) -->
+            <a href="advance.html" class="nav-link"><i class="fas fa-tools"></i><span class="nav-text">Advanced Console</span></a>
+            
+            <hr class="border-gray-300 my-2 mx-4">
+            <a href="infographic.html" class="nav-link"><i class="fas fa-chart-pie"></i><span class="nav-text">Infographic</span></a>
+            <a href="Doc.html" class="nav-link"><i class="fas fa-file-alt"></i><span class="nav-text">Documentation</span></a>
+        </nav>
+    </div>
+
+    <header class="bg-secondary shadow-md sticky top-0 z-20">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Header Title -->
+                    <h1 class="text-xl md:text-2xl font-bold text-main ml-4">Basic Interactive Script Console</h1>
+                </div>
+
+                <!-- Right-side icons -->
+                <div class="flex items-center space-x-4">
+                     <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs Blog">
+                        <i class="fab fa-blogger text-xl"></i>
+                    </a>
+                    <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Lab Telegram">
+                        <i class="fab fa-telegram text-xl"></i>
+                    </a>
+                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs GitHub">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <button id="dark-toggle" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Toggle Dark Mode">
+                        <i class="fas fa-moon text-xl dark:text-yellow-300"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 sm:p-6 lg:p-8">
+        <div class="container mx-auto">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: #0077B6;">Farm smarter, not harder — with FarmLabs.</h2>
+
+            <!-- Script Console Content -->
+            <div id="script-console-content">
+                <!-- Security Warning Removed for Basic Console as private keys are not handled directly -->
+
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="mb-12">
+                    <h2 class="text-3xl font-bold mb-2 text-main">Dashboard</h2>
+                    <p class="text-accent mb-6">Connect your wallet, start, stop, and monitor the Blockchain Interaction process from here, with real-time updates on wallet balances and action distribution.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-secondary p-6 rounded-lg shadow-md flex flex-col items-center justify-center space-y-4">
+                            <button id="connect-wallet-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-success">🔗 Connect Wallet</button>
+                            <div id="wallet-status-display" class="text-center text-sm font-medium text-main">
+                                No wallet connected.
+                            </div>
+                            <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Interaction</button>
+                            <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Interaction</button>
+                            <button id="manual-tx-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>✍️ Manual Transaction</button>
+                            <button id="clear-all-data-btn" class="w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear All Data</button>
+                        </div>
+                         <div class="bg-secondary p-6 rounded-lg shadow-md col-span-1 md:col-span-2">
+                            <h3 class="font-bold text-lg mb-4 text-main">Live Status</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm font-medium text-accent">Total Actions Performed</span>
+                                        <span id="progress-text" class="text-sm font-medium text-accent">0</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-4">
+                                        <div id="progress-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                    <div class="p-3 bg-blue-50 rounded-lg">
+                                        <div class="text-xs text-blue-500 font-bold uppercase">Status</div>
+                                        <div id="status-display" class="text-lg font-semibold text-main">Idle</div>
+                                    </div>
+                                    <div class="p-3 bg-green-50 rounded-lg">
+                                        <div class="text-xs text-green-500 font-bold uppercase">Successful Actions</div>
+                                        <div id="success-count" class="text-lg font-semibold text-main">0</div>
+                                    </div>
+                                    <div class="p-3 bg-red-50 rounded-lg">
+                                        <div class="text-xs text-red-500 font-bold uppercase">Failed Actions</div>
+                                        <div id="fail-count" class="text-lg font-semibold text-main">0</div>
+                                    </div>
+                                    <div class="p-3 bg-gray-100 rounded-lg">
+                                        <div class="text-xs text-gray-500 font-bold uppercase">Current Gas</div>
+                                        <div id="gas-display" class="text-lg font-semibold text-main">N/A</div>
+                                    </div>
+                                </div>
+                                <!-- Last Human-like Spike Indicator (kept for consistency, though logic is simplified) -->
+                                <div class="p-3 bg-purple-50 rounded-lg text-center">
+                                    <div class="text-xs text-purple-500 font-bold uppercase">Last Human-like Spike</div>
+                                    <div id="human-spike-display" class="text-lg font-semibold text-main">Never</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="bg-secondary p-6 rounded-lg shadow-md lg:col-span-2">
+                            <h3 class="font-bold text-lg mb-4 text-main">Wallet Balance (ETH)</h3>
+                            <p class="text-sm text-accent mb-4">This chart shows the current balance of your connected wallet, dynamically updating after transactions.</p>
+                            <div class="chart-container">
+                                <canvas id="wallet-balance-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-secondary p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold text-lg mb-4 text-main">Action Distribution</h3>
+                            <p class="text-sm text-accent mb-4">Visualizes the types of actions performed (send, idle, balance check).</p>
+                            <div class="chart-container">
+                                <canvas id="action-dist-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Wallet Section REMOVED - Private keys are not handled directly -->
+                <!-- Recipient Section -->
+                <section id="recipient-settings" class="mb-12">
+                    <h2 class="text-3xl font-bold mb-2 text-main">Recipient Settings</h2>
+                    <p class="text-accent mb-6">Choose how the script will select destination addresses for transactions.</p>
+                    <div class="bg-secondary p-8 rounded-lg shadow-md">
+                        <div class="space-y-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="recipient-mode" value="pool" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" checked disabled>
+                                <span class="ml-3 text-main">Use Dynamically Scanned Pool</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="recipient-mode" value="fixed" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                                <span class="ml-3 text-main">Use Fixed Address</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="recipient-mode" value="list" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                                <span class="ml-3 text-main">Use Custom List of Addresses (one per line)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="recipient-mode" value="predefined" class="form-radio h-5 w-5 text-blue-600 wallet-feature-control" disabled>
+                                <span class="ml-3 text-main">Use Predefined List of Addresses (from CSV)</span>
+                            </label>
+                        </div>
+
+                        <div id="fixed-address-section" class="mt-4 hidden">
+                            <label for="fixed-address" class="block font-medium mb-1 text-accent">Fixed Recipient Address</label>
+                            <input type="text" id="fixed-address" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x..." disabled>
+                        </div>
+
+                        <div id="list-addresses-section" class="mt-4 hidden">
+                            <label for="list-addresses" class="block font-medium mb-1 text-accent">Recipient Addresses (one per line)</label>
+                            <textarea id="list-addresses" rows="5" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm wallet-feature-control" placeholder="0x...&#10;0x...&#10;... (one address per line)" disabled></textarea>
+                            <button id="load-addresses-from-list-btn" class="mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Addresses from List</button>
+                            <p id="list-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                        </div>
+
+                        <div id="predefined-addresses-section" class="mt-4 hidden">
+                            <p class="block font-medium mb-1 text-accent">Download list here:</p>
+                            <ul class="list-disc pl-5 mb-4 text-sm text-blue-700">
+                                <li><a href="https://d.cess.network/n1/812192221.csv" target="_blank" class="hover:underline">Link 1 (recipients1)</a></li>
+                                <li><a href="https://d.cess.network/n1/1394676302.csv" target="_blank" class="hover:underline">Link 2 (recipients2)</a></li>
+                                <li><a href="https://d.cess.network/n1/1338053122.csv" target="_blank" class="hover:underline">Link 3 (recipients3)</a></li>
+                                <li><a href="https://d.cess.network/n1/738595260.csv" target="_blank" class="hover:underline">Link 4 (recipients4)</a></li>
+                                <li><a href="https://d.cess.network/n1/1213534582.csv" target="_blank" class="hover:underline">Link 5 (recipients5)</a></li>
+                                <li><a href="https://d.cess.network/n1/1210782270.csv" target="_blank" class="hover:underline">Link 6 (recipients6)</a></li>
+                                <li><a href="https://d.cess.network/n1/1179652688.csv" target="_blank" class="hover:underline">Link 7 (recipients7)</a></li>
+                                <li><a href="https://d.cess.network/n1/645402960.csv" target="_blank" class="hover:underline">Link 8 (recipients8)</a></li>
+                                <li><a href="https://d.cess.network/n1/1006375340.csv" target="_blank" class="hover:underline">Link 9 (recipients9)</a></li>
+                                <li><a href="https://d.cess.network/n1/1249120790.csv" target="_blank" class="hover:underline">Link 10 (recipients10)</a></li>
+                                <li><a href="https://d.cess.network/n1/892015044.csv" target="_blank" class="hover:underline">Link 11 (recipients11)</a></li>
+                                <li><a href="https://d.cess.network/n1/1174737402.csv" target="_blank" class="hover:underline">Link 12 (recipients12)</a></li>
+                            </ul>
+
+                            <label for="predefined-file-input" class="block font-medium mb-1 text-accent">Or Upload Your Own Predefined List (CSV)</label>
+                            <input type="file" id="predefined-file-input" accept=".csv" class="w-full p-2 border border-accent rounded-md mb-2 wallet-feature-control" disabled>
+                            <button id="load-predefined-file-btn" class="mt-2 w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>Load Predefined Addresses from CSV</button>
+                            <p id="predefined-addresses-info" class="text-sm text-gray-500 mt-1">No file loaded.</p>
+                            <ul id="predefined-addresses-display" class="list-disc pl-5 space-y-1 text-sm text-accent max-h-32 overflow-y-auto mt-2">
+                                <!-- Predefined addresses will be populated here -->
+                            </ul>
+                            <p id="predefined-addresses-count" class="text-sm text-green-600 mt-2 font-medium"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Configuration Section -->
+                <section id="config" class="mb-12">
+                    <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
+                    <p class="text-accent mb-6">Define the parameters for the Blockchain Interaction, including network settings, amounts, delays, and gas thresholds.</p>
+
+                    <!-- Main configuration grid container -->
+                    <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Individual configuration items -->
+                        <div>
+                            <label for="max-actions-per-session" class="block font-medium mb-1 text-accent">Max Actions Per Session
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of distinct actions (send, idle, balance check) the connected wallet will attempt in a session on a given blockchain network. The actual number of actions will be randomized up to this maximum.</span></span>
+                            </label>
+                            <input type="number" id="max-actions-per-session" value="3" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <p class="text-sm text-gray-500 mt-1">Maximum actions the connected wallet will perform in its session on a given chain.</p>
+                        </div>
+                        <div>
+                            <label for="gas-multiplier" class="block font-medium mb-1 text-accent">Max Gas Price Multiplier
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">If the current gas price on the network exceeds the average gas price by this multiplier, the script will temporarily pause activities for that wallet on that chain to avoid high fees.</span></span>
+                            </label>
+                            <input type="number" id="gas-multiplier" value="2" step="0.1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <p class="text-sm text-gray-500 mt-1">Skip wallet activity if current gas price exceeds average by this multiplier.</p>
+                        </div>
+                        <div>
+                            <label for="block-lookback" class="block font-medium mb-1 text-accent">Blocks to Scan for Addresses
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The number of recent blockchain blocks the script will scan to find and add new potential recipient addresses to its pool (for 'Dynamic Pool' mode). A higher number means more discovery but takes longer.</span></span>
+                            </label>
+                            <input type="number" id="block-lookback" value="100" min="10" max="1000" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses (for 'Dynamic Pool' mode).</p>
+                        </div>
+
+                        <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
+                        <div class="md:col-span-2">
+                            <label class="block font-medium mb-1 text-accent">Transaction Amount Range (ETH)
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">When a 'send' action is chosen, a random amount of ETH will be sent within this specified minimum and maximum range.</span></span>
+                            </label>
+                            <div class="flex items-center space-x-4">
+                                <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
+                                <input type="number" id="min-amount" value="0.0001" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                                <span class="text-gray-500">to</span>
+                                <input type="number" id="max-amount" value="0.0002" step="0.0001" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            </div>
+                             <p class="text-sm text-gray-500 mt-1">A random ETH amount within this range will be sent for 'send' actions.</p>
+                             <button id="explain-send-tx-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Explain Send Tx</button>
+                        </div>
+
+                        <!-- Delay Between Actions (spans 2 columns on medium screens and up) -->
+                        <div class="md:col-span-2">
+                            <label class="block font-medium mb-1 text-accent">Delay Between Actions (seconds)
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">After each action (send, idle, balance check), the script will pause for a random duration within this minimum and maximum second range.</span></span>
+                            </label>
+                            <div class="flex items-center space-x-4">
+                                <!-- Using flex-1 to ensure inputs share space equally within the flex container -->
+                                <input type="number" id="min-delay" value="10" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                                <span class="text-gray-500">to</span>
+                                <input type="number" id="max-delay" value="30" class="flex-1 p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">A random delay will be applied after each action.</p>
+                        </div>
+
+                        <!-- RPC Endpoints & Chain IDs (spans 2 columns on medium screens and up) -->
+                        <div class="md:col-span-2">
+                            <label class="block font-medium mb-1 text-accent">RPC Endpoints & Chain IDs (Format: URL,ChainID - one per line)
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">List the RPC URLs for the blockchain networks you want to interact with, followed by their corresponding Chain ID (e.g., 'https://mainnet.infura.io/v3/YOUR_ID,1'). The script will cycle through these networks.</span></span>
+                            </label>
+                            <textarea id="rpc-urls" rows="4" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1
+https://rpc.goerli.dev,5</textarea>
+                            <p class="text-sm text-gray-500 mt-1">The script will cycle through these RPCs and chains.</p>
+                            <button id="test-rpc-btn" class="mt-4 py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>⚡ Test RPC Connections</button>
+                        </div>
+
+                        <!-- Action Probability Matrix (spans 2 columns on medium screens and up, contains its own grid) -->
+                        <div class="md:col-span-2">
+                            <h3 class="font-bold text-lg mb-4 text-main">Action Probability Matrix (%)</h3>
+                            <p class="text-sm text-accent mb-4">Define the percentage chance for each action type. Must sum to 100.</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div>
+                                    <label for="prob-send" class="block font-medium mb-1 text-accent">Send</label>
+                                    <input type="number" id="prob-send" value="60" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                                </div>
+                                <div>
+                                    <label for="prob-idle-action" class="block font-medium mb-1 text-accent">Idle Action</label>
+                                    <input type="number" id="prob-idle-action" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                                </div>
+                                <div>
+                                    <label for="prob-balance-check" class="block font-medium mb-1 text-accent">Balance Check</label>
+                                    <input type="number" id="prob-balance-check" value="20" min="0" max="100" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition prob-input wallet-feature-control" disabled>
+                                </div>
+                            </div>
+                            <p id="prob-sum-warning" class="text-sm text-red-500 mt-2 hidden">Probabilities must sum to 100%!</p>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- Live Log Section -->
+                <section id="log">
+                     <h2 class="text-3xl font-bold mb-2 text-main">Live Log</h2>
+                     <p class="text-accent mb-6">Real-time output from the Blockchain Interaction process will appear below. You can also download the complete log.</p>
+                    <div class="bg-gray-800 text-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
+                        <div id="live-log"></div>
+                    </div>
+                    <div class="flex flex-wrap gap-4">
+                        <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
+                        <button id="summarize-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Summarize Log</button>
+                    </div>
+                </section>
+            </div><!-- End script-console-content -->
+        </div><!-- End container mx-auto -->
+    </main>
+
+    <!-- UPDATED FOOTER SECTION -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-2xl font-bold mb-2">We Grow Together!</h3>
+            <p class="mb-4 max-w-2xl mx-auto text-gray-300">
+                Your contributions help keep this project alive, ad-free, and continuously improving. Consider supporting our development efforts by donating.
+            </p>
+            <div class="flex items-center justify-center bg-gray-700 p-3 rounded-lg max-w-md mx-auto mb-6 shadow-md">
+                <span id="donation-address" class="text-sm md:text-base text-white font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-600 transition-colors" title="Copy Address">
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-400" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-600 transition-colors" title="Show QR Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                        <path d="M2 2h2v2H2V2Z"/>
+                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                        <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                    </svg>
+                </button>
+            </div>
+             <p class="text-sm text-gray-400 mt-8">
+                &copy; 2025 FarmLabs. All rights reserved.
+            </p>
+            <div class="flex items-center justify-center mt-4 space-x-6">
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Blog">
+                    <i class="fab fa-blogger fa-lg"></i>
+                </a>
+                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Telegram">
+                    <i class="fab fa-telegram fa-lg"></i>
+                </a>
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="GitHub">
+                    <i class="fab fa-github fa-lg"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    <div id="qr-code-modal" class="modal hidden">
+        <div class="modal-content text-main flex flex-col items-center text-center">
+            <span class="close-qr-button self-end">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
+            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
+            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
+        </div>
+    </div>
+    
+    <!-- Gemini Explanation Modal -->
+    <div id="gemini-modal" class="modal hidden">
+        <div class="modal-content text-main">
+            <span class="close-button">&times;</span>
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Gemini Explanation</h3>
+            <div id="modal-content" class="text-accent">
+                <div class="modal-loader"></div>
+                <p class="text-center mt-4">Generating explanation...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal hidden">
+        <div class="modal-content text-main">
+            <span class="close-confirm-button">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Confirm Action</h3>
+            <p id="confirm-message" class="mb-6 text-accent">Are you sure you want to proceed?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-confirm-btn" class="py-2 px-4 rounded-lg font-semibold btn-secondary">Cancel</button>
+                <button id="confirm-action-btn" class="py-2 px-4 rounded-lg font-semibold btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Transaction Modal -->
+    <div id="manual-tx-modal" class="modal hidden">
+        <div class="modal-content text-main">
+            <span class="close-button" id="manual-tx-close-btn">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Manual Transaction</h3>
+            <div class="mb-4">
+                <label for="manual-tx-recipient" class="block font-medium mb-1 text-accent">Recipient Address</label>
+                <input type="text" id="manual-tx-recipient" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm" placeholder="0x...">
+            </div>
+            <div class="mb-6">
+                <label for="manual-tx-amount" class="block font-medium mb-1 text-accent">Amount (ETH)</label>
+                <input type="number" id="manual-tx-amount" step="0.000001" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono text-sm" value="0.0001">
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button id="manual-tx-send-btn" class="py-2 px-4 rounded-lg font-semibold btn-primary">Send Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utility for random number generation
+        const Utils = {
+            // Generates a random number within a specified range (min inclusive, max exclusive)
+            getRandomInRange: (min, max) => Math.random() * (max - min) + min,
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const appState = {
+                isRunning: false,
+                stopFlag: false,
+                connectedAddress: null, // The single connected wallet address
+                signer: null, // The ethers.Signer object for the connected wallet
+                rpcConfigs: [], // [{url, chainId}]
+                currentRecipientPool: {}, // {chainId: [addresses]}
+                manualRecipientList: [], // For user-provided list
+                predefinedRecipientList: [], // Loaded from CSV
+                config: {},
+                stats: {
+                    totalActions: 0,
+                    successfulActions: 0,
+                    failedActions: 0,
+                    actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 }
+                },
+                logEntries: [], // For CSV export
+                charts: {
+                    walletBalance: null, // Console's wallet balance chart
+                    actionDist: null,    // Console's action distribution chart
+                },
+                pendingConfirmation: null, // Callback for confirmation modal
+                lastHumanLikeSpike: null, // To track the last "human-like" spike
+                gasUpdateInterval: null, // To store the interval ID for gas price updates
+            };
+
+            const ui = {
+                connectWalletBtn: document.getElementById('connect-wallet-btn'),
+                walletStatusDisplay: document.getElementById('wallet-status-display'),
+                walletFeatureControls: document.querySelectorAll('.wallet-feature-control'),
+                startBtn: document.getElementById('start-btn'),
+                stopBtn: document.getElementById('stop-btn'),
+                manualTxBtn: document.getElementById('manual-tx-btn'), // New manual tx button
+                clearAllDataBtn: document.getElementById('clear-all-data-btn'),
+                maxActionsPerSession: document.getElementById('max-actions-per-session'),
+                minAmount: document.getElementById('min-amount'),
+                maxAmount: document.getElementById('max-amount'),
+                minDelay: document.getElementById('min-delay'),
+                maxDelay: document.getElementById('max-delay'),
+                gasMultiplier: document.getElementById('gas-multiplier'),
+                blockLookback: document.getElementById('block-lookback'),
+                rpcUrls: document.getElementById('rpc-urls'),
+                testRpcBtn: document.getElementById('test-rpc-btn'),
+                probSend: document.getElementById('prob-send'),
+                probIdleAction: document.getElementById('prob-idle-action'),
+                probBalanceCheck: document.getElementById('prob-balance-check'),
+                probSumWarning: document.getElementById('prob-sum-warning'),
+                recipientMode: document.getElementsByName('recipient-mode'),
+                fixedAddressSection: document.getElementById('fixed-address-section'),
+                fixedAddress: document.getElementById('fixed-address'),
+                listAddressesSection: document.getElementById('list-addresses-section'),
+                listAddresses: document.getElementById('list-addresses'),
+                loadAddressesFromListBtn: document.getElementById('load-addresses-from-list-btn'),
+                listAddressesCount: document.getElementById('list-addresses-count'),
+                predefinedAddressesSection: document.getElementById('predefined-addresses-section'),
+                predefinedFileInput: document.getElementById('predefined-file-input'),
+                loadPredefinedFileBtn: document.getElementById('load-predefined-file-btn'),
+                predefinedAddressesInfo: document.getElementById('predefined-addresses-info'),
+                predefinedAddressesDisplay: document.getElementById('predefined-addresses-display'),
+                predefinedAddressesCount: document.getElementById('predefined-addresses-count'),
+                liveLog: document.getElementById('live-log'),
+                downloadLogBtn: document.getElementById('download-log-btn'),
+                summarizeLogBtn: document.getElementById('summarize-log-btn'),
+                progressBar: document.getElementById('progress-bar'),
+                progressText: document.getElementById('progress-text'),
+                statusDisplay: document.getElementById('status-display'),
+                successCount: document.getElementById('success-count'),
+                failCount: document.getElementById('fail-count'),
+                gasDisplay: document.getElementById('gas-display'),
+                walletBalanceChartCanvas: document.getElementById('wallet-balance-chart'),
+                actionDistChartCanvas: document.getElementById('action-dist-chart'),
+                explainSendTxBtn: document.getElementById('explain-send-tx-btn'),
+                geminiModal: document.getElementById('gemini-modal'),
+                modalTitle: document.getElementById('modal-title'),
+                modalContent: document.getElementById('modal-content'),
+                closeModalBtn: document.querySelector('#gemini-modal .close-button'),
+                confirmationModal: document.getElementById('confirmation-modal'),
+                confirmMessage: document.getElementById('confirm-message'),
+                confirmActionBtn: document.getElementById('confirm-action-btn'),
+                cancelConfirmBtn: document.getElementById('cancel-confirm-btn'),
+                closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
+                humanSpikeDisplay: document.getElementById('human-spike-display'),
+                darkToggleBtn: document.getElementById('dark-toggle'), // New dark mode toggle button
+                manualTxModal: document.getElementById('manual-tx-modal'), // Manual transaction modal
+                manualTxRecipientInput: document.getElementById('manual-tx-recipient'), // Manual tx recipient input
+                manualTxAmountInput: document.getElementById('manual-tx-amount'), // Manual tx amount input
+                manualTxSendBtn: document.getElementById('manual-tx-send-btn'), // Manual tx send button
+                manualTxCloseBtn: document.getElementById('manual-tx-close-btn'), // Manual tx close button
+            };
+
+            // Function to enable/disable UI elements
+            const setUIEnabled = (enabled) => {
+                ui.walletFeatureControls.forEach(control => {
+                    control.disabled = !enabled;
+                    // Adjust opacity/cursor for radio buttons based on enabled state
+                    if (control.type === 'radio' || control.type === 'checkbox') {
+                         control.parentElement.style.opacity = enabled ? '1' : '0.6';
+                         control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
+                    }
+                });
+
+                // The connect wallet button should ALWAYS be enabled.
+                ui.connectWalletBtn.disabled = false;
+
+                // Correctly show/hide recipient sections based on selected mode
+                const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked)?.value;
+                if (enabled) {
+                    ui.fixedAddressSection.classList.toggle('hidden', selectedRecipientMode !== 'fixed');
+                    ui.listAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'list');
+                    ui.predefinedAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'predefined');
+                } else {
+                    // When disabled, hide all recipient specific sections
+                    ui.fixedAddressSection.classList.add('hidden');
+                    ui.listAddressesSection.classList.add('hidden');
+                    ui.predefinedAddressesSection.classList.add('hidden');
+                }
+
+                // Reset specific elements when disabled
+                if (!enabled) {
+                    // Reset RPC URLs to default if no wallet is connected
+                    ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                    // Reset action probabilities to default
+                    ui.probSend.value = "60";
+                    ui.probIdleAction.value = "20";
+                    ui.probBalanceCheck.value = "20";
+                    loadConfiguration(); // Reload configuration to apply defaults
+                }
+            };
+
+            const openGeminiModal = (title, contentHtml) => {
+                ui.modalTitle.textContent = title;
+                ui.modalContent.innerHTML = contentHtml;
+                ui.geminiModal.classList.remove('hidden');
+            };
+
+            const closeGeminiModal = () => {
+                ui.geminiModal.classList.add('hidden');
+                ui.modalContent.innerHTML = '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>';
+            };
+
+            const openConfirmationModal = (message, callback) => {
+                ui.confirmMessage.textContent = message;
+                appState.pendingConfirmation = callback;
+                ui.confirmationModal.classList.remove('hidden');
+            };
+
+            const closeConfirmationModal = () => {
+                ui.confirmationModal.classList.add('hidden');
+                appState.pendingConfirmation = null;
+            };
+
+            const confirmAction = () => {
+                if (appState.pendingConfirmation) {
+                    appState.pendingConfirmation(true);
+                }
+                closeConfirmationModal();
+            };
+
+            const cancelAction = () => {
+                if (appState.pendingConfirmation) {
+                    appState.pendingConfirmation(false);
+                }
+                closeConfirmationModal();
+            };
+
+            const log = (message, type = 'info', actionData = {}) => {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntryDiv = document.createElement('div');
+                logEntryDiv.innerHTML = `<span class="text-gray-500 mr-2">${timestamp}</span> <span class="log-${type}">${message}</span>`;
+                ui.liveLog.appendChild(logEntryDiv);
+                ui.liveLog.scrollTop = ui.liveLog.scrollHeight;
+
+                appState.logEntries.push({
+                    Timestamp: new Date().toISOString(),
+                    ChainID: actionData.chainId || '',
+                    WalletAddress: actionData.walletAddress || '',
+                    Action: actionData.action || 'Log',
+                    Status: type.toUpperCase(),
+                    Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';'),
+                    DelayUsedMs: actionData.delayUsedMs || '',
+                    GasFactorUsed: actionData.gasFactorUsed || '',
+                });
+            };
+
+            const initConsoleCharts = () => {
+                const chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-main') } } }, // Use CSS variable for color
+                    scales: {
+                        x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-accent') } }, // Use CSS variable for color
+                        y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-accent') } }  // Use CSS variable for color
+                    }
+                };
+
+                if (appState.charts.walletBalance) {
+                    appState.charts.walletBalance.destroy();
+                }
+                appState.charts.walletBalance = new Chart(ui.walletBalanceChartCanvas, {
+                    type: 'bar',
+                    data: { labels: [], datasets: [{ label: 'ETH Balance', data: [], backgroundColor: '#60a5fa', borderColor: '#3b82f6', borderWidth: 1 }] },
+                    options: { ...chartOptions, indexAxis: 'y' }
+                });
+
+                if (appState.charts.actionDist) {
+                    appState.charts.actionDist.destroy();
+                }
+                appState.charts.actionDist = new Chart(ui.actionDistChartCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Send', 'Idle', 'Balance Check', 'Skipped'],
+                        datasets: [{
+                            label: 'Actions',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: ['#3b82f6', '#a8a29e', '#f59e0b', '#ef4444'],
+                            borderColor: '#ffffff',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { ...chartOptions, scales: {} }
+                });
+            };
+
+            const updateWalletBalanceChart = (balance = null) => {
+                const chart = appState.charts.walletBalance;
+                if (appState.connectedAddress && balance !== null) {
+                    chart.data.labels = [`...${appState.connectedAddress.slice(-6)}`];
+                    chart.data.datasets[0].data = [parseFloat(balance).toFixed(6)];
+                } else {
+                    chart.data.labels = [];
+                    chart.data.datasets[0].data = [];
+                }
+                chart.update();
+            };
+
+            const updateActionDistChart = (actionType) => {
+                appState.stats.actionCounts[actionType]++;
+                const chart = appState.charts.actionDist;
+                const dataMap = {
+                    send: 0, idle: 1, 'balance-check': 2, skipped: 3
+                };
+                if (dataMap[actionType] !== undefined) {
+                    chart.data.datasets[0].data[dataMap[actionType]] = appState.stats.actionCounts[actionType];
+                    chart.update();
+                }
+            };
+
+            const saveConfig = () => {
+                const configToSave = {
+                    maxActionsPerSession: ui.maxActionsPerSession.value,
+                    minAmount: ui.minAmount.value,
+                    maxAmount: ui.maxAmount.value,
+                    minDelay: ui.minDelay.value,
+                    maxDelay: ui.maxDelay.value,
+                    gasMultiplier: ui.gasMultiplier.value,
+                    blockLookback: ui.blockLookback.value,
+                    rpcUrls: ui.rpcUrls.value,
+                    probSend: ui.probSend.value,
+                    probIdleAction: ui.probIdleAction.value,
+                    probBalanceCheck: ui.probBalanceCheck.value,
+                    recipientMode: Array.from(ui.recipientMode).find(r => r.checked)?.value,
+                    fixedAddress: ui.fixedAddress.value,
+                    listAddresses: ui.listAddresses.value,
+                    darkMode: document.documentElement.classList.contains('dark')
+                };
+                localStorage.setItem('basicConsoleConfig', JSON.stringify(configToSave));
+                log('Configuration saved to local storage.', 'info');
+            };
+
+            const loadConfig = () => {
+                const savedConfig = localStorage.getItem('basicConsoleConfig');
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    ui.maxActionsPerSession.value = config.maxActionsPerSession || "3";
+                    ui.minAmount.value = config.minAmount || "0.0001";
+                    ui.maxAmount.value = config.maxAmount || "0.0002";
+                    ui.minDelay.value = config.minDelay || "10";
+                    ui.maxDelay.value = config.maxDelay || "30";
+                    ui.gasMultiplier.value = config.gasMultiplier || "2";
+                    ui.blockLookback.value = config.blockLookback || "100";
+                    ui.rpcUrls.value = config.rpcUrls || `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                    ui.probSend.value = config.probSend || "60";
+                    ui.probIdleAction.value = config.probIdleAction || "20";
+                    ui.probBalanceCheck.value = config.probBalanceCheck || "20";
+                    
+                    // Set recipient mode
+                    const savedRecipientMode = config.recipientMode || 'pool';
+                    document.querySelector(`input[name="recipient-mode"][value="${savedRecipientMode}"]`).checked = true;
+                    // Trigger change to show/hide sections
+                    const event = new Event('change');
+                    document.querySelector(`input[name="recipient-mode"][value="${savedRecipientMode}"]`).dispatchEvent(event);
+
+                    ui.fixedAddress.value = config.fixedAddress || '';
+                    ui.listAddresses.value = config.listAddresses || '';
+                    
+                    // Load manual recipient list
+                    loadAddressesFromList();
+
+                    // Apply dark mode preference
+                    if (config.darkMode) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                    log('Configuration loaded from local storage.', 'info');
+                } else {
+                    log('No saved configuration found. Using default settings.', 'info');
+                }
+                // Always load current configuration into appState after loading from storage or using defaults
+                loadConfiguration(); 
+            };
+
+            const loadConfiguration = () => {
+                const probInputs = document.querySelectorAll('.prob-input');
+                let totalProb = 0;
+                probInputs.forEach(input => totalProb += parseInt(input.value) || 0);
+
+                if (totalProb !== 100) {
+                    ui.probSumWarning.classList.remove('hidden');
+                    return false;
+                } else {
+                    ui.probSumWarning.classList.add('hidden');
+                }
+
+                const minAmount = parseFloat(ui.minAmount.value);
+                const maxAmount = parseFloat(ui.maxAmount.value);
+                if (minAmount > maxAmount) {
+                    log('Error: Minimum amount cannot be greater than maximum amount.', 'error');
+                    return false;
+                }
+
+                const minDelay = parseInt(ui.minDelay.value);
+                const maxDelay = parseInt(ui.maxDelay.value);
+                if (minDelay > maxDelay) {
+                    log('Error: Minimum delay cannot be greater than maximum delay.', 'error');
+                    return false;
+                }
+
+                appState.config = {
+                    maxActionsPerSession: parseInt(ui.maxActionsPerSession.value) || 3,
+                    minAmount: minAmount || 0.0001,
+                    maxAmount: maxAmount || 0.0002,
+                    minDelay: minDelay * 1000 || 10000,
+                    maxDelay: maxDelay * 1000 || 30000,
+                    gasMultiplier: parseFloat(ui.gasMultiplier.value) || 2,
+                    blockLookback: parseInt(ui.blockLookback.value) || 100,
+                    recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
+                    fixedAddress: ui.fixedAddress.value.trim(),
+                    probabilities: {
+                        send: parseInt(ui.probSend.value) || 60,
+                        idle: parseInt(ui.probIdleAction.value) || 20,
+                        'balance-check': parseInt(ui.probBalanceCheck.value) || 20,
+                    }
+                };
+
+                appState.rpcConfigs = ui.rpcUrls.value.split('\n').map(line => {
+                    const [url, chainIdStr] = line.split(',').map(s => s.trim());
+                    const chainId = parseInt(chainIdStr);
+                    if (!url || isNaN(chainId)) {
+                        log(`Warning: Invalid RPC entry ignored: "${line}". Format should be "URL,ChainID".`, 'warning');
+                        return null;
+                    }
+                    return { url, chainId: chainId };
+                }).filter(Boolean);
+
+                saveConfig(); // Save configuration whenever it's loaded/updated
+                return true;
+            };
+
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            const chooseAction = (probabilities) => {
+                const rand = Math.random() * 100;
+                let cumulativeProb = 0;
+
+                if (rand < (cumulativeProb += probabilities.send)) return 'send';
+                if (rand < (cumulativeProb += probabilities.idle)) return 'idle-action';
+                if (rand < (cumulativeProb += probabilities['balance-check'])) return 'balance-check';
+                return 'idle-action'; // Fallback
+            };
+
+            const scanRecentBlocks = async (rpc, chainId) => {
+                appState.currentRecipientPool[chainId] = appState.currentRecipientPool[chainId] || [];
+                const provider = new ethers.JsonRpcProvider(rpc);
+                log(`Scanning ${appState.config.blockLookback} blocks on Chain ID ${chainId}...`, 'info');
+                try {
+                    const currentBlockNumber = await provider.getBlockNumber();
+                    const startBlock = Math.max(0, currentBlockNumber - appState.config.blockLookback);
+                    const newAddresses = new Set();
+
+                    for (let blk = startBlock; blk <= currentBlockNumber; blk++) {
+                        const block = await provider.getBlock(blk, true);
+                        if (block && block.transactions) {
+                            block.transactions.forEach(tx => {
+                                if (tx.to && ethers.isAddress(tx.to)) {
+                                    newAddresses.add(tx.to);
+                                }
+                            });
+                        }
+                    }
+
+                    const existingAddresses = new Set(appState.currentRecipientPool[chainId]);
+                    newAddresses.forEach(addr => existingAddresses.add(addr));
+                    appState.currentRecipientPool[chainId] = Array.from(existingAddresses);
+                    log(`Found ${newAddresses.size} new addresses. Total recipients for chain ${chainId}: ${appState.currentRecipientPool[chainId].length}`, 'success');
+                } catch (error) {
+                    log(`Failed to scan blocks for chain ${chainId}: ${error.message}`, 'error');
+                }
+            };
+
+            async function callGeminiApi(prompt) {
+                log('Calling Gemini API for explanation...', 'info');
+                openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
+                // Direct call to Google Generative Language API
+                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }]
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const explanation = result.candidates[0].content.parts[0].text;
+                        ui.modalTitle.textContent = "Gemini Explanation";
+                        ui.modalContent.innerHTML = `<p>${explanation.replace(/\n/g, '<br>')}</p>`;
+                        return explanation;
+                    } else {
+                        ui.modalTitle.textContent = "Gemini Explanation Error";
+                        ui.modalContent.innerHTML = `<p class="text-red-500">No explanation generated. The model might have been unable to process the request or returned an unexpected format.</p>`;
+                        return "No explanation generated.";
+                    }
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    ui.modalTitle.textContent = "Gemini API Error";
+                    ui.modalContent.innerHTML = `<p class="text-red-500">Failed to get explanation: ${error.message}. Please check your network connection or try again later.</p>`;
+                    return `Failed to get explanation: ${error.message}.`;
+                }
+            }
+
+            const loadAddressesFromList = () => {
+                const addressesInput = ui.listAddresses.value.split('\n').map(addr => addr.trim()).filter(Boolean);
+                const validAddresses = [];
+                let invalidCount = 0;
+
+                addressesInput.forEach(addr => {
+                    if (ethers.isAddress(addr)) {
+                        validAddresses.push(addr);
+                    } else {
+                        invalidCount++;
+                        log(`Invalid address in list: "${addr}"`, 'warning');
+                    }
+                });
+
+                appState.manualRecipientList = validAddresses;
+                ui.listAddressesCount.textContent = `Loaded ${validAddresses.length} valid addresses. ${invalidCount > 0 ? `(${invalidCount} invalid ignored)` : ''}`;
+                if (validAddresses.length > 0) {
+                    log(`Successfully loaded ${validAddresses.length} recipient addresses from list.`, 'success');
+                } else {
+                    log('No valid addresses loaded from list.', 'warning');
+                }
+            };
+
+            const loadPredefinedListFromFile = () => {
+                const file = ui.predefinedFileInput.files[0];
+                if (!file) {
+                    log('No file selected for predefined list.', 'warning');
+                    ui.predefinedAddressesInfo.textContent = 'No file loaded.';
+                    ui.predefinedAddressesCount.textContent = '';
+                    appState.predefinedRecipientList = [];
+                    updatePredefinedAddressesDisplay();
+                    return;
+                }
+
+                ui.predefinedAddressesInfo.textContent = `Loading file: ${file.name}...`;
+                log(`Attempting to load predefined addresses from ${file.name}...`, 'info');
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const addresses = content.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+                    const validAddresses = [];
+                    let invalidCount = 0;
+
+                    addresses.forEach(addr => {
+                        if (ethers.isAddress(addr)) {
+                            validAddresses.push(addr);
+                        } else {
+                            invalidCount++;
+                            log(`Invalid address in predefined file: "${addr}"`, 'warning');
+                        }
+                    });
+
+                    appState.predefinedRecipientList = validAddresses;
+                    ui.predefinedAddressesInfo.textContent = `File loaded: ${file.name}`;
+                    ui.predefinedAddressesCount.textContent = `List contains ${validAddresses.length} valid addresses. ${invalidCount > 0 ? `(${invalidCount} invalid ignored)` : ''}`;
+                    if (validAddresses.length > 0) {
+                        log(`Successfully loaded ${validAddresses.length} addresses from "${file.name}".`, 'success');
+                    } else {
+                        log(`No valid addresses found in "${file.name}".`, 'warning');
+                    }
+                    updatePredefinedAddressesDisplay();
+                };
+
+                reader.onerror = (e) => {
+                    log(`Error reading file: ${e.target.error.name}`, 'error');
+                    ui.predefinedAddressesInfo.textContent = 'Error loading file.';
+                    ui.predefinedAddressesCount.textContent = '';
+                    appState.predefinedRecipientList = [];
+                    updatePredefinedAddressesDisplay();
+                };
+
+                reader.readAsText(file);
+            };
+
+            const updatePredefinedAddressesDisplay = () => {
+                ui.predefinedAddressesDisplay.innerHTML = '';
+                if (appState.predefinedRecipientList.length > 0) {
+                    appState.predefinedRecipientList.forEach(addr => {
+                        const li = document.createElement('li');
+                        li.textContent = addr;
+                        ui.predefinedAddressesDisplay.appendChild(li);
+                    });
+                } else {
+                    ui.predefinedAddressesDisplay.innerHTML = '<li>No predefined addresses loaded.</li>';
+                }
+            };
+
+            const updateGasPriceDisplay = async () => {
+                if (!appState.connectedAddress || appState.rpcConfigs.length === 0) {
+                    ui.gasDisplay.textContent = 'N/A';
+                    return;
+                }
+                try {
+                    // Use the first RPC config for gas price display, or the current chain's RPC if available
+                    const currentChainId = window.ethereum.networkVersion ? parseInt(window.ethereum.networkVersion, 10) : null;
+                    const currentRpcConfig = appState.rpcConfigs.find(rpc => rpc.chainId === currentChainId) || appState.rpcConfigs[0];
+
+                    if (!currentRpcConfig) {
+                        ui.gasDisplay.textContent = 'N/A (No RPC)';
+                        return;
+                    }
+
+                    const provider = new ethers.JsonRpcProvider(currentRpcConfig.url);
+                    const feeData = await provider.getFeeData();
+                    const gasPriceGwei = Number(ethers.formatUnits(feeData.gasPrice || feeData.maxFeePerGas || 0, 'gwei')).toFixed(2);
+                    ui.gasDisplay.textContent = `${gasPriceGwei} Gwei`;
+                } catch (error) {
+                    ui.gasDisplay.textContent = 'Error';
+                    console.error("Failed to fetch gas price:", error);
+                }
+            };
+
+            const testRpcConnections = async () => {
+                loadConfiguration(); // Ensure latest RPCs are loaded
+                if (appState.rpcConfigs.length === 0) {
+                    log('No RPC URLs configured to test.', 'warning');
+                    return;
+                }
+
+                log('Testing RPC connections...', 'info');
+                for (const rpcConfig of appState.rpcConfigs) {
+                    const provider = new ethers.JsonRpcProvider(rpcConfig.url);
+                    try {
+                        const network = await provider.getNetwork();
+                        const blockNumber = await provider.getBlockNumber();
+                        if (network.chainId === BigInt(rpcConfig.chainId)) {
+                            log(`✅ RPC ${rpcConfig.url} connected (Chain ID: ${network.chainId}, Latest Block: ${blockNumber})`, 'success');
+                        } else {
+                            log(`⚠️ RPC ${rpcConfig.url} connected but Chain ID mismatch. Configured: ${rpcConfig.chainId}, Actual: ${network.chainId}. Latest Block: ${blockNumber}.`, 'warning');
+                        }
+                    }
+                    catch (error) {
+                        log(`❌ Failed to connect to RPC ${rpcConfig.url}: ${error.message}`, 'error');
+                    }
+                }
+                log('RPC connection testing complete.', 'info');
+            };
+
+            // Helper function to check chain and balance
+            const checkChainAndBalance = async (provider, chainId) => {
+                try {
+                    const currentNetwork = await provider.getNetwork();
+                    if (currentNetwork.chainId !== BigInt(chainId)) {
+                        log(`Wallet is on Chain ID ${currentNetwork.chainId}. Attempting to switch to Chain ID ${chainId}...`, 'warning');
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: `0x${chainId.toString(16)}` }],
+                            });
+                            log(`Successfully switched to Chain ID ${chainId}.`, 'success');
+                            appState.signer = await provider.getSigner();
+                        } catch (switchError) {
+                            log(`Failed to switch chain to ${chainId}: ${switchError.message}. Skipping session.`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                            return false;
+                        }
+                    }
+                } catch (networkCheckError) {
+                    log(`Failed to check current network: ${networkCheckError.message}. Skipping session.`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                    return false;
+                }
+
+                try {
+                    const balanceWei = await provider.getBalance(appState.connectedAddress);
+                    updateWalletBalanceChart(ethers.formatEther(balanceWei));
+                    if (balanceWei < ethers.parseEther("0.001")) { // Ensure sufficient balance for gas
+                        log(`Skipping session on Chain ID ${chainId} due to critically low balance (${ethers.formatEther(balanceWei)} ETH).`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                        return false;
+                    } else if (balanceWei < ethers.parseEther("0.005")) { // Warning for slightly low balance
+                         log(`Connected wallet on Chain ID ${chainId} has low balance (${ethers.formatEther(balanceWei)} ETH).`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'info' });
+                    }
+                } catch (balanceError) {
+                    log(`Failed to check balance for connected wallet on Chain ID ${chainId}: ${balanceError.message}`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                    return false;
+                }
+                return true;
+            };
+
+            // Helper function to check gas price
+            const checkGasPrice = async (provider, chainId) => {
+                let currentGasPrice = null;
+                let maxPriorityFeePerGas = null;
+                let maxFeePerGas = null;
+
+                try {
+                    const feeData = await provider.getFeeData();
+                    currentGasPrice = feeData.gasPrice;
+                    maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+                    maxFeePerGas = feeData.maxFeePerGas;
+
+                    ui.gasDisplay.textContent = `${(Number(ethers.formatUnits(currentGasPrice || maxFeePerGas, 'gwei'))).toFixed(2)} Gwei`;
+
+                    const thresholdGasPrice = currentGasPrice ? (currentGasPrice * BigInt(Math.round(appState.config.gasMultiplier * 100))) / BigInt(100) : null;
+                    const thresholdMaxFeePerGas = maxFeePerGas ? (maxFeePerGas * BigInt(Math.round(appState.config.gasMultiplier * 100))) / BigInt(100) : null;
+
+                    if ((currentGasPrice && thresholdGasPrice && currentGasPrice > thresholdGasPrice) ||
+                        (maxFeePerGas && thresholdMaxFeePerGas && maxFeePerGas > thresholdMaxFeePerGas)) {
+                        log(`Gas price (${(Number(ethers.formatUnits(currentGasPrice || maxFeePerGas, 'gwei'))).toFixed(2)} Gwei) is too high. Skipping action.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                        return false;
+                    }
+                } catch (gasError) {
+                    log(`Failed to get gas price for Chain ID ${chainId}: ${gasError.message}. Proceeding without high gas check.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                }
+                return true;
+            };
+
+            // Helper function to perform send action
+            const performSendAction = async (provider, chainId) => {
+                let recipientAddress;
+                const currentChainRecipientPool = appState.currentRecipientPool[chainId];
+                
+                if (appState.config.recipientMode === 'fixed') {
+                    recipientAddress = ui.fixedAddress.value.trim();
+                    if (!ethers.isAddress(recipientAddress)) {
+                        log(`Fixed recipient address "${recipientAddress}" is invalid. Skipping send.`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                        return false;
+                    }
+                } else if (appState.config.recipientMode === 'list') {
+                    if (appState.manualRecipientList.length === 0) {
+                        log(`Recipient list is empty. Skipping send.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                        return false;
+                    }
+                    recipientAddress = appState.manualRecipientList[Math.floor(Math.random() * appState.manualRecipientList.length)];
+                }
+                else if (appState.config.recipientMode === 'predefined') {
+                    if (appState.predefinedRecipientList.length === 0) {
+                        log(`Predefined recipient list is empty. Skipping send.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                        return false;
+                    }
+                    recipientAddress = appState.predefinedRecipientList[Math.floor(Math.random() * appState.predefinedRecipientList.length)];
+                }
+                else if (appState.config.recipientMode === 'pool') {
+                    if (currentChainRecipientPool && currentChainRecipientPool.length > 0) {
+                        recipientAddress = currentChainRecipientPool[Math.floor(Math.random() * currentChainRecipientPool.length)];
+                    } else {
+                        log(`Dynamic pool empty for Chain ID ${chainId}. Skipping send.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                        return false;
+                    }
+                } else {
+                    log(`No valid recipient selection for 'send' action. Skipping.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                    return false;
+                }
+
+                const amount = Utils.getRandomInRange(appState.config.minAmount, appState.config.maxAmount);
+                const tx = {
+                    to: recipientAddress,
+                    value: ethers.parseEther(amount.toFixed(12))
+                };
+
+                try {
+                    log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}... Awaiting wallet confirmation.`, 'info');
+                    const txResponse = await appState.signer.sendTransaction(tx);
+                    log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                    await txResponse.wait();
+                    log(`Tx confirmed!`, 'success');
+                    return true;
+                } catch (error) {
+                    log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                    return false;
+                }
+            };
+
+            // Helper function to perform idle action
+            const performIdleAction = async (chainId) => {
+                log(`Connected wallet is idling for this action.`, 'info', { chainId, walletAddress: appState.connectedAddress, action: 'idle' });
+                return true;
+            };
+
+            // Helper function to perform balance check
+            const performBalanceCheck = async (provider, chainId) => {
+                try {
+                    const currentBalanceWei = await provider.getBalance(appState.connectedAddress);
+                    log(`Connected wallet checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ETH`, 'info', { chainId, walletAddress: appState.connectedAddress, action: 'balance-check' });
+                    return true;
+                } catch (error) {
+                    log(`Failed to check balance for connected wallet: ${error.message}`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'balance-check' });
+                    return false;
+                }
+            };
+
+
+            // Main runner loop for automated interactions
+            const runSession = async () => {
+                appState.isRunning = true;
+                appState.stopFlag = false;
+                ui.startBtn.disabled = true;
+                ui.stopBtn.disabled = false;
+                ui.statusDisplay.textContent = 'Running';
+                ui.successCount.textContent = appState.stats.successfulActions.toString();
+                ui.failCount.textContent = appState.stats.failedActions.toString();
+                ui.progressText.textContent = '0';
+                ui.progressBar.style.width = `0%`; // Reset progress bar
+
+                // Start gas price update interval (if not already running)
+                if (!appState.gasUpdateInterval) {
+                    appState.gasUpdateInterval = setInterval(updateGasPriceDisplay, 15000);
+                }
+
+                log(`Starting Blockchain Interaction process for connected wallet ${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)} across ${appState.rpcConfigs.length} chains.`, 'info');
+
+                // Pre-scan all RPCs for addresses for the 'pool' mode
+                if (appState.config.recipientMode === 'pool') {
+                    log('Pre-scanning all configured chains for recipient addresses for the dynamic pool...', 'info');
+                    for (const rpcConfig of appState.rpcConfigs) {
+                        await scanRecentBlocks(rpcConfig.url, rpcConfig.chainId);
+                    }
+                    log('Pre-scanning complete.', 'info');
+                }
+
+                while (appState.isRunning && !appState.stopFlag) {
+                    // Randomly select an RPC configuration for this session
+                    const rpcConfigIndex = Math.floor(Math.random() * appState.rpcConfigs.length);
+                    const rpcConfig = appState.rpcConfigs[rpcConfigIndex];
+                    const chainId = rpcConfig.chainId;
+                    const rpcUrl = rpcConfig.url;
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+
+                    log(`🌐 Initiating session on Chain ID ${chainId} (${rpcUrl})...`, 'info');
+
+                    const canProceed = await checkChainAndBalance(provider, chainId);
+                    if (!canProceed) {
+                        updateActionDistChart('skipped'); // Mark as skipped if chain/balance check fails
+                        await sleep(Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
+                        continue; // Skip this session
+                    }
+
+                    const actionsForSession = Math.floor(Utils.getRandomInRange(1, appState.config.maxActionsPerSession + 1));
+                    log(`Connected wallet will perform ${actionsForSession} action(s) on Chain ID ${chainId}.`, 'info');
+
+                    for (let i = 1; i <= actionsForSession; i++) {
+                        if (appState.stopFlag) break;
+
+                        appState.stats.totalActions++;
+                        ui.progressText.textContent = `${appState.stats.totalActions}`;
+                        ui.progressBar.style.width = `100%`; // This progress bar logic might need adjustment if it's per-session or overall
+
+                        const gasCheckPassed = await checkGasPrice(provider, chainId);
+                        if (!gasCheckPassed) {
+                            updateActionDistChart('skipped');
+                            break; // Break from inner loop, will move to the next session
+                        }
+                        
+                        const chosenBehavior = chooseAction(appState.config.probabilities);
+                        log(`[Action ${i}/${actionsForSession}] Chosen action: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress: appState.connectedAddress, action: chosenBehavior });
+
+                        let actionSuccess = false;
+                        switch (chosenBehavior) {
+                            case "send":
+                                actionSuccess = await performSendAction(provider, chainId);
+                                break;
+                            case "idle-action":
+                                actionSuccess = await performIdleAction(chainId);
+                                break;
+                            case "balance-check":
+                                actionSuccess = await performBalanceCheck(provider, chainId);
+                                break;
+                        }
+
+                        if (actionSuccess) {
+                            appState.stats.successfulActions++;
+                        } else {
+                            appState.stats.failedActions++;
+                        }
+                        ui.successCount.textContent = appState.stats.successfulActions.toString();
+                        ui.failCount.textContent = appState.stats.failedActions.toString();
+                        updateActionDistChart(chosenBehavior);
+
+                        try {
+                            const newBalanceWei = await provider.getBalance(appState.connectedAddress);
+                            updateWalletBalanceChart(ethers.formatEther(newBalanceWei));
+                        } catch (balanceUpdateError) {
+                            log(`Failed to update balance for connected wallet: ${balanceUpdateError.message}`, 'warning');
+                        }
+
+                        if (i < actionsForSession && !appState.stopFlag) {
+                            const delayUsed = Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
+                            log(`Waiting for ${Math.round(delayUsed/1000)} seconds before next action...`, 'info', { delayUsedMs: delayUsed });
+                            appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
+                            ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
+                            await sleep(delayUsed);
+                        }
+                    } // End of actionsForSession loop
+
+                    if (appState.stopFlag) break;
+
+                    // Log summary after each session
+                    log(`🔍 Session Summary: ${appState.stats.totalActions} total actions | ${appState.stats.successfulActions} successful | ${appState.stats.failedActions} failed`, 'info');
+
+                    const sessionDelay = Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
+                    log(`Session for connected wallet on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
+                    await sleep(sessionDelay);
+                } // End of while (appState.isRunning && !appState.stopFlag)
+                log('Interaction process finished.', 'success');
+                stopInteraction();
+            };
+
+            const startInteraction = async () => {
+                openConfirmationModal('Are you sure you want to start Blockchain Interaction? This involves real blockchain interactions and will prompt your connected wallet for confirmations.', async (confirmed) => {
+                    if (!confirmed) {
+                        log('Interaction start cancelled by user.', 'info');
+                        return;
+                    }
+
+                    if (!loadConfiguration()) {
+                        log('Configuration is invalid. Please fix errors before starting.', 'error');
+                        return;
+                    }
+
+                    if (!appState.connectedAddress || !appState.signer) {
+                        log('Please connect your wallet first.', 'error');
+                        return;
+                    }
+
+                    if (appState.rpcConfigs.length === 0) {
+                        log('Please provide at least one RPC URL and Chain ID.', 'error');
+                        return;
+                    }
+                    if (appState.config.recipientMode === 'fixed' && !ethers.isAddress(appState.config.fixedAddress)) {
+                        log('Invalid fixed recipient address.', 'error');
+                        return;
+                    }
+                    if (appState.config.recipientMode === 'list' && appState.manualRecipientList.length === 0) {
+                        log('Recipient list is empty. Please load addresses into the list or choose another recipient mode.', 'error');
+                        return;
+                    }
+                    if (appState.config.recipientMode === 'predefined' && appState.predefinedRecipientList.length === 0) {
+                        log('Predefined recipient list is empty. Please load a CSV file with addresses.', 'error');
+                        return;
+                    }
+                    
+                    // Call the main session runner
+                    runSession();
+                });
+            };
+
+            const stopInteraction = () => {
+                appState.isRunning = false;
+                appState.stopFlag = true;
+                ui.startBtn.disabled = false;
+                ui.stopBtn.disabled = true;
+                ui.statusDisplay.textContent = 'Idle';
+                if (appState.gasUpdateInterval) {
+                    clearInterval(appState.gasUpdateInterval);
+                    appState.gasUpdateInterval = null;
+                }
+            };
+
+            const clearAllData = () => {
+                openConfirmationModal('Are you sure you want to clear ALL configurations and log data? This action cannot be undone.', (confirmed) => {
+                    if (confirmed) {
+                        appState.isRunning = false;
+                        appState.stopFlag = false;
+                        appState.connectedAddress = null;
+                        appState.signer = null;
+                        appState.rpcConfigs = [];
+                        appState.currentRecipientPool = {};
+                        appState.manualRecipientList = [];
+                        ui.listAddresses.value = '';
+                        ui.listAddressesCount.textContent = '';
+                        appState.predefinedRecipientList = [];
+                        ui.predefinedFileInput.value = '';
+                        ui.predefinedAddressesInfo.textContent = 'No file loaded.';
+                        updatePredefinedAddressesDisplay();
+                        appState.config = {};
+                        appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
+                        appState.logEntries = [];
+                        appState.lastHumanLikeSpike = null;
+                        ui.humanSpikeDisplay.textContent = 'Never';
+
+                        // Reset config fields to initial values
+                        ui.maxActionsPerSession.value = "3";
+                        ui.minAmount.value = "0.0001";
+                        ui.maxAmount.value = "0.0002";
+                        ui.minDelay.value = "10";
+                        ui.maxDelay.value = "30";
+                        ui.gasMultiplier.value = "2";
+                        ui.blockLookback.value = "100";
+                        ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                        ui.probSend.value = "60";
+                        ui.probIdleAction.value = "20";
+                        ui.probBalanceCheck.value = "20";
+                        
+                        // Reset recipient mode to default (pool)
+                        document.querySelector('input[name="recipient-mode"][value="pool"]').checked = true;
+                        ui.fixedAddressSection.classList.add('hidden');
+                        ui.listAddressesSection.classList.add('hidden');
+                        ui.predefinedAddressesSection.classList.add('hidden');
+                        ui.fixedAddress.value = '';
+
+                        localStorage.removeItem('basicConsoleConfig'); // Clear saved config
+                        log('Local storage configuration cleared.', 'info');
+
+                        setUIEnabled(false);
+                        initConsoleCharts();
+                        updateWalletBalanceChart(); // Ensure wallet balance chart is empty
+                        ui.walletStatusDisplay.textContent = `No wallet connected.`;
+                        log('All data cleared. Console reset.');
+                        if (appState.gasUpdateInterval) {
+                            clearInterval(appState.gasUpdateInterval);
+                            appState.gasUpdateInterval = null;
+                            ui.gasDisplay.textContent = 'N/A';
+                        }
+                    }
+                });
+            };
+
+            const handleExplainSendTx = async () => {
+                const minAmount = ui.minAmount.value;
+                const maxAmount = ui.maxAmount.value;
+                const recipientMode = Array.from(ui.recipientMode).find(r => r.checked).value;
+                const fixedAddress = ui.fixedAddress.value.trim();
+                const listAddressCount = appState.manualRecipientList.length;
+                const predefinedAddressCount = appState.predefinedRecipientList.length;
+
+                let recipientDescription = '';
+                if (recipientMode === 'fixed' && fixedAddress) {
+                    recipientDescription = `a fixed address (${fixedAddress.substring(0, 6)}...)`;
+                } else if (recipientMode === 'list' && listAddressCount > 0) {
+                    recipientDescription = `a random address from a custom list of ${listAddressCount} addresses`;
+                } else if (recipientMode === 'predefined' && predefinedAddressCount > 0) {
+                    recipientDescription = `a random address from a predefined list of ${predefinedAddressCount} addresses`;
+                } else if (recipientMode === 'pool') {
+                    recipientDescription = 'a random address from a dynamically scanned pool (if available for the connected chain)';
+                } else {
+                    recipientDescription = 'an unspecified recipient (please select a valid recipient mode)';
+                }
+
+                const prompt = `I am setting up a script to send Ethereum. The amount will be between ${minAmount} and ${maxAmount} ETH. The recipient will be ${recipientDescription}. Explain the typical purpose of such transactions in a blockchain context and any general risks a user should be aware of.`;
+                await callGeminiApi(prompt);
+            };
+
+            const handleSummarizeLog = async () => {
+                if (appState.logEntries.length === 0) {
+                    openGeminiModal('No Log Data', '<p class="text-accent">There are no log entries to summarize yet. Start Interaction to generate logs!</p>');
+                    return;
+                }
+
+                const recentLogEntries = appState.logEntries.slice(-100);
+                const formattedLog = recentLogEntries.map(entry => {
+                    return `${entry.Timestamp} [${entry.Status}] ${entry.Action} - ${entry.Details}`;
+                }).join('\n');
+
+                const prompt = `Please summarize the following blockchain transaction log. Identify key events, common patterns (e.g., successful transactions, repeated errors), and any notable observations. If there are errors, categorize them if possible.
+
+                --- Log Data ---
+                ${formattedLog}
+                --- End Log Data ---
+
+                Provide a concise summary and any insights you can derive.`;
+
+                await callGeminiApi(prompt);
+            };
+
+
+            const downloadLog = () => {
+                if (appState.logEntries.length === 0) {
+                    openGeminiModal('No Data', '<p class="text-accent">No log data to download.</p>');
+                    return;
+                }
+
+                const headers = Object.keys(appState.logEntries[0]).join(',');
+                const rows = appState.logEntries.map(entry =>
+                    Object.values(entry).map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')
+                );
+
+                const csvContent = headers + '\n' + rows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `tx_log_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const copyToClipboard = (text) => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    log(`Copied "${text}" to clipboard.`, 'info');
+                } catch (err) {
+                    log('Failed to copy to clipboard (unsupported by browser/iframe).', 'error');
+                }
+                document.body.removeChild(textarea);
+            };
+
+            const connectWallet = async () => {
+                if (typeof window.ethereum === 'undefined') {
+                    log('Rabby Wallet or compatible wallet not detected. Please install one.', 'error');
+                    ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://chromewebstore.google.com/detail/rabby-wallet/acmacodkjbdgmoleebolmdjonilkdbch" target="_blank" class="underline text-blue-500">Rabby Wallet</a> or a compatible browser extension.`;
+                    setUIEnabled(false);
+                    return;
+                }
+
+                log('window.ethereum detected. Requesting accounts...', 'info');
+                ui.walletStatusDisplay.innerHTML = 'Connecting... (Check your wallet extension for a pop-up)';
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                    if (accounts.length === 0) {
+                        log('No accounts found. Please connect your wallet and select an account.', 'error');
+                        appState.connectedAddress = null;
+                        appState.signer = null;
+                        ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                        setUIEnabled(false);
+                        updateWalletBalanceChart(0);
+                        return;
+                    }
+                    appState.connectedAddress = accounts[0];
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    appState.signer = await provider.getSigner();
+                    log(`Wallet connected: ${appState.connectedAddress}`, 'success');
+                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                    setUIEnabled(true);
+                    updateWalletBalanceChart(ethers.formatEther(await provider.getBalance(appState.connectedAddress)));
+                    updateGasPriceDisplay(); // Initial gas price display
+                    // Start gas price update interval if not already running
+                    if (!appState.gasUpdateInterval) {
+                        appState.gasUpdateInterval = setInterval(updateGasPriceDisplay, 15000);
+                    }
+
+
+                    // Set up event listeners for window.ethereum
+                    window.ethereum.on('accountsChanged', async (newAccounts) => {
+                        log('Wallet accounts changed event detected.', 'info');
+                        if (newAccounts.length === 0) {
+                            log('Wallet disconnected or no accounts selected.', 'warning');
+                            appState.connectedAddress = null;
+                            appState.signer = null;
+                            ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                            setUIEnabled(false);
+                            updateWalletBalanceChart(0);
+                            if (appState.gasUpdateInterval) {
+                                clearInterval(appState.gasUpdateInterval);
+                                appState.gasUpdateInterval = null;
+                                ui.gasDisplay.textContent = 'N/A';
+                            }
+                        } else if (appState.connectedAddress && newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
+                            log(`Account changed to: ${newAccounts[0]}`, 'info');
+                            appState.connectedAddress = newAccounts[0];
+                            const newProvider = new ethers.BrowserProvider(window.ethereum);
+                            appState.signer = await newProvider.getSigner();
+                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            setUIEnabled(true);
+                            updateWalletBalanceChart(ethers.formatEther(await newProvider.getBalance(appState.connectedAddress)));
+                            updateGasPriceDisplay();
+                        } else if (!appState.connectedAddress) {
+                            log(`Wallet reconnected with account: ${newAccounts[0]}`, 'info');
+                            appState.connectedAddress = newAccounts[0];
+                            const newProvider = new ethers.BrowserProvider(window.ethereum);
+                            appState.signer = await newProvider.getSigner();
+                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            setUIEnabled(true);
+                            updateWalletBalanceChart(ethers.formatEther(await newProvider.getBalance(appState.connectedAddress)));
+                            updateGasPriceDisplay();
+                        }
+                    });
+
+                    window.ethereum.on('chainChanged', async (chainId) => {
+                        log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure your RPC configurations match this network.`, 'warning');
+                        if (appState.connectedAddress) {
+                            const newProvider = new ethers.BrowserProvider(window.ethereum);
+                            appState.signer = await newProvider.getSigner();
+                            updateWalletBalanceChart(ethers.formatEther(await newProvider.getBalance(appState.connectedAddress)));
+                            updateGasPriceDisplay();
+                        }
+                    });
+
+                    window.ethereum.on('disconnect', (error) => {
+                        log(`Wallet disconnected: ${error.message || 'Unknown error'}`, 'error');
+                        appState.connectedAddress = null;
+                        appState.signer = null;
+                        ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                        setUIEnabled(false);
+                        updateWalletBalanceChart(0);
+                        if (appState.gasUpdateInterval) {
+                            clearInterval(appState.gasUpdateInterval);
+                            appState.gasUpdateInterval = null;
+                            ui.gasDisplay.textContent = 'N/A';
+                        }
+                    });
+
+                } catch (error) {
+                    log(`Wallet connection failed: ${error.message}`, 'error');
+                    appState.connectedAddress = null;
+                    appState.signer = null;
+                    ui.walletStatusDisplay.innerHTML = `Connection failed.`;
+                    setUIEnabled(false);
+                    updateWalletBalanceChart(0);
+                }
+            };
+
+            const handleManualTransaction = async () => {
+                if (!appState.connectedAddress || !appState.signer) {
+                    log('Please connect your wallet first to send a manual transaction.', 'error');
+                    return;
+                }
+
+                const recipient = ui.manualTxRecipientInput.value.trim();
+                const amount = parseFloat(ui.manualTxAmountInput.value);
+
+                if (!ethers.isAddress(recipient)) {
+                    log('Invalid recipient address for manual transaction.', 'error');
+                    return;
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    log('Invalid amount for manual transaction. Must be a positive number.', 'error');
+                    return;
+                }
+
+                openConfirmationModal(`Are you sure you want to send ${amount} ETH to ${recipient}? This will prompt your connected wallet for confirmation.`, async (confirmed) => {
+                    if (!confirmed) {
+                        log('Manual transaction cancelled by user.', 'info');
+                        return;
+                    }
+
+                    try {
+                        const tx = {
+                            to: recipient,
+                            value: ethers.parseEther(amount.toFixed(12))
+                        };
+
+                        log(`Sending manual transaction: ${amount} ETH to ${recipient}... Awaiting wallet confirmation.`, 'info');
+                        const txResponse = await appState.signer.sendTransaction(tx);
+                        log(`Manual Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { walletAddress: appState.connectedAddress, action: 'manual_send' });
+                        await txResponse.wait();
+                        log(`Manual Tx confirmed!`, 'success');
+
+                        // Update balance after manual transaction
+                        const provider = new ethers.BrowserProvider(window.ethereum);
+                        const newBalanceWei = await provider.getBalance(appState.connectedAddress);
+                        updateWalletBalanceChart(ethers.formatEther(newBalanceWei));
+
+                    } catch (error) {
+                        log(`Manual transaction failed: ${error.message}`, 'error', { walletAddress: appState.connectedAddress, action: 'manual_send' });
+                    } finally {
+                        ui.manualTxModal.classList.add('hidden'); // Close modal after attempt
+                    }
+                });
+            };
+
+
+            const setupEventListeners = () => {
+                ui.connectWalletBtn.addEventListener('click', connectWallet);
+                ui.startBtn.addEventListener('click', startInteraction);
+                ui.stopBtn.addEventListener('click', stopInteraction);
+                ui.manualTxBtn.addEventListener('click', () => ui.manualTxModal.classList.remove('hidden')); // Open manual tx modal
+                ui.manualTxSendBtn.addEventListener('click', handleManualTransaction); // Send manual tx
+                ui.manualTxCloseBtn.addEventListener('click', () => ui.manualTxModal.classList.add('hidden')); // Close manual tx modal
+                ui.clearAllDataBtn.addEventListener('click', clearAllData);
+                ui.testRpcBtn.addEventListener('click', testRpcConnections);
+                ui.downloadLogBtn.addEventListener('click', downloadLog);
+                ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog);
+                ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
+                ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
+                ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
+
+                ui.closeModalBtn.addEventListener('click', closeGeminiModal);
+                window.addEventListener('click', (event) => {
+                    if (event.target === ui.geminiModal) {
+                        closeGeminiModal();
+                    }
+                });
+
+                ui.confirmActionBtn.addEventListener('click', confirmAction);
+                ui.cancelConfirmBtn.addEventListener('click', cancelAction);
+                ui.closeConfirmBtn.addEventListener('click', cancelAction);
+                window.addEventListener('click', (event) => {
+                    if (event.target === ui.confirmationModal) {
+                        cancelAction();
+                    }
+                });
+
+                ui.liveLog.addEventListener('click', (event) => {
+                    const copyBtn = event.target.closest('.log-copy-btn');
+                    if (copyBtn && copyBtn.dataset.txHash) {
+                        copyToClipboard(copyBtn.dataset.txHash);
+                    }
+                });
+
+                ui.recipientMode.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
+                        ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
+                        ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined');
+                        loadConfiguration(); // Re-load config to save the new recipient mode
+                    });
+                });
+
+                // Add listeners for config changes to save them
+                document.querySelectorAll('#max-actions-per-session, #min-amount, #max-amount, #min-delay, #max-delay, #gas-multiplier, #block-lookback, #rpc-urls, #prob-send, #prob-idle-action, #prob-balance-check, #fixed-address, #list-addresses').forEach(input => {
+                    input.addEventListener('input', loadConfiguration); // Calls loadConfiguration which then calls saveConfig
+                });
+
+                // Dark mode toggle listener
+                ui.darkToggleBtn.addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    saveConfig(); // Save dark mode preference
+                });
+            };
+
+            initConsoleCharts();
+            setupEventListeners();
+            loadConfig(); // Load configuration first
+            updateWalletBalanceChart();
+            setUIEnabled(false);
+
+            // Set the initial active navigation link for Basic Console
+            document.querySelector('#sidebar .nav-link[href="basic.html"]').classList.add('active');
+
+            // Initial check for window.ethereum and existing connection on page load
+            if (typeof window.ethereum !== 'undefined') {
+                 log('Rabby Wallet or compatible wallet detected on startup. Checking for existing connection...', 'info');
+                 window.ethereum.request({ method: 'eth_accounts' })
+                    .then(async accounts => {
+                        if (accounts.length > 0) {
+                            appState.connectedAddress = accounts[0];
+                            const provider = new ethers.BrowserProvider(window.ethereum);
+                            appState.signer = await provider.getSigner();
+                            log(`Existing wallet connection found: ${appState.connectedAddress}`, 'info');
+                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            setUIEnabled(true);
+                            updateWalletBalanceChart(ethers.formatEther(await provider.getBalance(appState.connectedAddress)));
+                            updateGasPriceDisplay(); // Initial gas price display
+                            // Start gas price update interval if not already running
+                            if (!appState.gasUpdateInterval) {
+                                appState.gasUpdateInterval = setInterval(updateGasPriceDisplay, 15000);
+                            }
+                        } else {
+                             ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                             log('No existing wallet connection found on startup.', 'info');
+                             setUIEnabled(false);
+                        }
+                    })
+                    .catch(error => {
+                        log(`Error checking existing wallet connection: ${error.message}`, 'error');
+                         ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
+                         setUIEnabled(false);
+                    });
+
+            } else {
+                ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://chromewebstore.google.com/detail/rabby-wallet/acmacodkjbdgmoleebolmdjonilkdbch" target="_blank" class="underline text-blue-500">Rabby Wallet</a>.`;
+                log('Rabby Wallet or compatible wallet not detected on startup.', 'error');
+                setUIEnabled(false);
+            }
+
+            log('Console initialized. Please connect your wallet to begin.');
+
+            // --- FOOTER FUNCTIONALITY ---
+            const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
+            const copyBtn = document.getElementById('copy-address-btn');
+            const copyIcon = document.getElementById('copy-icon');
+            const checkIcon = document.getElementById('check-icon');
+            checkIcon.classList.add('hidden'); // Ensure check icon is hidden initially
+            const showQrBtn = document.getElementById('show-qr-btn');
+            const qrModal = document.getElementById('qr-code-modal');
+            const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrAddressDisplay = document.getElementById('qr-address-display');
+
+            // Initialize QR Code once
+            if(typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeContainer, {
+                    text: donationAddressStr,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#2d3748",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                qrAddressDisplay.textContent = donationAddressStr;
+            } else {
+                console.error("QRCode library is not loaded.")
+                qrCodeContainer.innerHTML = "QR Code library failed to load. Please check your connection.";
+            }
+
+            // Copy to clipboard
+            copyBtn.addEventListener('click', () => {
+                copyToClipboard(donationAddressStr);
+                copyIcon.classList.add('hidden');
+                checkIcon.classList.remove('hidden');
+                setTimeout(() => {
+                    copyIcon.classList.remove('hidden');
+                    checkIcon.classList.add('hidden');
+                }, 2000);
+            });
+
+            // Show QR Modal
+            showQrBtn.addEventListener('click', () => {
+                qrModal.classList.remove('hidden');
+            });
+
+            // Close QR Modal logic
+            const closeQrModal = () => {
+                qrModal.classList.add('hidden');
+            }
+            closeQrModalBtn.addEventListener('click', closeQrModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
