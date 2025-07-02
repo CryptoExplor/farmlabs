@@ -165,7 +165,7 @@
         /* Modal Styles */
         .modal {
             position: fixed;
-            z-index: 100;
+            z-index: 100; /* Base z-index for modals */
             left: 0;
             top: 0;
             width: 100%;
@@ -176,6 +176,11 @@
             align-items: center;
             justify-content: center;
         }
+        /* Specific z-index for modal stacking */
+        #manual-tx-modal { z-index: 100; }
+        #confirmation-modal { z-index: 110; } /* Always above manual tx modal */
+        #gemini-modal { z-index: 120; } /* Always above confirmation modal */
+
         .modal-content {
             background-color: #fefefe;
             margin: auto;
@@ -402,6 +407,7 @@
                             <div id="wallet-status-display" class="text-center text-sm font-medium text-main">
                                 No wallet connected.
                             </div>
+                            <div class="text-sm text-accent">Gas Token: <span id="native-token-display">N/A</span></div>
                             <button id="start-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-primary wallet-feature-control" disabled>▶️ Start Interaction</button>
                             <button id="stop-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-danger wallet-feature-control" disabled>⏹️ Stop Interaction</button>
                             <button id="manual-tx-btn" class="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>✍️ Manual Transaction</button>
@@ -696,7 +702,7 @@ https://rpc.goerli.dev,5</textarea>
     </div>
     
     <!-- Gemini Explanation Modal -->
-    <div id="gemini-modal" class="modal hidden">
+    <div id="gemini-modal" class="modal hidden" style="z-index:120;">
         <div class="modal-content text-main">
             <span class="close-button">&times;</span>
             <h3 id="modal-title" class="text-xl font-bold mb-4">Gemini Explanation</h3>
@@ -708,7 +714,7 @@ https://rpc.goerli.dev,5</textarea>
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmation-modal" class="modal hidden">
+    <div id="confirmation-modal" class="modal hidden" style="z-index:110;">
         <div class="modal-content text-main">
             <span class="close-confirm-button">&times;</span>
             <h3 class="text-xl font-bold mb-4">Confirm Action</h3>
@@ -721,7 +727,7 @@ https://rpc.goerli.dev,5</textarea>
     </div>
 
     <!-- Manual Transaction Modal -->
-    <div id="manual-tx-modal" class="modal hidden">
+    <div id="manual-tx-modal" class="modal hidden" style="z-index:100;">
         <div class="modal-content text-main">
             <span class="close-button" id="manual-tx-close-btn">&times;</span>
             <h3 class="text-xl font-bold mb-4">Manual Transaction</h3>
@@ -771,6 +777,9 @@ https://rpc.goerli.dev,5</textarea>
                 pendingConfirmation: null, // Callback for confirmation modal
                 lastHumanLikeSpike: null, // To track the last "human-like" spike
                 gasUpdateInterval: null, // To store the interval ID for gas price updates
+                chainId: null, // Current connected chain ID
+                chainName: null, // Current connected chain name
+                nativeToken: null, // Current native token symbol (ETH, MATIC, BNB, etc.)
             };
 
             const ui = {
@@ -835,6 +844,7 @@ https://rpc.goerli.dev,5</textarea>
                 manualTxAmountInput: document.getElementById('manual-tx-amount'), // Manual tx amount input
                 manualTxSendBtn: document.getElementById('manual-tx-send-btn'), // Manual tx send button
                 manualTxCloseBtn: document.getElementById('manual-tx-close-btn'), // Manual tx close button
+                nativeTokenDisplay: document.getElementById('native-token-display'), // Native token display
             };
 
             // Function to enable/disable UI elements
@@ -1444,7 +1454,7 @@ https://rpc.goerli.dev,5</textarea>
                 };
 
                 try {
-                    log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}... Awaiting wallet confirmation.`, 'info');
+                    log(`Sending ${amount.toFixed(6)} ${appState.nativeToken} to ${recipientAddress}... Awaiting wallet confirmation.`, 'info');
                     const txResponse = await appState.signer.sendTransaction(tx);
                     log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
                     await txResponse.wait();
@@ -1466,7 +1476,7 @@ https://rpc.goerli.dev,5</textarea>
             const performBalanceCheck = async (provider, chainId) => {
                 try {
                     const currentBalanceWei = await provider.getBalance(appState.connectedAddress);
-                    log(`Connected wallet checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ETH`, 'info', { chainId, walletAddress: appState.connectedAddress, action: 'balance-check' });
+                    log(`Connected wallet checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ${appState.nativeToken}`, 'info', { chainId, walletAddress: appState.connectedAddress, action: 'balance-check' });
                     return true;
                 } catch (error) {
                     log(`Failed to check balance for connected wallet: ${error.message}`, 'error', { chainId, walletAddress: appState.connectedAddress, action: 'balance-check' });
@@ -1503,89 +1513,77 @@ https://rpc.goerli.dev,5</textarea>
                     log('Pre-scanning complete.', 'info');
                 }
 
-                while (appState.isRunning && !appState.stopFlag) {
-                    // Randomly select an RPC configuration for this session
+                for (let i = 0; i < appState.config.maxActionsPerSession; i++) {
+                    if (appState.stopFlag) break;
+
+                    // Randomly select an RPC configuration for this action
                     const rpcConfigIndex = Math.floor(Math.random() * appState.rpcConfigs.length);
                     const rpcConfig = appState.rpcConfigs[rpcConfigIndex];
                     const chainId = rpcConfig.chainId;
                     const rpcUrl = rpcConfig.url;
                     const provider = new ethers.BrowserProvider(window.ethereum);
 
-                    log(`🌐 Initiating session on Chain ID ${chainId} (${rpcUrl})...`, 'info');
+                    log(`🌐 Preparing action on Chain ID ${chainId} (${rpcUrl})...`, 'info');
 
                     const canProceed = await checkChainAndBalance(provider, chainId);
                     if (!canProceed) {
                         updateActionDistChart('skipped'); // Mark as skipped if chain/balance check fails
                         await sleep(Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
-                        continue; // Skip this session
+                        continue; // Skip this action and proceed to the next iteration
                     }
 
-                    const actionsForSession = Math.floor(Utils.getRandomInRange(1, appState.config.maxActionsPerSession + 1));
-                    log(`Connected wallet will perform ${actionsForSession} action(s) on Chain ID ${chainId}.`, 'info');
+                    const gasCheckPassed = await checkGasPrice(provider, chainId);
+                    if (!gasCheckPassed) {
+                        updateActionDistChart('skipped');
+                        await sleep(Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
+                        continue; // Skip this action and proceed to the next iteration
+                    }
+                    
+                    const chosenBehavior = chooseAction(appState.config.probabilities);
+                    log(`[Action ${i + 1}/${appState.config.maxActionsPerSession}] Chosen action: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress: appState.connectedAddress, action: chosenBehavior });
 
-                    for (let i = 1; i <= actionsForSession; i++) {
-                        if (appState.stopFlag) break;
+                    let actionSuccess = false;
+                    switch (chosenBehavior) {
+                        case "send":
+                            actionSuccess = await performSendAction(provider, chainId);
+                            break;
+                        case "idle-action":
+                            actionSuccess = await performIdleAction(chainId);
+                            break;
+                        case "balance-check":
+                            actionSuccess = await performBalanceCheck(provider, chainId);
+                            break;
+                    }
 
-                        appState.stats.totalActions++;
-                        ui.progressText.textContent = `${appState.stats.totalActions}`;
-                        ui.progressBar.style.width = `100%`; // This progress bar logic might need adjustment if it's per-session or overall
+                    if (actionSuccess) {
+                        appState.stats.successfulActions++;
+                    } else {
+                        appState.stats.failedActions++;
+                    }
+                    ui.successCount.textContent = appState.stats.successfulActions.toString();
+                    ui.failCount.textContent = appState.stats.failedActions.toString();
+                    updateActionDistChart(chosenBehavior);
 
-                        const gasCheckPassed = await checkGasPrice(provider, chainId);
-                        if (!gasCheckPassed) {
-                            updateActionDistChart('skipped');
-                            break; // Break from inner loop, will move to the next session
-                        }
-                        
-                        const chosenBehavior = chooseAction(appState.config.probabilities);
-                        log(`[Action ${i}/${actionsForSession}] Chosen action: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress: appState.connectedAddress, action: chosenBehavior });
+                    try {
+                        const newBalanceWei = await provider.getBalance(appState.connectedAddress);
+                        updateWalletBalanceChart(ethers.formatEther(newBalanceWei));
+                    } catch (balanceUpdateError) {
+                        log(`Failed to update balance for connected wallet: ${balanceUpdateError.message}`, 'warning');
+                    }
 
-                        let actionSuccess = false;
-                        switch (chosenBehavior) {
-                            case "send":
-                                actionSuccess = await performSendAction(provider, chainId);
-                                break;
-                            case "idle-action":
-                                actionSuccess = await performIdleAction(chainId);
-                                break;
-                            case "balance-check":
-                                actionSuccess = await performBalanceCheck(provider, chainId);
-                                break;
-                        }
+                    appState.stats.totalActions++;
+                    ui.progressText.textContent = `${appState.stats.totalActions}`;
+                    ui.progressBar.style.width = `${(appState.stats.totalActions / appState.config.maxActionsPerSession) * 100}%`;
 
-                        if (actionSuccess) {
-                            appState.stats.successfulActions++;
-                        } else {
-                            appState.stats.failedActions++;
-                        }
-                        ui.successCount.textContent = appState.stats.successfulActions.toString();
-                        ui.failCount.textContent = appState.stats.failedActions.toString();
-                        updateActionDistChart(chosenBehavior);
+                    if (i < appState.config.maxActionsPerSession - 1 && !appState.stopFlag) {
+                        const delayUsed = Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
+                        log(`Waiting for ${Math.round(delayUsed/1000)} seconds before next action...`, 'info', { delayUsedMs: delayUsed });
+                        appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
+                        ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
+                        await sleep(delayUsed);
+                    }
+                } // End of for loop
 
-                        try {
-                            const newBalanceWei = await provider.getBalance(appState.connectedAddress);
-                            updateWalletBalanceChart(ethers.formatEther(newBalanceWei));
-                        } catch (balanceUpdateError) {
-                            log(`Failed to update balance for connected wallet: ${balanceUpdateError.message}`, 'warning');
-                        }
-
-                        if (i < actionsForSession && !appState.stopFlag) {
-                            const delayUsed = Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
-                            log(`Waiting for ${Math.round(delayUsed/1000)} seconds before next action...`, 'info', { delayUsedMs: delayUsed });
-                            appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
-                            ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
-                            await sleep(delayUsed);
-                        }
-                    } // End of actionsForSession loop
-
-                    if (appState.stopFlag) break;
-
-                    // Log summary after each session
-                    log(`🔍 Session Summary: ${appState.stats.totalActions} total actions | ${appState.stats.successfulActions} successful | ${appState.stats.failedActions} failed`, 'info');
-
-                    const sessionDelay = Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
-                    log(`Session for connected wallet on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
-                    await sleep(sessionDelay);
-                } // End of while (appState.isRunning && !appState.stopFlag)
                 log('Interaction process finished.', 'success');
                 stopInteraction();
             };
@@ -1662,6 +1660,10 @@ https://rpc.goerli.dev,5</textarea>
                         appState.logEntries = [];
                         appState.lastHumanLikeSpike = null;
                         ui.humanSpikeDisplay.textContent = 'Never';
+                        appState.chainId = null;
+                        appState.chainName = null;
+                        appState.nativeToken = null;
+                        ui.nativeTokenDisplay.textContent = 'N/A';
 
                         // Reset config fields to initial values
                         ui.maxActionsPerSession.value = "3";
@@ -1802,7 +1804,11 @@ https://rpc.goerli.dev,5</textarea>
                         log('No accounts found. Please connect your wallet and select an account.', 'error');
                         appState.connectedAddress = null;
                         appState.signer = null;
+                        appState.chainId = null;
+                        appState.chainName = null;
+                        appState.nativeToken = null;
                         ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                        ui.nativeTokenDisplay.textContent = 'N/A';
                         setUIEnabled(false);
                         updateWalletBalanceChart(0);
                         return;
@@ -1810,8 +1816,19 @@ https://rpc.goerli.dev,5</textarea>
                     appState.connectedAddress = accounts[0];
                     const provider = new ethers.BrowserProvider(window.ethereum);
                     appState.signer = await provider.getSigner();
+
+                    const network = await provider.getNetwork();
+                    appState.chainId = Number(network.chainId);
+                    appState.chainName = network.name;
+                    appState.nativeToken = network.nativeCurrency?.symbol || "ETH"; // Fallback
+
                     log(`Wallet connected: ${appState.connectedAddress}`, 'success');
-                    ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                    ui.walletStatusDisplay.innerHTML = `
+                        Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong><br>
+                        Chain ID: <strong>${appState.chainId}</strong><br>
+                        Network: <strong>${appState.chainName}</strong>
+                    `;
+                    ui.nativeTokenDisplay.textContent = appState.nativeToken;
                     setUIEnabled(true);
                     updateWalletBalanceChart(ethers.formatEther(await provider.getBalance(appState.connectedAddress)));
                     updateGasPriceDisplay(); // Initial gas price display
@@ -1828,20 +1845,28 @@ https://rpc.goerli.dev,5</textarea>
                             log('Wallet disconnected or no accounts selected.', 'warning');
                             appState.connectedAddress = null;
                             appState.signer = null;
+                            appState.chainId = null;
+                            appState.chainName = null;
+                            appState.nativeToken = null;
                             ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                            ui.nativeTokenDisplay.textContent = 'N/A';
                             setUIEnabled(false);
                             updateWalletBalanceChart(0);
-                            if (appState.gasUpdateInterval) {
-                                clearInterval(appState.gasUpdateInterval);
-                                appState.gasUpdateInterval = null;
-                                ui.gasDisplay.textContent = 'N/A';
-                            }
                         } else if (appState.connectedAddress && newAccounts[0].toLowerCase() !== appState.connectedAddress.toLowerCase()) {
                             log(`Account changed to: ${newAccounts[0]}`, 'info');
                             appState.connectedAddress = newAccounts[0];
                             const newProvider = new ethers.BrowserProvider(window.ethereum);
                             appState.signer = await newProvider.getSigner();
-                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            const network = await newProvider.getNetwork();
+                            appState.chainId = Number(network.chainId);
+                            appState.chainName = network.name;
+                            appState.nativeToken = network.nativeCurrency?.symbol || "ETH";
+                            ui.walletStatusDisplay.innerHTML = `
+                                Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong><br>
+                                Chain ID: <strong>${appState.chainId}</strong><br>
+                                Network: <strong>${appState.chainName}</strong>
+                            `;
+                            ui.nativeTokenDisplay.textContent = appState.nativeToken;
                             setUIEnabled(true);
                             updateWalletBalanceChart(ethers.formatEther(await newProvider.getBalance(appState.connectedAddress)));
                             updateGasPriceDisplay();
@@ -1850,18 +1875,38 @@ https://rpc.goerli.dev,5</textarea>
                             appState.connectedAddress = newAccounts[0];
                             const newProvider = new ethers.BrowserProvider(window.ethereum);
                             appState.signer = await newProvider.getSigner();
-                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            const network = await newProvider.getNetwork();
+                            appState.chainId = Number(network.chainId);
+                            appState.chainName = network.name;
+                            appState.nativeToken = network.nativeCurrency?.symbol || "ETH";
+                            ui.walletStatusDisplay.innerHTML = `
+                                Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong><br>
+                                Chain ID: <strong>${appState.chainId}</strong><br>
+                                Network: <strong>${appState.chainName}</strong>
+                            `;
+                            ui.nativeTokenDisplay.textContent = appState.nativeToken;
                             setUIEnabled(true);
                             updateWalletBalanceChart(ethers.formatEther(await newProvider.getBalance(appState.connectedAddress)));
                             updateGasPriceDisplay();
                         }
                     });
 
-                    window.ethereum.on('chainChanged', async (chainId) => {
-                        log(`Network changed to Chain ID: ${parseInt(chainId, 16)}. Please ensure your RPC configurations match this network.`, 'warning');
+                    window.ethereum.on('chainChanged', async (chainIdHex) => {
+                        const chainId = parseInt(chainIdHex, 16);
+                        log(`Network changed to Chain ID: ${chainId}. Please ensure your RPC configurations match this network.`, 'warning');
                         if (appState.connectedAddress) {
                             const newProvider = new ethers.BrowserProvider(window.ethereum);
                             appState.signer = await newProvider.getSigner();
+                            const network = await newProvider.getNetwork();
+                            appState.chainId = Number(network.chainId);
+                            appState.chainName = network.name;
+                            appState.nativeToken = network.nativeCurrency?.symbol || "ETH";
+                            ui.walletStatusDisplay.innerHTML = `
+                                Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong><br>
+                                Chain ID: <strong>${appState.chainId}</strong><br>
+                                Network: <strong>${appState.chainName}</strong>
+                            `;
+                            ui.nativeTokenDisplay.textContent = appState.nativeToken;
                             updateWalletBalanceChart(ethers.formatEther(await newProvider.getBalance(appState.connectedAddress)));
                             updateGasPriceDisplay();
                         }
@@ -1871,7 +1916,11 @@ https://rpc.goerli.dev,5</textarea>
                         log(`Wallet disconnected: ${error.message || 'Unknown error'}`, 'error');
                         appState.connectedAddress = null;
                         appState.signer = null;
+                        appState.chainId = null;
+                        appState.chainName = null;
+                        appState.nativeToken = null;
                         ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                        ui.nativeTokenDisplay.textContent = 'N/A';
                         setUIEnabled(false);
                         updateWalletBalanceChart(0);
                         if (appState.gasUpdateInterval) {
@@ -1885,7 +1934,11 @@ https://rpc.goerli.dev,5</textarea>
                     log(`Wallet connection failed: ${error.message}`, 'error');
                     appState.connectedAddress = null;
                     appState.signer = null;
+                    appState.chainId = null;
+                    appState.chainName = null;
+                    appState.nativeToken = null;
                     ui.walletStatusDisplay.innerHTML = `Connection failed.`;
+                    ui.nativeTokenDisplay.textContent = 'N/A';
                     setUIEnabled(false);
                     updateWalletBalanceChart(0);
                 }
@@ -1909,7 +1962,7 @@ https://rpc.goerli.dev,5</textarea>
                     return;
                 }
 
-                openConfirmationModal(`Are you sure you want to send ${amount} ETH to ${recipient}? This will prompt your connected wallet for confirmation.`, async (confirmed) => {
+                openConfirmationModal(`Are you sure you want to send ${amount} ${appState.nativeToken} to ${recipient}? This will prompt your connected wallet for confirmation.`, async (confirmed) => {
                     if (!confirmed) {
                         log('Manual transaction cancelled by user.', 'info');
                         return;
@@ -1921,7 +1974,7 @@ https://rpc.goerli.dev,5</textarea>
                             value: ethers.parseEther(amount.toFixed(12))
                         };
 
-                        log(`Sending manual transaction: ${amount} ETH to ${recipient}... Awaiting wallet confirmation.`, 'info');
+                        log(`Sending manual transaction: ${amount} ${appState.nativeToken} to ${recipient}... Awaiting wallet confirmation.`, 'info');
                         const txResponse = await appState.signer.sendTransaction(tx);
                         log(`Manual Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { walletAddress: appState.connectedAddress, action: 'manual_send' });
                         await txResponse.wait();
@@ -2018,8 +2071,19 @@ https://rpc.goerli.dev,5</textarea>
                             appState.connectedAddress = accounts[0];
                             const provider = new ethers.BrowserProvider(window.ethereum);
                             appState.signer = await provider.getSigner();
+
+                            const network = await provider.getNetwork();
+                            appState.chainId = Number(network.chainId);
+                            appState.chainName = network.name;
+                            appState.nativeToken = network.nativeCurrency?.symbol || "ETH";
+
                             log(`Existing wallet connection found: ${appState.connectedAddress}`, 'info');
-                            ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
+                            ui.walletStatusDisplay.innerHTML = `
+                                Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong><br>
+                                Chain ID: <strong>${appState.chainId}</strong><br>
+                                Network: <strong>${appState.chainName}</strong>
+                            `;
+                            ui.nativeTokenDisplay.textContent = appState.nativeToken;
                             setUIEnabled(true);
                             updateWalletBalanceChart(ethers.formatEther(await provider.getBalance(appState.connectedAddress)));
                             updateGasPriceDisplay(); // Initial gas price display
@@ -2029,6 +2093,7 @@ https://rpc.goerli.dev,5</textarea>
                             }
                         } else {
                              ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
+                             ui.nativeTokenDisplay.textContent = 'N/A';
                              log('No existing wallet connection found on startup.', 'info');
                              setUIEnabled(false);
                         }
@@ -2036,6 +2101,7 @@ https://rpc.goerli.dev,5</textarea>
                     .catch(error => {
                         log(`Error checking existing wallet connection: ${error.message}`, 'error');
                          ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
+                         ui.nativeTokenDisplay.textContent = 'N/A';
                          setUIEnabled(false);
                     });
 
