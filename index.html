@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmLabs - Automate Your Blockchain Interactions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Using Tailwind's theme for consistency */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb; /* bg-primary from advance.html */
+            color: #2d3748; /* text-main from advance.html */
+        }
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://placehold.co/1920x1080/2d3748/f4f1eb?text=FarmLabs');
+            background-size: cover;
+            background-position: center;
+        }
+        .modal {
+            display: none; /* Hidden by default */
+        }
+        .modal.flex {
+            display: flex;
+        }
+        .typed-cursor {
+            color: #3b82f6; /* Blue-500 */
+        }
+    </style>
+</head>
+<body class="text-main">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <img loading="lazy" src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-10 w-10 mr-3 rounded-full">
+                <h1 class="text-2xl font-bold text-gray-800">FarmLabs</h1>
+            </div>
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="home.html" class="text-gray-600 hover:text-blue-500 font-semibold">Home</a>
+                <a href="basic.html" class="text-gray-600 hover:text-blue-500 font-semibold">Basic Console</a>
+                <a href="advance.html" class="text-gray-600 hover:text-blue-500 font-semibold">Advanced Console</a>
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500 font-semibold">Blog</a>
+            </nav>
+            <div class="hidden md:flex items-center">
+                 <a href="basic.html" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-full font-bold transition-colors">Launch App</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-500 focus:outline-none">
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <a href="home.html" class="block px-6 py-3 text-gray-600 hover:bg-gray-100 font-semibold">Home</a>
+            <a href="basic.html" class="block px-6 py-3 text-gray-600 hover:bg-gray-100 font-semibold">Basic Console</a>
+            <a href="advance.html" class="block px-6 py-3 text-gray-600 hover:bg-gray-100 font-semibold">Advanced Console</a>
+            <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="block px-6 py-3 text-gray-600 hover:bg-gray-100 font-semibold">Blog</a>
+            <div class="px-6 py-4">
+                <a href="basic.html" class="bg-blue-500 hover:bg-blue-600 text-white w-full block text-center px-6 py-2 rounded-full font-bold transition-colors">Launch App</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white py-20 md:py-32">
+        <div class="container mx-auto text-center px-6">
+            <h2 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Farm <span id="typed-output"></span>, Not Harder</h2>
+            <p class="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl mx-auto">An advanced, interactive console for automating your blockchain interactions with human-like stealth and precision.</p>
+            <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="basic.html" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-bold transition-colors w-full sm:w-auto">Go to Basic Console</a>
+                <a href="#features" class="bg-white text-blue-500 border border-blue-500 hover:bg-blue-50 px-8 py-3 rounded-full text-lg font-bold transition-colors w-full sm:w-auto">Learn More</a>
+            </div>
+            <p class="mt-8 text-sm text-gray-300"><i class="fas fa-lock mr-2"></i>Client-side processing ensures your private keys never leave your browser. Safe for testnets.</p>
+        </div>
+    </section>
+
+    <!-- How it Works Section -->
+    <section id="how-it-works" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl font-bold text-gray-800">Get Started in 3 Easy Steps</h3>
+                <p class="text-gray-600 mt-2">Launch the console and start automating in minutes.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="p-4">
+                    <div class="flex items-center justify-center h-20 w-20 mx-auto mb-6 bg-blue-100 text-blue-500 rounded-full text-3xl">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">1. Connect Wallet</h4>
+                    <p class="text-gray-600">Connect your Web3 wallet (e.g., MetaMask) to enable the console.</p>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-center h-20 w-20 mx-auto mb-6 bg-blue-100 text-blue-500 rounded-full text-3xl">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">2. Configure Profile</h4>
+                    <p class="text-gray-600">Load your keys, set delays, gas fees, and choose your stealth profile.</p>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-center h-20 w-20 mx-auto mb-6 bg-blue-100 text-blue-500 rounded-full text-3xl">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">3. Launch Console</h4>
+                    <p class="text-gray-600">Start the script and monitor all activity from the live dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl font-bold text-gray-800">Powerful Features at Your Fingertips</h3>
+                <p class="text-gray-600 mt-2">Everything you need to manage complex blockchain tasks efficiently.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <i class="fas fa-cogs text-4xl text-blue-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2">Advanced Configuration</h4>
+                    <p class="text-gray-600">Fine-tune every aspect of your script, from gas fees and transaction delays to human-like behavior simulation.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <i class="fas fa-tachometer-alt text-4xl text-blue-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2">Live Dashboard</h4>
+                    <p class="text-gray-600">Monitor your wallets, track performance, and view real-time logs and analytics all in one place.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <i class="fas fa-shield-alt text-4xl text-blue-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2">Security First</h4>
+                    <p class="text-gray-600">Client-side processing ensures your private keys never leave your browser. Use with testnets for full peace of mind.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl font-bold text-gray-800">Choose Your Console</h3>
+                <p class="text-gray-600 mt-2">We offer two powerful options to fit your needs.</p>
+            </div>
+            <div class="flex flex-col md:flex-row justify-center gap-8">
+                <!-- Basic Console Card -->
+                <div class="w-full md:w-1/3 bg-gray-50 p-8 rounded-lg shadow-lg border-2 border-transparent">
+                    <h4 class="text-2xl font-bold mb-4 text-center">✅ Basic</h4>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Quick Setup</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Simple Interface</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Ideal for Beginners</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Core Automation</li>
+                    </ul>
+                    <a href="basic.html" class="mt-8 block w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-full font-bold transition-colors">Launch Basic</a>
+                </div>
+                <!-- Advanced Console Card -->
+                <div class="w-full md:w-1/3 bg-blue-50 p-8 rounded-lg shadow-2xl border-2 border-blue-500">
+                    <h4 class="text-2xl font-bold mb-4 text-center">🧠 Advanced</h4>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Stealth Profiles</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Live Analytics & Charts</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Human-like Behavior</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Full Customization</li>
+                    </ul>
+                    <a href="advance.html" class="mt-8 block w-full text-center bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-bold transition-colors">Launch Advanced</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl font-bold text-gray-800">What Users Are Saying</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <p class="text-gray-600 italic mb-4">"Used this on 10 testnets, 0 bans. The stealth features are a game-changer. Love it!"</p>
+                    <div class="flex items-center">
+                        <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=A" class="h-10 w-10 rounded-full mr-4" alt="User Avatar">
+                        <div>
+                            <p class="font-bold">Alex_Crypto</p>
+                            <p class="text-sm text-gray-500">Airdrop Hunter</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <p class="text-gray-600 italic mb-4">"The advanced console saved me hours of manual work. The real-time dashboard is incredibly useful for tracking everything."</p>
+                    <div class="flex items-center">
+                        <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=J" class="h-10 w-10 rounded-full mr-4" alt="User Avatar">
+                        <div>
+                            <p class="font-bold">Jane_DeFi</p>
+                            <p class="text-sm text-gray-500">Testnet Farmer</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- UNIFIED DARK FOOTER -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-2xl font-bold mb-2">We Grow Together!</h3>
+            <p class="mb-4 max-w-2xl mx-auto text-gray-300">
+                Your contributions help keep this project alive, ad-free, and continuously improving. Consider supporting our development efforts by donating.
+            </p>
+            <div class="flex items-center justify-center bg-gray-700 p-3 rounded-lg max-w-md mx-auto mb-6 shadow-md">
+                <span id="donation-address" class="text-sm md:text-base text-white font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-600 transition-colors" title="Copy Address">
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-400" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-600 transition-colors" title="Show QR Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                        <path d="M2 2h2v2H2V2Z"/>
+                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                        <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                    </svg>
+                </button>
+            </div>
+             <p class="text-sm text-gray-400 mt-8">
+                &copy; 2025 FarmLabs. All rights reserved.
+            </p>
+            <div class="flex items-center justify-center mt-4 space-x-6">
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Blog">
+                    <i class="fab fa-blogger fa-lg"></i>
+                </a>
+                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Telegram">
+                    <i class="fab fa-telegram fa-lg"></i>
+                </a>
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="GitHub">
+                    <i class="fab fa-github fa-lg"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    <div id="qr-code-modal" class="modal fixed z-100 left-0 top-0 w-full h-full overflow-auto bg-black bg-opacity-40 items-center justify-center">
+        <div class="modal-content bg-white text-gray-800 flex flex-col items-center text-center p-5 border border-gray-300 max-w-sm mx-auto rounded-lg shadow-lg relative">
+            <span class="close-qr-button self-end text-gray-400 text-3xl font-bold cursor-pointer hover:text-black">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
+            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
+            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Mobile Menu Toggle ---
+            // This script finds the hamburger button and the mobile menu by their IDs.
+            // When the button is clicked, it toggles the 'hidden' class on the menu, making it appear or disappear.
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // --- Typed.js Hero Animation ---
+            if (typeof Typed !== 'undefined') {
+                new Typed('#typed-output', {
+                    strings: ['Smarter', 'Stealthier', 'Profitable'],
+                    typeSpeed: 70,
+                    backSpeed: 50,
+                    backDelay: 1500,
+                    loop: true,
+                    smartBackspace: true,
+                });
+            } else {
+                document.getElementById('typed-output').textContent = 'Smarter';
+            }
+
+            // --- Footer & Modal Functionality ---
+            const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
+            const copyBtn = document.getElementById('copy-address-btn');
+            const copyIcon = document.getElementById('copy-icon');
+            const checkIcon = document.getElementById('check-icon');
+            const showQrBtn = document.getElementById('show-qr-btn');
+            const qrModal = document.getElementById('qr-code-modal');
+            const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrAddressDisplay = document.getElementById('qr-address-display');
+
+            // --- Copy to Clipboard Functionality ---
+            copyBtn.addEventListener('click', () => {
+                // Using a temporary textarea for broader browser support in iframes
+                const textArea = document.createElement("textarea");
+                textArea.value = donationAddressStr;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    copyIcon.classList.add('hidden');
+                    checkIcon.classList.remove('hidden');
+                    setTimeout(() => {
+                        copyIcon.classList.remove('hidden');
+                        checkIcon.classList.add('hidden');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+                document.body.removeChild(textArea);
+            });
+
+            // --- QR Code Modal Functionality ---
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeContainer, {
+                    text: donationAddressStr,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#2d3748",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                qrAddressDisplay.textContent = donationAddressStr;
+            } else {
+                console.error("QRCode library is not loaded.");
+                qrCodeContainer.innerHTML = "QR Code library failed to load.";
+            }
+
+            showQrBtn.addEventListener('click', () => {
+                qrModal.classList.add('flex');
+            });
+
+            const closeQrModal = () => {
+                qrModal.classList.remove('flex');
+            }
+            closeQrModalBtn.addEventListener('click', closeQrModal);
+            
+            window.addEventListener('click', (event) => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
