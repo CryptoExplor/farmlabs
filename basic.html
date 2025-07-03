@@ -280,7 +280,6 @@
         /* Modal Styles */
         .modal {
             position: fixed;
-            z-index: 100;
             left: 0;
             top: 0;
             width: 100%;
@@ -889,7 +888,7 @@ https://rpc.goerli.dev,5</textarea>
     </div>
     
     <!-- Gemini Explanation Modal -->
-    <div id="gemini-modal" class="modal hidden">
+    <div id="gemini-modal" class="modal hidden" style="z-index:120;">
         <div class="modal-content text-main">
             <span class="close-button">&times;</span>
             <h3 id="modal-title" class="text-xl font-bold mb-4">Gemini Explanation</h3>
@@ -902,7 +901,7 @@ https://rpc.goerli.dev,5</textarea>
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmation-modal" class="modal hidden">
+    <div id="confirmation-modal" class="modal hidden" style="z-index:110;">
         <div class="modal-content text-main">
             <span class="close-confirm-button">&times;</span>
             <h3 class="text-xl font-bold mb-4">Confirm Action</h3>
@@ -915,7 +914,7 @@ https://rpc.goerli.dev,5</textarea>
     </div>
 
     <!-- Manual Transaction Modal -->
-    <div id="manual-tx-modal" class="modal hidden">
+    <div id="manual-tx-modal" class="modal hidden" style="z-index:100;">
         <div class="modal-content text-main">
             <span class="close-button" id="manual-tx-close-btn">&times;</span>
             <h3 class="text-xl font-bold mb-4">Manual Transaction</h3>
@@ -1600,20 +1599,21 @@ https://rpc.goerli.dev,5</textarea>
                         if (currentGasPriceBigInt > thresholdGasPrice) {
                             isSpiked = 'Yes';
                         }
-                    } else if (feeData.maxFeePerGas) {
-                        const currentMaxFeeBigInt = feeData.maxFeePerGas;
+                    } else if (maxFeePerGas) {
+                        const currentMaxFeeBigInt = maxFeePerGas;
                         const thresholdMaxFee = (currentMaxFeeBigInt * BigInt(Math.round(appState.config.gasMultiplier * 100))) / BigInt(100);
                         if (currentMaxFeeBigInt > thresholdMaxFee) {
                             isSpiked = 'Yes';
                         }
                     }
-
-                    ui.gasBaseFee.textContent = baseFee;
-                    ui.gasPriorityFee.textContent = priorityFee;
-                    ui.gasTotal.textContent = totalGas;
                     ui.gasSpiked.textContent = isSpiked;
-                    ui.gasDetails.classList.remove('hidden'); // Ensure details are visible
-                } catch (error) {
+
+                    if (isSpiked === 'Yes') {
+                        log(`Gas price (${totalGas} Gwei) is too high. Skipping action.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
+                        showToast(`Gas price too high (${totalGas} Gwei). Skipping action.`, 'warning');
+                        return false;
+                    }
+                } catch (gasError) {
                     ui.gasDisplay.textContent = 'Error';
                     ui.gasBaseFee.textContent = 'Error';
                     ui.gasPriorityFee.textContent = 'Error';
@@ -1622,6 +1622,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.gasDetails.classList.remove('hidden'); // Still show details with error states
                     console.error("Failed to fetch gas price:", error);
                 }
+                return true;
             };
 
             const testRpcConnections = async () => {
@@ -2211,8 +2212,8 @@ https://rpc.goerli.dev,5</textarea>
                     ui.chainName.textContent = chainInfo.name;
                     ui.chainSymbol.textContent = chainInfo.symbol;
                     ui.chainId.textContent = chainId;
-                    // Safely get RPC URL
-                    ui.chainRpc.textContent = provider?.connection?.url || 'N/A';
+                    // Safely get RPC URL from provider or window.ethereum
+                    ui.chainRpc.textContent = provider?.connection?.url || window.ethereum?.rpcUrl || 'N/A';
                     ui.chainExplorer.textContent = chainInfo.explorer;
                     ui.chainExplorer.href = chainInfo.explorer;
                     ui.connectedChainDetails.classList.remove('hidden');
