@@ -493,6 +493,52 @@
         .toast.warning { background-color: #f59e0b; } /* Orange */
         .toast.error { background-color: #ef4444; } /* Red */
 
+        /* Dropdown for download log */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        html.dark .dropdown-content {
+            background-color: #2d3748;
+        }
+
+        .dropdown-content button {
+            color: #2d3748;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        html.dark .dropdown-content button {
+            color: #e2e8f0;
+        }
+
+        .dropdown-content button:hover {
+            background-color: #f1f1f1;
+        }
+        html.dark .dropdown-content button:hover {
+            background-color: #4a5568;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
@@ -834,19 +880,16 @@ https://rpc.goerli.dev,5</textarea>
                     </div>
                     <div class="flex flex-wrap gap-4">
                         <!-- Log Export Selector -->
-                        <div class="relative inline-block text-left">
+                        <div class="dropdown">
                             <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>
-                                ⬇️ Download Log <i class="fas fa-caret-down ml-2"></i>
-                            </button>
-                            <div id="download-log-dropdown" class="origin-top-right absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 hidden">
-                                <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="download-log-btn">
-                                    <a href="#" id="download-csv-btn" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">CSV</a>
-                                    <a href="#" id="download-json-btn" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">JSON</a>
-                                </div>
+                                ⬇️ Download Log</button>
+                            <div class="dropdown-content">
+                                <button id="download-csv-btn">Download CSV</button>
+                                <button id="download-json-btn">Download JSON</button>
                             </div>
                         </div>
+                        <button id="clear-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear Log</button>
                         <button id="summarize-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Summarize Log</button>
-                        <button id="clear-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🧹 Clear Log</button>
                     </div>
                 </section>
             </div><!-- End script-console-content -->
@@ -1476,6 +1519,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.modalTitle.textContent = "API Key Required";
                     ui.modalContent.innerHTML = `<p class="text-red-500">${errorMessage}</p>`;
                     log(errorMessage, 'error');
+                    showToast(errorMessage, 'error');
                     return;
                 }
 
@@ -1531,8 +1575,10 @@ https://rpc.goerli.dev,5</textarea>
                 ui.listAddressesCount.textContent = `Loaded ${validAddresses.length} valid addresses. ${invalidCount > 0 ? `(${invalidCount} invalid ignored)` : ''}`;
                 if (validAddresses.length > 0) {
                     log(`Successfully loaded ${validAddresses.length} recipient addresses from list.`, 'success');
+                    showToast(`Loaded ${validAddresses.length} addresses.`, 'success');
                 } else {
                     log('No valid addresses loaded from list.', 'warning');
+                    showToast('No valid addresses loaded.', 'warning');
                 }
             };
 
@@ -1544,6 +1590,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.predefinedAddressesCount.textContent = '';
                     appState.predefinedRecipientList = [];
                     updatePredefinedAddressesDisplay();
+                    showToast('No file selected.', 'warning');
                     return;
                 }
 
@@ -1571,8 +1618,10 @@ https://rpc.goerli.dev,5</textarea>
                     ui.predefinedAddressesCount.textContent = `List contains ${validAddresses.length} valid addresses. ${invalidCount > 0 ? `(${invalidCount} invalid ignored)` : ''}`;
                     if (validAddresses.length > 0) {
                         log(`Successfully loaded ${validAddresses.length} addresses from "${file.name}".`, 'success');
+                        showToast(`Loaded ${validAddresses.length} addresses from file.`, 'success');
                     } else {
                         log(`No valid addresses found in "${file.name}".`, 'warning');
+                        showToast(`No valid addresses found in file.`, 'warning');
                     }
                     updatePredefinedAddressesDisplay();
                 };
@@ -1583,6 +1632,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.predefinedAddressesCount.textContent = '';
                     appState.predefinedRecipientList = [];
                     updatePredefinedAddressesDisplay();
+                    showToast('Error reading file.', 'error');
                 };
 
                 reader.readAsText(file);
@@ -1801,14 +1851,14 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 } else if (appState.config.recipientMode === 'list') {
                     if (appState.manualRecipientList.length === 0) {
-                        log(`Recipient list is empty. Skipping send.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                        log(`Recipient list is empty. Skipping send for wallet.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
                         return false;
                     }
                     recipientAddress = appState.manualRecipientList[Math.floor(Math.random() * appState.manualRecipientList.length)];
                 }
                 else if (appState.config.recipientMode === 'predefined') {
                     if (appState.predefinedRecipientList.length === 0) {
-                        log(`Predefined recipient list is empty. Skipping send.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
+                        log(`Predefined recipient list is empty. Skipping send for wallet.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'send' });
                         return false;
                     }
                     recipientAddress = appState.predefinedRecipientList[Math.floor(Math.random() * appState.predefinedRecipientList.length)];
@@ -2454,24 +2504,26 @@ https://rpc.goerli.dev,5</textarea>
                 ui.clearAllDataBtn.addEventListener('click', clearAllData);
                 ui.testRpcBtn.addEventListener('click', testRpcConnections);
                 
+                // Download Log Dropdown
                 ui.downloadLogBtn.addEventListener('click', (event) => {
-                    event.stopPropagation();
+                    event.stopPropagation(); // Prevent document click from closing it immediately
                     ui.downloadLogDropdown.classList.toggle('hidden');
                 });
                 document.addEventListener('click', (event) => {
+                    // Close dropdown if click outside
                     if (!ui.downloadLogDropdown.contains(event.target) && !ui.downloadLogBtn.contains(event.target)) {
                         ui.downloadLogDropdown.classList.add('hidden');
                     }
                 });
                 ui.downloadCsvBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
+                    e.preventDefault(); // Prevent default link behavior
                     downloadLog('csv');
-                    ui.downloadLogDropdown.classList.add('hidden');
+                    ui.downloadLogDropdown.classList.add('hidden'); // Close dropdown after selection
                 });
                 ui.downloadJsonBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
+                    e.preventDefault(); // Prevent default link behavior
                     downloadLog('json');
-                    ui.downloadLogDropdown.classList.add('hidden');
+                    ui.downloadLogDropdown.classList.add('hidden'); // Close dropdown after selection
                 });
 
                 ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog);
