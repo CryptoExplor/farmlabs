@@ -2391,10 +2391,15 @@ https://rpc.goerli.dev,5</textarea>
                     return;
                 }
 
+                // Temporarily hide the manual transaction modal before showing confirmation
+                // This ensures the confirmation modal is always on top and clear.
+                ui.manualTxModal.classList.add('hidden');
+
                 openConfirmationModal(`Are you sure you want to send ${amount} ETH to ${recipient}? This will prompt your connected wallet for confirmation.`, async (confirmed) => {
                     if (!confirmed) {
                         log('Manual transaction cancelled by user.', 'info');
                         showToast('Manual transaction cancelled.', 'info');
+                        ui.manualTxModal.classList.remove('hidden'); // Show manual tx modal again if cancelled
                         return;
                     }
 
@@ -2405,10 +2410,8 @@ https://rpc.goerli.dev,5</textarea>
                         };
 
                         log(`Sending manual transaction: ${amount} ETH to ${recipient}... Awaiting wallet confirmation.`, 'info');
-                        // Show toast notification if confirmation modal is open
-                        if (!ui.manualTxModal.classList.contains('hidden')) {
-                            showToast('Wallet confirmation is pending behind the manual transaction modal.', 'warning');
-                        }
+                        // The toast notification about wallet confirmation being behind a modal is now less relevant
+                        // since the manualTxModal is hidden. The wallet itself will pop up.
                         const txResponse = await appState.signer.sendTransaction(tx);
                         log(`Manual Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { walletAddress: appState.connectedAddress, action: 'manual_send' });
                         await txResponse.wait();
@@ -2424,7 +2427,9 @@ https://rpc.goerli.dev,5</textarea>
                         log(`Manual transaction failed: ${error.message}`, 'error', { walletAddress: appState.connectedAddress, action: 'manual_send' });
                         showToast(`Manual transaction failed: ${error.message}`, 'error');
                     } finally {
-                        ui.manualTxModal.classList.add('hidden'); // Close modal after attempt
+                        // The manual transaction modal should remain hidden after the transaction attempt
+                        // (whether successful or failed), as the user has completed the input for it.
+                        // It will be re-opened if the user clicks the "Manual Transaction" button again.
                     }
                 });
             };
