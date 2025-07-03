@@ -417,7 +417,7 @@
             margin-left: 0.75rem;
         }
 
-        /* Submenu styles (removed for basic.html, but keeping for general styling consistency) */
+        /* Submenu styles */
         .submenu {
             max-height: 0;
             overflow: hidden;
@@ -510,8 +510,20 @@
         <nav class="flex flex-col mt-4">
             <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
             
-            <!-- Basic Console -->
-            <a href="basic.html" class="nav-link active"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
+            <!-- Basic Console Submenu -->
+            <div>
+                <div id="basic-console-toggle" class="submenu-toggle active">
+                    <i class="fas fa-terminal"></i>
+                    <span class="nav-text">Basic Console</span>
+                    <i class="fas fa-chevron-down text-xs nav-text"></i>
+                </div>
+                <div id="basic-console-submenu" class="submenu open">
+                    <a href="#dashboard" class="nav-link"><i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span></a>
+                    <a href="#recipient-settings" class="nav-link"><i class="fas fa-users"></i><span class="nav-text">Recipients</span></a>
+                    <a href="#config" class="nav-link"><i class="fas fa-cogs"></i><span class="nav-text">Configuration</span></a>
+                    <a href="#log" class="nav-link"><i class="fas fa-stream"></i><span class="nav-text">Live Log</span></a>
+                </div>
+            </div>
 
             <!-- Advanced Console (now a direct link) -->
             <a href="advance.html" class="nav-link"><i class="fas fa-tools"></i><span class="nav-text">Advanced Console</span></a>
@@ -738,6 +750,15 @@
                             </label>
                             <input type="number" id="block-lookback" value="100" min="10" max="1000" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:focus:border-blue-500 transition wallet-feature-control" disabled>
                             <p class="text-sm text-gray-500 mt-1">Number of recent blocks to scan for new recipient addresses (for 'Dynamic Pool' mode).</p>
+                        </div>
+                        
+                        <!-- Gemini API Key Input -->
+                        <div>
+                            <label for="gemini-api-key" class="block font-medium mb-1 text-accent">Gemini API Key
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Enter your Google AI Studio API key to use the 'Explain' and 'Summarize' features.</span></span>
+                            </label>
+                            <input type="password" id="gemini-api-key" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" placeholder="Enter your Gemini API Key" disabled>
+                             <p class="text-sm text-gray-500 mt-1">This key is used for AI-powered explanations and summaries.</p>
                         </div>
 
                         <!-- Transaction Amount Range (spans 2 columns on medium screens and up) -->
@@ -985,16 +1006,16 @@ https://rpc.goerli.dev,5</textarea>
             const ui = {
                 connectWalletBtn: document.getElementById('connect-wallet-btn'),
                 walletStatusDisplay: document.getElementById('wallet-status-display'),
-                connectedChainDetails: document.getElementById('connected-chain-details'), // New
-                chainName: document.getElementById('chain-name'), // New
-                chainSymbol: document.getElementById('chain-symbol'), // New
-                chainId: document.getElementById('chain-id'), // New
-                chainRpc: document.getElementById('chain-rpc'), // New
-                chainExplorer: document.getElementById('chain-explorer'), // New
+                connectedChainDetails: document.getElementById('connected-chain-details'),
+                chainName: document.getElementById('chain-name'),
+                chainSymbol: document.getElementById('chain-symbol'),
+                chainId: document.getElementById('chain-id'),
+                chainRpc: document.getElementById('chain-rpc'),
+                chainExplorer: document.getElementById('chain-explorer'),
                 walletFeatureControls: document.querySelectorAll('.wallet-feature-control'),
                 startBtn: document.getElementById('start-btn'),
                 stopBtn: document.getElementById('stop-btn'),
-                manualTxBtn: document.getElementById('manual-tx-btn'), // New manual tx button
+                manualTxBtn: document.getElementById('manual-tx-btn'),
                 clearAllDataBtn: document.getElementById('clear-all-data-btn'),
                 maxActionsPerSession: document.getElementById('max-actions-per-session'),
                 minAmount: document.getElementById('min-amount'),
@@ -1005,6 +1026,7 @@ https://rpc.goerli.dev,5</textarea>
                 blockLookback: document.getElementById('block-lookback'),
                 rpcUrls: document.getElementById('rpc-urls'),
                 testRpcBtn: document.getElementById('test-rpc-btn'),
+                geminiApiKey: document.getElementById('gemini-api-key'), // New UI element for Gemini Key
                 probSend: document.getElementById('prob-send'),
                 probIdleAction: document.getElementById('prob-idle-action'),
                 probBalanceCheck: document.getElementById('prob-balance-check'),
@@ -1024,28 +1046,28 @@ https://rpc.goerli.dev,5</textarea>
                 predefinedAddressesCount: document.getElementById('predefined-addresses-count'),
                 liveLog: document.getElementById('live-log'),
                 downloadLogBtn: document.getElementById('download-log-btn'),
-                downloadLogDropdown: document.getElementById('download-log-dropdown'), // New
-                downloadCsvBtn: document.getElementById('download-csv-btn'), // New
-                downloadJsonBtn: document.getElementById('download-json-btn'), // New
+                downloadLogDropdown: document.getElementById('download-log-dropdown'),
+                downloadCsvBtn: document.getElementById('download-csv-btn'),
+                downloadJsonBtn: document.getElementById('download-json-btn'),
                 summarizeLogBtn: document.getElementById('summarize-log-btn'),
-                clearLogBtn: document.getElementById('clear-log-btn'), // New
+                clearLogBtn: document.getElementById('clear-log-btn'),
                 progressBar: document.getElementById('progress-bar'),
                 progressText: document.getElementById('progress-text'),
                 statusDisplay: document.getElementById('status-display'),
                 successCount: document.getElementById('success-count'),
                 failCount: document.getElementById('fail-count'),
                 gasDisplay: document.getElementById('gas-display'),
-                gasDetails: document.getElementById('gas-details'), // New
-                gasBaseFee: document.getElementById('gas-base-fee'), // New
-                gasPriorityFee: document.getElementById('gas-priority-fee'), // New
-                gasTotal: document.getElementById('gas-total'), // New
-                gasSpiked: document.getElementById('gas-spiked'), // New
+                gasDetails: document.getElementById('gas-details'),
+                gasBaseFee: document.getElementById('gas-base-fee'),
+                gasPriorityFee: document.getElementById('gas-priority-fee'),
+                gasTotal: document.getElementById('gas-total'),
+                gasSpiked: document.getElementById('gas-spiked'),
                 walletBalanceChartCanvas: document.getElementById('wallet-balance-chart'),
                 actionDistChartCanvas: document.getElementById('action-dist-chart'),
                 explainSendTxBtn: document.getElementById('explain-send-tx-btn'),
                 geminiModal: document.getElementById('gemini-modal'),
                 modalTitle: document.getElementById('modal-title'),
-                modalPromptDisplay: document.getElementById('modal-prompt-display'), // New
+                modalPromptDisplay: document.getElementById('modal-prompt-display'),
                 modalContent: document.getElementById('modal-content'),
                 closeModalBtn: document.querySelector('#gemini-modal .close-button'),
                 confirmationModal: document.getElementById('confirmation-modal'),
@@ -1054,13 +1076,16 @@ https://rpc.goerli.dev,5</textarea>
                 cancelConfirmBtn: document.getElementById('cancel-confirm-btn'),
                 closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
                 humanSpikeDisplay: document.getElementById('human-spike-display'),
-                darkToggleBtn: document.getElementById('dark-toggle'), // New dark mode toggle button
-                manualTxModal: document.getElementById('manual-tx-modal'), // Manual transaction modal
-                manualTxRecipientInput: document.getElementById('manual-tx-recipient'), // Manual tx recipient input
-                manualTxAmountInput: document.getElementById('manual-tx-amount'), // Manual tx amount input
-                manualTxSendBtn: document.getElementById('manual-tx-send-btn'), // Manual tx send button
-                manualTxCloseBtn: document.getElementById('manual-tx-close-btn'), // Manual tx close button
-                toastContainer: document.getElementById('toast-container'), // New
+                darkToggleBtn: document.getElementById('dark-toggle'),
+                manualTxModal: document.getElementById('manual-tx-modal'),
+                manualTxRecipientInput: document.getElementById('manual-tx-recipient'),
+                manualTxAmountInput: document.getElementById('manual-tx-amount'),
+                manualTxSendBtn: document.getElementById('manual-tx-send-btn'),
+                manualTxCloseBtn: document.getElementById('manual-tx-close-btn'),
+                toastContainer: document.getElementById('toast-container'),
+                // Sidebar navigation elements
+                basicConsoleToggle: document.getElementById('basic-console-toggle'),
+                basicConsoleSubmenu: document.getElementById('basic-console-submenu'),
             };
 
             // Function to show toast notifications
@@ -1286,6 +1311,7 @@ https://rpc.goerli.dev,5</textarea>
                     gasMultiplier: ui.gasMultiplier.value,
                     blockLookback: ui.blockLookback.value,
                     rpcUrls: ui.rpcUrls.value,
+                    geminiApiKey: ui.geminiApiKey.value, // Save Gemini Key
                     probSend: ui.probSend.value,
                     probIdleAction: ui.probIdleAction.value,
                     probBalanceCheck: ui.probBalanceCheck.value,
@@ -1310,6 +1336,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.gasMultiplier.value = config.gasMultiplier || "2";
                     ui.blockLookback.value = config.blockLookback || "100";
                     ui.rpcUrls.value = config.rpcUrls || `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                    ui.geminiApiKey.value = config.geminiApiKey || ""; // Load Gemini Key
                     ui.probSend.value = config.probSend || "60";
                     ui.probIdleAction.value = config.probIdleAction || "20";
                     ui.probBalanceCheck.value = config.probBalanceCheck || "20";
@@ -1441,9 +1468,18 @@ https://rpc.goerli.dev,5</textarea>
 
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
-                openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>', prompt); // Pass prompt
-                // Direct call to Google Generative Language API
-                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
+                openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>', prompt);
+
+                const userApiKey = ui.geminiApiKey.value.trim();
+                if (!userApiKey) {
+                    const errorMessage = "Please enter your Gemini API Key in the Configuration section to use this feature.";
+                    ui.modalTitle.textContent = "API Key Required";
+                    ui.modalContent.innerHTML = `<p class="text-red-500">${errorMessage}</p>`;
+                    log(errorMessage, 'error');
+                    return;
+                }
+
+                const apiKey = userApiKey;
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1464,14 +1500,15 @@ https://rpc.goerli.dev,5</textarea>
                         ui.modalContent.innerHTML = `<p>${explanation.replace(/\n/g, '<br>')}</p>`;
                         return explanation;
                     } else {
+                        const errorText = result.error ? result.error.message : "The model returned an unexpected format or no content.";
                         ui.modalTitle.textContent = "Gemini Explanation Error";
-                        ui.modalContent.innerHTML = `<p class="text-red-500">No explanation generated. The model might have been unable to process the request or returned an unexpected format.</p>`;
+                        ui.modalContent.innerHTML = `<p class="text-red-500">No explanation generated. ${errorText}</p>`;
                         return "No explanation generated.";
                     }
                 } catch (error) {
                     console.error("Gemini API call failed:", error);
                     ui.modalTitle.textContent = "Gemini API Error";
-                    ui.modalContent.innerHTML = `<p class="text-red-500">Failed to get explanation: ${error.message}. Please check your network connection or try again later.</p>`;
+                    ui.modalContent.innerHTML = `<p class="text-red-500">Failed to get explanation: ${error.message}. Please check your network connection or API key and try again.</p>`;
                     return `Failed to get explanation: ${error.message}.`;
                 }
             }
@@ -1586,12 +1623,14 @@ https://rpc.goerli.dev,5</textarea>
 
                     const baseFee = feeData.lastBaseFeePerGas ? Number(ethers.formatUnits(feeData.lastBaseFeePerGas, 'gwei')).toFixed(2) : 'N/A';
                     const priorityFee = feeData.maxPriorityFeePerGas ? Number(ethers.formatUnits(feeData.maxPriorityFeePerGas, 'gwei')).toFixed(2) : 'N/A';
-                    const totalGas = feeData.gasPrice ? Number(ethers.formatUnits(feeData.gasPrice, 'gwei')).toFixed(2) : 'N/A'; // For legacy or estimate
-                    const maxFeePerGas = feeData.maxFeePerGas ? Number(ethers.formatUnits(feeData.maxFeePerGas, 'gwei')).toFixed(2) : 'N/A'; // For EIP-1559
+                    const totalGas = feeData.gasPrice ? Number(ethers.formatUnits(feeData.gasPrice, 'gwei')).toFixed(2) : 'N/A';
+                    const maxFeePerGas = feeData.maxFeePerGas ? Number(ethers.formatUnits(feeData.maxFeePerGas, 'gwei')).toFixed(2) : 'N/A';
 
-                    ui.gasDisplay.textContent = `${totalGas} Gwei`; // Keep the main display concise
+                    ui.gasDisplay.textContent = `${totalGas} Gwei`;
+                    ui.gasBaseFee.textContent = baseFee;
+                    ui.gasPriorityFee.textContent = priorityFee;
+                    ui.gasTotal.textContent = totalGas;
 
-                    // Determine spiked status
                     let isSpiked = 'No';
                     if (feeData.gasPrice) {
                         const currentGasPriceBigInt = feeData.gasPrice;
@@ -1600,29 +1639,25 @@ https://rpc.goerli.dev,5</textarea>
                             isSpiked = 'Yes';
                         }
                     } else if (maxFeePerGas) {
-                        const currentMaxFeeBigInt = maxFeePerGas;
+                        const currentMaxFeeBigInt = feeData.maxFeePerGas;
                         const thresholdMaxFee = (currentMaxFeeBigInt * BigInt(Math.round(appState.config.gasMultiplier * 100))) / BigInt(100);
                         if (currentMaxFeeBigInt > thresholdMaxFee) {
                             isSpiked = 'Yes';
                         }
                     }
                     ui.gasSpiked.textContent = isSpiked;
+                    ui.gasDetails.classList.remove('hidden');
 
-                    if (isSpiked === 'Yes') {
-                        log(`Gas price (${totalGas} Gwei) is too high. Skipping action.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
-                        showToast(`Gas price too high (${totalGas} Gwei). Skipping action.`, 'warning');
-                        return false;
-                    }
                 } catch (gasError) {
-                    ui.gasDisplay.textContent = 'Error';
-                    ui.gasBaseFee.textContent = 'Error';
-                    ui.gasPriorityFee.textContent = 'Error';
-                    ui.gasTotal.textContent = 'Error';
-                    ui.gasSpiked.textContent = 'Error';
-                    ui.gasDetails.classList.remove('hidden'); // Still show details with error states
-                    console.error("Failed to fetch gas price:", error);
+                    ui.gasDisplay.textContent = 'N/A';
+                    ui.gasBaseFee.textContent = 'N/A';
+                    ui.gasPriorityFee.textContent = 'N/A';
+                    ui.gasTotal.textContent = 'N/A';
+                    ui.gasSpiked.textContent = 'N/A';
+                    ui.gasDetails.classList.remove('hidden');
+                    console.error("Failed to fetch gas price:", gasError);
+                    log('Could not fetch gas price. Please check your RPC connection in Configuration.', 'warning');
                 }
-                return true;
             };
 
             const testRpcConnections = async () => {
@@ -1706,17 +1741,11 @@ https://rpc.goerli.dev,5</textarea>
 
             // Helper function to check gas price
             const checkGasPrice = async (provider, chainId) => {
-                let currentGasPrice = null;
-                let maxPriorityFeePerGas = null;
-                let maxFeePerGas = null;
-
                 try {
                     const feeData = await provider.getFeeData();
-                    currentGasPrice = feeData.gasPrice;
-                    maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-                    maxFeePerGas = feeData.maxFeePerGas;
+                    const currentGasPrice = feeData.gasPrice;
+                    const maxFeePerGas = feeData.maxFeePerGas;
 
-                    // Update detailed gas display
                     const baseFee = feeData.lastBaseFeePerGas ? Number(ethers.formatUnits(feeData.lastBaseFeePerGas, 'gwei')).toFixed(2) : 'N/A';
                     const priorityFee = feeData.maxPriorityFeePerGas ? Number(ethers.formatUnits(feeData.maxPriorityFeePerGas, 'gwei')).toFixed(2) : 'N/A';
                     const totalGas = feeData.gasPrice ? Number(ethers.formatUnits(feeData.gasPrice, 'gwei')).toFixed(2) : 'N/A';
@@ -1724,7 +1753,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.gasBaseFee.textContent = baseFee;
                     ui.gasPriorityFee.textContent = priorityFee;
                     ui.gasTotal.textContent = totalGas;
-                    ui.gasDisplay.textContent = `${totalGas} Gwei`; // Update main display
+                    ui.gasDisplay.textContent = `${totalGas} Gwei`;
 
                     let isSpiked = 'No';
                     if (currentGasPrice) {
@@ -1750,6 +1779,11 @@ https://rpc.goerli.dev,5</textarea>
                 } catch (gasError) {
                     log(`Failed to get gas price for Chain ID ${chainId}: ${gasError.message}. Proceeding without high gas check.`, 'warning', { chainId, walletAddress: appState.connectedAddress, action: 'skipped' });
                     showToast(`Failed to get gas price.`, 'error');
+                    ui.gasDisplay.textContent = 'N/A';
+                    ui.gasBaseFee.textContent = 'N/A';
+                    ui.gasPriorityFee.textContent = 'N/A';
+                    ui.gasTotal.textContent = 'N/A';
+                    ui.gasSpiked.textContent = 'N/A';
                 }
                 return true;
             };
@@ -1799,7 +1833,6 @@ https://rpc.goerli.dev,5</textarea>
 
                 try {
                     log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}... Awaiting wallet confirmation.`, 'info');
-                    // Check if confirmation modal is open
                     if (!ui.confirmationModal.classList.contains('hidden')) {
                         showToast('Wallet confirmation is pending behind a modal.', 'warning');
                     }
@@ -1845,14 +1878,12 @@ https://rpc.goerli.dev,5</textarea>
                 ui.progressText.textContent = '0';
                 ui.progressBar.style.width = `0%`; // Reset progress bar
 
-                // Start gas price update interval (if not already running)
                 if (!appState.gasUpdateInterval) {
                     appState.gasUpdateInterval = setInterval(updateGasPriceDisplay, 15000);
                 }
 
                 log(`Starting Blockchain Interaction process for connected wallet ${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)} across ${appState.rpcConfigs.length} chains.`, 'info');
 
-                // Pre-scan all RPCs for addresses for the 'pool' mode
                 if (appState.config.recipientMode === 'pool') {
                     log('Pre-scanning all configured chains for recipient addresses for the dynamic pool...', 'info');
                     for (const rpcConfig of appState.rpcConfigs) {
@@ -1862,7 +1893,6 @@ https://rpc.goerli.dev,5</textarea>
                 }
 
                 while (appState.isRunning && !appState.stopFlag) {
-                    // Randomly select an RPC configuration for this session
                     const rpcConfigIndex = Math.floor(Math.random() * appState.rpcConfigs.length);
                     const rpcConfig = appState.rpcConfigs[rpcConfigIndex];
                     const chainId = rpcConfig.chainId;
@@ -1873,9 +1903,9 @@ https://rpc.goerli.dev,5</textarea>
 
                     const canProceed = await checkChainAndBalance(provider, chainId);
                     if (!canProceed) {
-                        updateActionDistChart('skipped'); // Mark as skipped if chain/balance check fails
+                        updateActionDistChart('skipped');
                         await sleep(Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay));
-                        continue; // Skip this session
+                        continue;
                     }
 
                     const actionsForSession = Math.floor(Utils.getRandomInRange(1, appState.config.maxActionsPerSession + 1));
@@ -1886,12 +1916,12 @@ https://rpc.goerli.dev,5</textarea>
 
                         appState.stats.totalActions++;
                         ui.progressText.textContent = `${appState.stats.totalActions}`;
-                        ui.progressBar.style.width = `100%`; // This progress bar logic might need adjustment if it's per-session or overall
+                        ui.progressBar.style.width = `100%`;
 
                         const gasCheckPassed = await checkGasPrice(provider, chainId);
                         if (!gasCheckPassed) {
                             updateActionDistChart('skipped');
-                            break; // Break from inner loop, will move to the next session
+                            break;
                         }
                         
                         const chosenBehavior = chooseAction(appState.config.probabilities);
@@ -1933,17 +1963,16 @@ https://rpc.goerli.dev,5</textarea>
                             ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
                             await sleep(delayUsed);
                         }
-                    } // End of actionsForSession loop
+                    }
 
                     if (appState.stopFlag) break;
 
-                    // Log summary after each session
                     log(`🔍 Session Summary: ${appState.stats.totalActions} total actions | ${appState.stats.successfulActions} successful | ${appState.stats.failedActions} failed`, 'info');
 
                     const sessionDelay = Utils.getRandomInRange(appState.config.minDelay, appState.config.maxDelay);
                     log(`Session for connected wallet on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
                     await sleep(sessionDelay);
-                } // End of while (appState.isRunning && !appState.stopFlag)
+                }
                 log('Interaction process finished.', 'success');
                 stopInteraction();
             };
@@ -1989,7 +2018,6 @@ https://rpc.goerli.dev,5</textarea>
                         return;
                     }
                     
-                    // Call the main session runner
                     runSession();
                 });
             };
@@ -2029,7 +2057,6 @@ https://rpc.goerli.dev,5</textarea>
                         appState.lastHumanLikeSpike = null;
                         ui.humanSpikeDisplay.textContent = 'Never';
 
-                        // Reset config fields to initial values
                         ui.maxActionsPerSession.value = "3";
                         ui.minAmount.value = "0.0001";
                         ui.maxAmount.value = "0.0002";
@@ -2038,24 +2065,24 @@ https://rpc.goerli.dev,5</textarea>
                         ui.gasMultiplier.value = "2";
                         ui.blockLookback.value = "100";
                         ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
+                        ui.geminiApiKey.value = "";
                         ui.probSend.value = "60";
                         ui.probIdleAction.value = "20";
                         ui.probBalanceCheck.value = "20";
                         
-                        // Reset recipient mode to default (pool)
                         document.querySelector('input[name="recipient-mode"][value="pool"]').checked = true;
                         ui.fixedAddressSection.classList.add('hidden');
                         ui.listAddressesSection.classList.add('hidden');
                         ui.predefinedAddressesSection.classList.add('hidden');
                         ui.fixedAddress.value = '';
 
-                        localStorage.removeItem('basicConsoleConfig'); // Clear saved config
+                        localStorage.removeItem('basicConsoleConfig');
                         log('Local storage configuration cleared.', 'info');
                         showToast('All data cleared.', 'info');
 
                         setUIEnabled(false);
                         initConsoleCharts();
-                        updateWalletBalanceChart(); // Ensure wallet balance chart is empty
+                        updateWalletBalanceChart();
                         ui.walletStatusDisplay.textContent = `No wallet connected.`;
                         log('All data cleared. Console reset.');
                         if (appState.gasUpdateInterval) {
@@ -2068,7 +2095,6 @@ https://rpc.goerli.dev,5</textarea>
                             ui.gasSpiked.textContent = 'N/A';
                             ui.gasDetails.classList.add('hidden');
                         }
-                        // Clear connected chain display
                         ui.chainName.textContent = 'N/A';
                         ui.chainSymbol.textContent = 'N/A';
                         ui.chainId.textContent = 'N/A';
@@ -2212,7 +2238,6 @@ https://rpc.goerli.dev,5</textarea>
                     ui.chainName.textContent = chainInfo.name;
                     ui.chainSymbol.textContent = chainInfo.symbol;
                     ui.chainId.textContent = chainId;
-                    // Safely get RPC URL from provider or window.ethereum
                     ui.chainRpc.textContent = provider?.connection?.url || window.ethereum?.rpcUrl || 'N/A';
                     ui.chainExplorer.textContent = chainInfo.explorer;
                     ui.chainExplorer.href = chainInfo.explorer;
@@ -2255,32 +2280,26 @@ https://rpc.goerli.dev,5</textarea>
                     ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
                     setUIEnabled(true);
                     updateWalletBalanceChart(ethers.formatEther(await provider.getBalance(appState.connectedAddress)));
-                    updateGasPriceDisplay(); // Initial gas price display
-                    updateConnectedChainDisplay(provider); // Initial chain display
+                    updateGasPriceDisplay();
+                    updateConnectedChainDisplay(provider);
                     showToast('Wallet connected!', 'success');
 
-                    // Auto-fill RPC + ChainID if missing
                     const currentNetwork = await provider.getNetwork();
                     const currentChainId = Number(currentNetwork.chainId);
-                    // Safely get RPC URL from provider or window.ethereum
                     const currentRpcUrl = provider?.connection?.url || window.ethereum?.rpcUrl || 'N/A';
                     const rpcEntry = `${currentRpcUrl},${currentChainId}`;
 
                     if (currentRpcUrl !== 'N/A' && !ui.rpcUrls.value.includes(rpcEntry)) {
                         ui.rpcUrls.value += `\n${rpcEntry}`;
-                        loadConfiguration(); // Reload config to include new RPC
+                        loadConfiguration();
                         log(`Added current RPC ${rpcEntry} to configuration.`, 'info');
                         showToast(`Added current RPC to config.`, 'info');
                     }
 
-
-                    // Start gas price update interval if not already running
                     if (!appState.gasUpdateInterval) {
                         appState.gasUpdateInterval = setInterval(updateGasPriceDisplay, 15000);
                     }
 
-
-                    // Set up event listeners for window.ethereum
                     window.ethereum.on('accountsChanged', async (newAccounts) => {
                         log('Wallet accounts changed event detected.', 'info');
                         showToast('Wallet accounts changed.', 'info');
@@ -2348,7 +2367,6 @@ https://rpc.goerli.dev,5</textarea>
                             ui.gasDetails.classList.add('hidden');
                         }
                         ui.connectedChainDetails.classList.add('hidden');
-                        // Clear appState on disconnect as suggested by the user
                         appState.rpcConfigs = [];
                         appState.currentRecipientPool = {};
                         appState.manualRecipientList = [];
@@ -2391,15 +2409,13 @@ https://rpc.goerli.dev,5</textarea>
                     return;
                 }
 
-                // Temporarily hide the manual transaction modal before showing confirmation
-                // This ensures the confirmation modal is always on top and clear.
                 ui.manualTxModal.classList.add('hidden');
 
                 openConfirmationModal(`Are you sure you want to send ${amount} ETH to ${recipient}? This will prompt your connected wallet for confirmation.`, async (confirmed) => {
                     if (!confirmed) {
                         log('Manual transaction cancelled by user.', 'info');
                         showToast('Manual transaction cancelled.', 'info');
-                        ui.manualTxModal.classList.remove('hidden'); // Show manual tx modal again if cancelled
+                        ui.manualTxModal.classList.remove('hidden');
                         return;
                     }
 
@@ -2410,15 +2426,12 @@ https://rpc.goerli.dev,5</textarea>
                         };
 
                         log(`Sending manual transaction: ${amount} ETH to ${recipient}... Awaiting wallet confirmation.`, 'info');
-                        // The toast notification about wallet confirmation being behind a modal is now less relevant
-                        // since the manualTxModal is hidden. The wallet itself will pop up.
                         const txResponse = await appState.signer.sendTransaction(tx);
                         log(`Manual Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { walletAddress: appState.connectedAddress, action: 'manual_send' });
                         await txResponse.wait();
                         log(`Manual Tx confirmed!`, 'success');
                         showToast('Manual transaction confirmed!', 'success');
 
-                        // Update balance after manual transaction
                         const provider = new ethers.BrowserProvider(window.ethereum);
                         const newBalanceWei = await provider.getBalance(appState.connectedAddress);
                         updateWalletBalanceChart(ethers.formatEther(newBalanceWei));
@@ -2426,10 +2439,6 @@ https://rpc.goerli.dev,5</textarea>
                     } catch (error) {
                         log(`Manual transaction failed: ${error.message}`, 'error', { walletAddress: appState.connectedAddress, action: 'manual_send' });
                         showToast(`Manual transaction failed: ${error.message}`, 'error');
-                    } finally {
-                        // The manual transaction modal should remain hidden after the transaction attempt
-                        // (whether successful or failed), as the user has completed the input for it.
-                        // It will be re-opened if the user clicks the "Manual Transaction" button again.
                     }
                 });
             };
@@ -2439,18 +2448,16 @@ https://rpc.goerli.dev,5</textarea>
                 ui.connectWalletBtn.addEventListener('click', connectWallet);
                 ui.startBtn.addEventListener('click', startInteraction);
                 ui.stopBtn.addEventListener('click', stopInteraction);
-                ui.manualTxBtn.addEventListener('click', () => ui.manualTxModal.classList.remove('hidden')); // Open manual tx modal
-                ui.manualTxSendBtn.addEventListener('click', handleManualTransaction); // Send manual tx
-                ui.manualTxCloseBtn.addEventListener('click', () => ui.manualTxModal.classList.add('hidden')); // Close manual tx modal
+                ui.manualTxBtn.addEventListener('click', () => ui.manualTxModal.classList.remove('hidden'));
+                ui.manualTxSendBtn.addEventListener('click', handleManualTransaction);
+                ui.manualTxCloseBtn.addEventListener('click', () => ui.manualTxModal.classList.add('hidden'));
                 ui.clearAllDataBtn.addEventListener('click', clearAllData);
                 ui.testRpcBtn.addEventListener('click', testRpcConnections);
                 
-                // Toggle download log dropdown
                 ui.downloadLogBtn.addEventListener('click', (event) => {
-                    event.stopPropagation(); // Prevent document click from closing immediately
+                    event.stopPropagation();
                     ui.downloadLogDropdown.classList.toggle('hidden');
                 });
-                // Close dropdown if clicked outside
                 document.addEventListener('click', (event) => {
                     if (!ui.downloadLogDropdown.contains(event.target) && !ui.downloadLogBtn.contains(event.target)) {
                         ui.downloadLogDropdown.classList.add('hidden');
@@ -2468,7 +2475,7 @@ https://rpc.goerli.dev,5</textarea>
                 });
 
                 ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog);
-                ui.clearLogBtn.addEventListener('click', clearLog); // New clear log button listener
+                ui.clearLogBtn.addEventListener('click', clearLog);
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
                 ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
@@ -2496,17 +2503,14 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 });
 
-                // Tooltip functionality for mobile (click to show/hide)
                 document.querySelectorAll('.tooltip-container').forEach(container => {
                     container.addEventListener('click', (event) => {
-                        // Only toggle on small screens
                         if (window.innerWidth <= 767) {
-                            event.stopPropagation(); // Prevent document click from immediately closing
+                            event.stopPropagation();
                             container.classList.toggle('active');
                         }
                     });
                 });
-                // Close tooltips when clicking anywhere else on small screens
                 document.addEventListener('click', (event) => {
                     if (window.innerWidth <= 767) {
                         document.querySelectorAll('.tooltip-container.active').forEach(container => {
@@ -2522,22 +2526,18 @@ https://rpc.goerli.dev,5</textarea>
                         ui.fixedAddressSection.classList.toggle('hidden', e.target.value !== 'fixed');
                         ui.listAddressesSection.classList.toggle('hidden', e.target.value !== 'list');
                         ui.predefinedAddressesSection.classList.toggle('hidden', e.target.value !== 'predefined');
-                        loadConfiguration(); // Re-load config to save the new recipient mode
+                        loadConfiguration();
                     });
                 });
 
-                // Add listeners for config changes to save them
-                document.querySelectorAll('#max-actions-per-session, #min-amount, #max-amount, #min-delay, #max-delay, #gas-multiplier, #block-lookback, #rpc-urls, #prob-send, #prob-idle-action, #prob-balance-check, #fixed-address, #list-addresses').forEach(input => {
-                    input.addEventListener('input', loadConfiguration); // Calls loadConfiguration which then calls saveConfig
+                document.querySelectorAll('#max-actions-per-session, #min-amount, #max-amount, #min-delay, #max-delay, #gas-multiplier, #block-lookback, #rpc-urls, #gemini-api-key, #prob-send, #prob-idle-action, #prob-balance-check, #fixed-address, #list-addresses').forEach(input => {
+                    input.addEventListener('input', loadConfiguration);
                 });
 
-                // Dark mode toggle listener
                 ui.darkToggleBtn.addEventListener('click', () => {
                     document.documentElement.classList.toggle('dark');
-                    saveConfig(); // Save dark mode preference
-                    // Re-initialize charts to apply new theme colors
+                    saveConfig();
                     initConsoleCharts();
-                    // Update current chart data
                     if (appState.connectedAddress) {
                         const provider = new ethers.BrowserProvider(window.ethereum);
                         provider.getBalance(appState.connectedAddress).then(balanceWei => {
@@ -2548,18 +2548,46 @@ https://rpc.goerli.dev,5</textarea>
                     }
                     appState.charts.actionDist.update();
                 });
+
+                // Sidebar navigation logic
+                ui.basicConsoleToggle.addEventListener('click', () => {
+                    ui.basicConsoleToggle.classList.toggle('active');
+                    ui.basicConsoleSubmenu.classList.toggle('open');
+                });
+
+                document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        if (this.getAttribute('href') && !this.getAttribute('href').startsWith('#')) {
+                            return;
+                        }
+                        e.preventDefault();
+                        
+                        document.querySelectorAll('#sidebar .nav-link, #sidebar .submenu-toggle').forEach(el => el.classList.remove('active'));
+                        
+                        const parentSubmenu = this.closest('.submenu');
+                        if (parentSubmenu) {
+                            parentSubmenu.previousElementSibling.classList.add('active');
+                        } else {
+                             this.classList.add('active');
+                        }
+                        
+                        const targetId = this.getAttribute('href').substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    });
+                });
             };
 
             initConsoleCharts();
             setupEventListeners();
-            loadConfig(); // Load configuration first
+            loadConfig();
             updateWalletBalanceChart();
             setUIEnabled(false);
 
-            // Set the initial active navigation link for Basic Console
-            document.querySelector('#sidebar .nav-link[href="basic.html"]').classList.add('active');
+            document.querySelector('#sidebar .nav-link[href="#dashboard"]').classList.add('active');
 
-            // Initial check for window.ethereum and existing connection on page load
             if (typeof window.ethereum !== 'undefined') {
                  log('Rabby Wallet or compatible wallet detected on startup. Checking for existing connection...', 'info');
                  window.ethereum.request({ method: 'eth_accounts' })
@@ -2572,9 +2600,8 @@ https://rpc.goerli.dev,5</textarea>
                             ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
                             setUIEnabled(true);
                             updateWalletBalanceChart(ethers.formatEther(await provider.getBalance(appState.connectedAddress)));
-                            updateGasPriceDisplay(); // Initial gas price display
-                            updateConnectedChainDisplay(provider); // Initial chain display
-                            // Start gas price update interval if not already running
+                            updateGasPriceDisplay();
+                            updateConnectedChainDisplay(provider);
                             if (!appState.gasUpdateInterval) {
                                 appState.gasUpdateInterval = setInterval(updateGasPriceDisplay, 15000);
                             }
@@ -2603,14 +2630,13 @@ https://rpc.goerli.dev,5</textarea>
             const copyBtn = document.getElementById('copy-address-btn');
             const copyIcon = document.getElementById('copy-icon');
             const checkIcon = document.getElementById('check-icon');
-            checkIcon.classList.add('hidden'); // Ensure check icon is hidden initially
+            checkIcon.classList.add('hidden');
             const showQrBtn = document.getElementById('show-qr-btn');
             const qrModal = document.getElementById('qr-code-modal');
             const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
             const qrCodeContainer = document.getElementById('qr-code-container');
             const qrAddressDisplay = document.getElementById('qr-address-display');
 
-            // Initialize QR Code once
             if(typeof QRCode !== 'undefined') {
                 new QRCode(qrCodeContainer, {
                     text: donationAddressStr,
@@ -2626,7 +2652,6 @@ https://rpc.goerli.dev,5</textarea>
                 qrCodeContainer.innerHTML = "QR Code library failed to load. Please check your connection.";
             }
 
-            // Copy to clipboard
             copyBtn.addEventListener('click', () => {
                 copyToClipboard(donationAddressStr);
                 copyIcon.classList.add('hidden');
@@ -2637,12 +2662,10 @@ https://rpc.goerli.dev,5</textarea>
                 }, 2000);
             });
 
-            // Show QR Modal
             showQrBtn.addEventListener('click', () => {
                 qrModal.classList.remove('hidden');
             });
 
-            // Close QR Modal logic
             const closeQrModal = () => {
                 qrModal.classList.add('hidden');
             }
