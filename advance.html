@@ -16,12 +16,20 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Base styles */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f4f1eb; /* Warm Beige */
             color: #212529; /* Dark Gray for infographic text */
         }
-        /* Console specific styles */
+
+        /* Dark mode styles */
+        html.dark body {
+            background-color: #1a202c; /* Dark Slate */
+            color: #e2e8f0; /* Light Gray */
+        }
+
+        /* Console specific styles - Light Mode */
         .bg-primary { background-color: #f4f1eb; }
         .bg-secondary { background-color: #ffffff; }
         .text-main { color: #2d3748; } /* Slate 800 */
@@ -37,6 +45,23 @@
         .btn-success:hover { background-color: #16a34a; }
         .btn-llm { background-color: #e0f2fe; color: #0284c7; } /* Light blue for LLM buttons */
         .btn-llm:hover { background-color: #bae6fd; }
+
+        /* Console specific styles - Dark Mode */
+        html.dark .bg-primary { background-color: #1a202c; }
+        html.dark .bg-secondary { background-color: #2d3748; }
+        html.dark .text-main { color: #e2e8f0; } /* Light Gray */
+        html.dark .text-accent { color: #a0aec0; } /* Gray 400 */
+        html.dark .border-accent { border-color: #4a5568; /* Slate 600 */ }
+        html.dark .btn-primary { background-color: #4299e1; color: white; }
+        html.dark .btn-primary:hover { background-color: #3182ce; }
+        html.dark .btn-secondary { background-color: #718096; color: white; }
+        html.dark .btn-secondary:hover { background-color: #5a67d8; }
+        html.dark .btn-danger { background-color: #fc8181; color: white; }
+        html.dark .btn-danger:hover { background-color: #e53e3e; }
+        html.dark .btn-success { background-color: #68d391; color: white; }
+        html.dark .btn-success:hover { background-color: #38a169; }
+        html.dark .btn-llm { background-color: #90cdf4; color: #1a202c; } /* Lighter blue for LLM buttons */
+        html.dark .btn-llm:hover { background-color: #63b3ed; }
 
         /* Chart container for console charts */
         .chart-container {
@@ -63,6 +88,12 @@
         .log-info { color: #3b82f6; }
         .log-warning { color: #f59e0b; }
         .log-skipped { color: #a8a29e; }
+        html.dark .log-success { color: #68d391; }
+        html.dark .log-error { color: #fc8181; }
+        html.dark .log-info { color: #90cdf4; }
+        html.dark .log-warning { color: #fbd38d; }
+        html.dark .log-skipped { color: #cbd5e0; }
+
         .log-copy-btn {
             background: none;
             border: none;
@@ -77,6 +108,8 @@
         .log-copy-btn:hover {
             color: #e2e8f0; /* Lighter gray on hover */
         }
+        html.dark .log-copy-btn { color: #a0aec0; }
+        html.dark .log-copy-btn:hover { color: #e2e8f0; }
 
 
         .tooltip-container {
@@ -142,7 +175,11 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             position: relative;
         }
-        .close-button, .close-qr-button {
+        html.dark .modal-content {
+            background-color: #2d3748;
+            border-color: #4a5568;
+        }
+        .close-button, .close-qr-button, .close-confirm-button {
             color: #aaa;
             float: right;
             font-size: 28px;
@@ -151,11 +188,22 @@
         .close-button:hover,
         .close-button:focus,
         .close-qr-button:hover,
-        .close-qr-button:focus {
+        .close-qr-button:focus,
+        .close-confirm-button:hover,
+        .close-confirm-button:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
+        html.dark .close-button, html.dark .close-qr-button, html.dark .close-confirm-button {
+            color: #cbd5e0;
+        }
+        html.dark .close-button:hover, html.dark .close-button:focus,
+        html.dark .close-qr-button:hover, html.dark .close-qr-button:focus,
+        html.dark .close-confirm-button:hover, html.dark .close-confirm-button:focus {
+            color: #e2e8f0;
+        }
+
         .modal-loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3b82f6;
@@ -164,6 +212,10 @@
             height: 24px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
+        }
+        html.dark .modal-loader {
+            border-color: #4a5568;
+            border-top-color: #4299e1;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -176,6 +228,11 @@
             opacity: 0.6;
             cursor: not-allowed;
             background-color: #e2e8f0; /* Light gray */
+        }
+        html.dark .wallet-feature-control:disabled,
+        html.dark .wallet-feature-control[disabled] {
+            background-color: #4a5568; /* Darker gray */
+            color: #cbd5e0;
         }
 
         /* --- MODIFIED: Hover-expanding Sidebar Navigation --- */
@@ -193,6 +250,12 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Softer shadow */
             overflow-x: hidden; /* Hide overflowing content */
             border-right: 1px solid #e2e8f0; /* Add a subtle border */
+        }
+        html.dark #sidebar {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+            border-right: 1px solid #4a5568;
         }
 
         #sidebar:hover {
@@ -217,6 +280,17 @@
             transition: background-color 0.2s ease, color 0.2s ease, justify-content 0.3s ease-in-out;
             white-space: nowrap;
             cursor: pointer;
+        }
+        html.dark #sidebar .nav-link, html.dark #sidebar .submenu-toggle {
+            color: #a0aec0;
+        }
+        html.dark #sidebar .nav-link:hover, html.dark #sidebar .submenu-toggle:hover {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        html.dark #sidebar .nav-link.active, html.dark #sidebar .submenu-toggle.active {
+            background-color: #4299e1;
+            color: white;
         }
         
         #sidebar:hover .nav-link, #sidebar:hover .submenu-toggle {
@@ -252,6 +326,9 @@
             transition: max-height 0.3s ease-in-out;
             background-color: #f8fafc; /* Slightly different bg for submenu */
         }
+        html.dark .submenu {
+            background-color: #1a202c;
+        }
         
         .submenu.open {
             max-height: 500px; /* Large enough to show all items */
@@ -282,6 +359,53 @@
         #sidebar:hover ~ footer {
             margin-left: 250px;
         }
+
+        /* Dropdown for download log */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        html.dark .dropdown-content {
+            background-color: #2d3748;
+        }
+
+        .dropdown-content button {
+            color: #2d3748;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        html.dark .dropdown-content button {
+            color: #e2e8f0;
+        }
+
+        .dropdown-content button:hover {
+            background-color: #f1f1f1;
+        }
+        html.dark .dropdown-content button:hover {
+            background-color: #4a5568;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
@@ -299,8 +423,8 @@
         <nav class="flex flex-col mt-4">
             <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
             
-            <!-- Basic Console (Placeholder) -->
-            <a href="#" class="nav-link text-gray-400 cursor-not-allowed" title="Coming Soon!"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
+            <!-- Basic Console Link (Activated) -->
+            <a href="basic.html" class="nav-link"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
 
             <!-- Advanced Console Submenu -->
             <div>
@@ -343,6 +467,10 @@
                     <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs GitHub">
                         <i class="fab fa-github text-xl"></i>
                     </a>
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="text-accent hover:text-blue-500 p-2 rounded-full transition-colors duration-200" title="Toggle Dark Mode">
+                        <i class="fas fa-moon text-xl" id="theme-toggle-icon"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -528,6 +656,13 @@
                 <section id="config" class="mb-12">
                     <h2 class="text-3xl font-bold mb-2 text-main">Configuration</h2>
                     <p class="text-accent mb-6">Define the parameters for the Blockchain Interaction, including network settings, amounts, delays, and gas thresholds.</p>
+
+                    <!-- NEW: API Key Input -->
+                    <div class="mb-6">
+                        <label for="api-key-input" class="block font-medium text-accent mb-1">Gemini API Key (Optional)</label>
+                        <input type="text" id="api-key-input" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter your Gemini API Key (e.g., AIzaSy...)">
+                        <p class="text-sm text-gray-500 mt-1">If left blank, a default key may be used (if available in environment).</p>
+                    </div>
 
                     <!-- NEW: Stealth Profile Preset -->
                     <div class="mb-6">
@@ -767,7 +902,14 @@ https://rpc.goerli.dev,5</textarea>
                         <div id="live-log"></div>
                     </div>
                     <div class="flex flex-wrap gap-4">
-                        <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log (CSV)</button>
+                        <div class="dropdown">
+                            <button id="download-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-success wallet-feature-control" disabled>⬇️ Download Log</button>
+                            <div class="dropdown-content">
+                                <button id="download-log-csv-btn">Download CSV</button>
+                                <button id="download-log-json-btn">Download JSON</button>
+                            </div>
+                        </div>
+                        <button id="clear-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-secondary wallet-feature-control" disabled>🗑️ Clear Log</button>
                         <button id="summarize-log-btn" class="py-2 px-4 rounded-lg font-semibold transition-all duration-300 btn-llm wallet-feature-control" disabled>✨ Summarize Log</button>
                     </div>
                 </section>
@@ -1150,6 +1292,9 @@ https://rpc.goerli.dev,5</textarea>
                 predefinedAddressesCount: document.getElementById('predefined-addresses-count'),
                 liveLog: document.getElementById('live-log'),
                 downloadLogBtn: document.getElementById('download-log-btn'),
+                downloadLogCsvBtn: document.getElementById('download-log-csv-btn'), // NEW
+                downloadLogJsonBtn: document.getElementById('download-log-json-btn'), // NEW
+                clearLogBtn: document.getElementById('clear-log-btn'), // NEW
                 summarizeLogBtn: document.getElementById('summarize-log-btn'), // NEW UI element
                 progressBar: document.getElementById('progress-bar'),
                 progressText: document.getElementById('progress-text'),
@@ -1173,6 +1318,9 @@ https://rpc.goerli.dev,5</textarea>
                 stealthProfileSelector: document.getElementById('stealth-profile'), // NEW UI element
                 advancedConsoleToggle: document.getElementById('advanced-console-toggle'),
                 advancedConsoleSubmenu: document.getElementById('advanced-console-submenu'),
+                themeToggle: document.getElementById('theme-toggle'), // NEW
+                themeToggleIcon: document.getElementById('theme-toggle-icon'), // NEW
+                apiKeyInput: document.getElementById('api-key-input'), // NEW
             };
 
             // Function to enable/disable UI elements
@@ -1317,10 +1465,10 @@ https://rpc.goerli.dev,5</textarea>
                 const chartOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#2d3748' } } },
+                    plugins: { legend: { labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-main') } } },
                     scales: {
-                        x: { ticks: { color: '#4a5568' } },
-                        y: { ticks: { color: '#4a5568' } }
+                        x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-accent') } },
+                        y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-accent') } }
                     }
                 };
 
@@ -1534,7 +1682,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = ""; // API key is left blank, Canvas will provide it at runtime.
+                const apiKey = ui.apiKeyInput.value.trim() || ""; // Use user provided key, or empty string
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -2199,18 +2347,16 @@ https://rpc.goerli.dev,5</textarea>
                 }).join('\n');
 
                 const prompt = `Please summarize the following blockchain transaction log. Identify key events, common patterns (e.g., successful transactions, repeated errors), and any notable observations. If there are errors, categorize them if possible.
-
                 --- Log Data ---
                 ${formattedLog}
                 --- End Log Data ---
-
                 Provide a concise summary and any insights you can derive.`;
 
                 await callGeminiApi(prompt);
             };
 
 
-            const downloadLog = () => {
+            const downloadLogCsv = () => {
                 if (appState.logEntries.length === 0) {
                     openGeminiModal('No Data', '<p class="text-accent">No log data to download.</p>');
                     return;
@@ -2229,6 +2375,34 @@ https://rpc.goerli.dev,5</textarea>
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                log('Log downloaded as CSV.', 'info');
+            };
+
+            const downloadLogJson = () => {
+                if (appState.logEntries.length === 0) {
+                    openGeminiModal('No Data', '<p class="text-accent">No log data to download.</p>');
+                    return;
+                }
+
+                const jsonContent = JSON.stringify(appState.logEntries, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `tx_log_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                log('Log downloaded as JSON.', 'info');
+            };
+
+            const clearLog = () => {
+                openConfirmationModal('Are you sure you want to clear the live log? This will remove all displayed and stored log entries.', (confirmed) => {
+                    if (confirmed) {
+                        ui.liveLog.innerHTML = '';
+                        appState.logEntries = [];
+                        log('Live log cleared.', 'info');
+                    }
+                });
             };
 
             const copyToClipboard = (text) => {
@@ -2319,7 +2493,9 @@ https://rpc.goerli.dev,5</textarea>
                 ui.clearAllDataBtn.addEventListener('click', clearAllData);
                 ui.loadKeysBtn.addEventListener('click', loadWallets);
                 ui.testRpcBtn.addEventListener('click', testRpcConnections);
-                ui.downloadLogBtn.addEventListener('click', downloadLog);
+                ui.downloadLogCsvBtn.addEventListener('click', downloadLogCsv); // NEW
+                ui.downloadLogJsonBtn.addEventListener('click', downloadLogJson); // NEW
+                ui.clearLogBtn.addEventListener('click', clearLog); // NEW
                 ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog); // NEW event listener
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
@@ -2384,6 +2560,7 @@ https://rpc.goerli.dev,5</textarea>
                 ui.enableTimeOfDayBias.addEventListener('change', loadConfiguration); // NEW
                 ui.rpcSwitchDelay.addEventListener('input', loadConfiguration); // NEW
                 ui.walletSwitchDelay.addEventListener('input', loadConfiguration); // NEW
+                ui.apiKeyInput.addEventListener('input', loadConfiguration); // NEW
 
                 // Event listener for Stealth Profile Selector
                 ui.stealthProfileSelector.addEventListener("change", (e) => {
@@ -2428,6 +2605,30 @@ https://rpc.goerli.dev,5</textarea>
                     });
                 });
 
+                // Dark Mode Toggle Logic
+                ui.themeToggle.addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                    ui.themeToggleIcon.classList.toggle('fa-sun', isDarkMode);
+                    ui.themeToggleIcon.classList.toggle('fa-moon', !isDarkMode);
+                    // Re-initialize charts to update colors based on new theme
+                    initConsoleCharts();
+                    updateWalletBalanceChart();
+                    updateActionDistChart('send'); // Trigger a dummy update to refresh action chart colors
+                });
+
+                // Apply saved theme on load
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    ui.themeToggleIcon.classList.add('fa-sun');
+                    ui.themeToggleIcon.classList.remove('fa-moon');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    ui.themeToggleIcon.classList.add('fa-moon');
+                    ui.themeToggleIcon.classList.remove('fa-sun');
+                }
             };
 
             initConsoleCharts(); // Initialize charts for the console
