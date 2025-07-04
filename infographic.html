@@ -43,19 +43,38 @@
         .text-accent { color: var(--accent-text); }
         .border-accent { border-color: var(--border-color); }
 
-        /* Navigation link styles */
+        /* Dark mode styles */
+        html.dark {
+            --primary-bg: #1a202c; /* Dark background */
+            --secondary-bg: #2d3748;
+            --main-text: #e2e8f0; /* Light text */
+            --accent-text: #a0aec0;
+            --border-color: #4a5568;
+            --blue-accent: #60a5fa;
+            --blue-dark: #3b82f6;
+            --chart-cyan: #00B4D8;
+            --chart-magenta: #f472b6;
+            --chart-yellow: #fcd34d;
+        }
+
+        html.dark body {
+            background-color: var(--primary-bg);
+            color: var(--main-text);
+        }
+
+        /* Navigation link styles - Removed active class styling */
         .nav-link {
             transition: all 0.3s ease;
             border-bottom: 2px solid transparent;
         }
-        .nav-link:hover, .nav-link.active {
-            color: var(--blue-accent);
-            border-bottom-color: var(--blue-accent);
+        /* Removed hover background and color for nav-link and submenu-toggle */
+        .nav-link:hover {
+            /* Removed color and border-bottom-color to remove highlight */
         }
 
         /* Infographic specific styles */
         #infographic-content {
-            background-color: #F8F9FA; /* Slightly lighter background for content sections */
+            background-color: var(--secondary-bg); /* Use secondary-bg for content sections */
             color: var(--main-text);
         }
         .chart-container {
@@ -172,6 +191,125 @@
             text-decoration: none;
             cursor: pointer;
         }
+        html.dark .close-qr-button:hover, html.dark .close-qr-button:focus {
+             color: var(--main-text);
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 80px; /* Collapsed width */
+            background-color: var(--secondary-bg);
+            color: var(--main-text);
+            padding-top: 1rem;
+            transition: width 0.3s ease-in-out;
+            z-index: 50;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-x: hidden;
+            border-right: 1px solid var(--border-color);
+        }
+        html.dark #sidebar {
+            background-color: var(--secondary-bg);
+            color: var(--main-text);
+            border-right: 1px solid var(--border-color);
+        }
+
+        #sidebar:hover {
+            width: 250px; /* Expanded width */
+        }
+        
+        #sidebar .logo-container {
+            transition: justify-content 0.3s ease-in-out;
+        }
+        #sidebar:hover .logo-container {
+            justify-content: flex-start;
+        }
+
+        #sidebar .nav-link, #sidebar .submenu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            color: var(--accent-text);
+            font-weight: 600;
+            text-decoration: none;
+            transition: justify-content 0.3s ease-in-out; /* Only transition justify-content */
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        html.dark #sidebar .nav-link, html.dark #sidebar .submenu-toggle {
+            color: var(--accent-text);
+        }
+        /* Removed hover background and color for nav-link and submenu-toggle */
+        
+        #sidebar:hover .nav-link, #sidebar:hover .submenu-toggle {
+            justify-content: flex-start;
+        }
+
+        #sidebar .nav-link i, #sidebar .submenu-toggle i {
+            min-width: 24px;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        #sidebar .nav-text {
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            margin-left: 0;
+            transition: opacity 0.2s ease-in-out, max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+            transition-delay: 0.1s;
+        }
+
+        #sidebar:hover .nav-text {
+            opacity: 1;
+            max-width: 200px;
+            margin-left: 0.75rem;
+        }
+
+        /* Submenu styles - These styles are no longer strictly needed for 'Documentation' but kept for other potential submenus */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            background-color: #f8fafc; /* Slightly different bg for submenu */
+        }
+        html.dark .submenu {
+            background-color: #1f2937;
+        }
+        
+        .submenu.open {
+            max-height: 500px; /* Large enough to show all items */
+        }
+
+        .submenu .nav-link {
+            padding-left: 3.5rem; /* Indent submenu items */
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .submenu-toggle .fa-chevron-down {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        /* Styles for the content wrapper */
+        #content-wrapper {
+            margin-left: 80px; /* Initial margin for collapsed sidebar */
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* Dynamically adjust margin-left when sidebar expands */
+        #sidebar:hover ~ #content-wrapper {
+            margin-left: 250px; /* Expanded width */
+        }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
@@ -180,443 +318,455 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3062851685354753"
      crossorigin="anonymous"></script>
 
-    <header class="bg-secondary shadow-md sticky top-0 z-10">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
-                    <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-8 w-8 mr-2 rounded-full">
-                    <h1 class="text-xl md:text-2xl font-bold text-main">Stealth Automation Infographic</h1>
-                </div>
-                <nav class="hidden md:flex items-center space-x-8">
-                    <!-- Link to the main console, renamed to index.html for Vercel deployment -->
-                    <a href="index.html" class="nav-link text-accent font-medium pb-1">Dashboard</a>
-                    <a href="#infographic-overview" class="nav-link text-accent font-medium pb-1 active">Infographic</a>
-                    <a href="https://farm-labs.blogspot.com/" target="_blank" class="nav-link text-accent font-medium pb-1" title="Farm Labs Blog">
-                        <i class="fab fa-blogger text-xl"></i>
-                    </a>
-                    <a href="https://t.me/farm_lab" target="_blank" class="nav-link text-accent font-medium pb-1" title="Farm Lab Telegram">
-                        <i class="fab fa-telegram text-xl"></i>
-                    </a>
-                    <!-- GitHub Link in Header -->
-                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="nav-link text-accent font-medium pb-1" title="Farm Labs GitHub">
-                        <i class="fab fa-github text-xl"></i>
-                    </a>
-                </nav>
-            </div>
+    <!-- Sidebar Navigation -->
+    <div id="sidebar">
+        <div class="p-4 mt-8 flex items-center justify-center logo-container">
+            <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-10 w-10 rounded-full">
+            <h2 class="text-xl font-bold nav-text">FarmLabs</h2>
         </div>
-    </header>
+        <nav class="flex flex-col mt-4">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
+            <a href="basic.html" class="nav-link"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
+            <a href="advance.html" class="nav-link"><i class="fas fa-tools"></i><span class="nav-text">Advance Console</span></a>
+            <hr class="border-gray-300 dark:border-gray-600 my-2 mx-4">
+            <a href="infographic.html" class="nav-link"><i class="fas fa-chart-pie"></i><span class="nav-text">Infographic</span></a>
 
-    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: var(--blue-dark);">Farm smarter, not harder — with FarmLabs.</h2>
-
-        <div id="infographic-content">
-            <!-- Section 1: Introduction & Hook (Combined from both) -->
-            <section id="infographic-overview" class="text-center my-12 md:my-16 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
-                <h2 class="section-title">The Blueprint of Human-like Automation</h2>
-                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-                    A deep dive into a client-side tool designed to automate blockchain interactions for Researchers, Developers, Protocol testing, testnet farmers and airdrop eligibility , with a focus on simulating organic, human-like activity.
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                    <div class="kpi-card">
-                        <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">5</span>
-                        <h3 class="text-xl font-semibold text-gray-700">Recipient Modes</h3>
-                        <p class="text-gray-500 mt-2">From dynamic address pools to self-interaction, offering diverse targeting strategies.</p>
-                    </div>
-                    <div class="kpi-card">
-                        <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">5+</span>
-                        <h3 class="text-xl font-semibold text-gray-700">Randomization Factors</h3>
-                        <p class="text-gray-500 mt-2">Simulates human behavior by randomizing amounts, delays, wallets, chains, and gas fees.</p>
-                    </div>
-                    <div class="kpi-card">
-                        <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">∞</span>
-                        <h3 class="text-xl font-semibold text-gray-700">Supported Wallets</h3>
-                        <p class="text-gray-500 mt-2">Load an unlimited number of private keys to scale your operations effortlessly.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 2: The Core Engine (Combined from both) -->
-            <section id="infographic-how-it-works" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
-                <h2 class="section-title">The Core Engine: How It Works</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    The script follows a logical, configurable flow to execute its tasks. From initialization to the final transaction, each step is designed for automation and control.
-                </p>
-                <div class="flex flex-col items-center space-y-4">
-                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">1. Connect & Load Wallets</div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">2. Configure Settings (Recipients, Delays, Amounts)</div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">3. Start Interaction Process</div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step p-6 w-full md:w-2/3 text-center border-dashed border-2 border-gray-300 bg-gray-50 text-gray-700">
-                        <h4 class="font-bold text-lg mb-4">4. Execution Loop (Repeats)</h4>
-                        <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
-                            <div class="font-semibold">Select Chain</div>
-                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
-                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
-                            <div class="font-semibold">Select Wallet</div>
-                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
-                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
-                            <div class="font-semibold">Choose Action</div>
-                            <div class="text-2xl flowchart-arrow hidden md:block">→</div>
-                            <div class="text-2xl flowchart-arrow md:hidden">↓</div>
-                            <div class="font-semibold">Execute Tx</div>
-                        </div>
-                    </div>
-                    <div class="text-4xl flowchart-arrow">↓</div>
-                    <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">5. Monitor via Dashboard & Logs</div>
-                </div>
-            </section>
-
-            <!-- Section 3: KPIs (From infographic-page) -->
-            <section id="infographic-kpis" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
-                 <h2 class="section-title">Key Performance Indicators</h2>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 px-8">
-                     <div>
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Action Distribution</h3>
-                        <p class="text-center text-gray-600 mb-6">
-                            This chart shows the typical probability of the script performing a 'Send' transaction versus choosing to remain 'Idle' for an action, a key feature for simulating non-robotic behavior.
-                        </p>
-                        <div class="chart-container">
-                            <canvas id="infographicActionDistChart"></canvas>
-                        </div>
-                     </div>
-                     <div>
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Sample Wallet Balances (ETH)</h3>
-                         <p class="text-center text-gray-600 mb-6">
-                            A snapshot of balances across multiple loaded wallets. The script provides real-time updates to this data as transactions are confirmed on the network.
-                        </p>
-                        <div class="chart-container">
-                            <canvas id="infographicWalletBalanceChart"></canvas>
-                        </div>
-                     </div>
-                 </div>
-            </section>
-
-            <!-- Section: Deconstructing the Digital Fingerprint / Layer 1 (Combined & Enhanced) -->
-            <section id="infographic-fingerprinting" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
-                <h2 class="section-title">Deconstructing the Digital Fingerprint</h2>
-                <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Platforms create a unique identity by collecting various data points from your browser and device—such as graphics capabilities, installed fonts, and system settings. This "fingerprint" is powerful because it persists even if you clear cookies. To evade detection, a script must address multiple, independent fingerprinting vectors simultaneously to create a consistent, plausible profile.</p>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                    <div class="space-y-4">
-                        <h3 class="text-2xl font-bold mb-4 text-infographic-cyan">Anatomy of a Fingerprint</h3>
-                         <div class="chart-container">
-                            <canvas id="infographicFingerprintChart"></canvas>
-                        </div>
-                        <p class="text-center text-sm text-gray-500 mt-4">A radar chart illustrates how various data points (like Canvas, WebGL, and Fonts) contribute to a user's unique digital signature. The larger the area, the more unique the user.</p>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="text-2xl font-bold mb-4 text-infographic-yellow">Crafting a Coherent Persona</h3>
-                        <p class="text-gray-600 mb-6">Randomizing individual attributes is not enough; modern anti-bot systems detect inconsistent profiles. The key is to build a <span class="font-bold text-main">plausible but fake identity</span>. This flowchart outlines the logic for generating a believable digital persona that can evade statistical analysis.</p>
-                        <div class="flex flex-col lg:flex-row justify-center items-stretch gap-4">
-                            <div class="flowchart-node flex flex-col justify-center">
-                                <span class="text-4xl">🖥️</span>
-                                <p class="mt-2 font-semibold">1. Select Realistic Base Profile</p>
-                                <p class="text-sm text-gray-500">(e.g., Chrome on Windows 11)</p>
-                            </div>
-                            <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
-                            <div class="flowchart-node flex flex-col justify-center">
-                                <span class="text-4xl">🛡️</span>
-                                <p class="mt-2 font-semibold">2. Choose Plausible Hardware</p>
-                                <p class="text-sm text-gray-500">(e.g., Common GPU, 4 CPU Cores)</p>
-                            </div>
-                            <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
-                            <div class="flowchart-node flex flex-col justify-center">
-                                <span class="text-4xl">🎲</span>
-                                <p class="mt-2 font-semibold">3. Randomize Attributes Logically</p>
-                                <p class="text-sm text-gray-500">(e.g., Add noise to Canvas, spoof fonts)</p>
-                            </div>
-                            <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
-                            <div class="flowchart-node bg-infographic-cyan text-white flex flex-col justify-center">
-                                <span class="text-4xl">👻</span>
-                                <p class="mt-2 font-bold">4. Output: Coherent, Spoofed Fingerprint</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section: The Shifting Footprint (Proxies) (Combined & Enhanced) -->
-            <section id="proxies" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
-                <h2 class="section-title">Layer 2: The Shifting Footprint (IP Rotation)</h2>
-                 <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Your IP address is a primary tracker. Strategically rotating IPs through proxies is fundamental, but the type of proxy matters significantly. Routinely changing IP addresses is critical for bypassing IP-based blocking and rate limits. However, IP rotation alone is not a silver bullet. Anti-bot systems correlate IP changes with other persistent identifiers, like device fingerprints. True evasion requires a synergistic approach, combining IP masking with coherent fingerprint spoofing to present a genuinely human-like profile across multiple detection vectors.</p>
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
-                    <div class="md:col-span-3">
-                        <h3 class="text-xl font-semibold text-accent mb-2">Proxy Effectiveness Comparison</h3>
-                        <p class="text-gray-600 mb-4">Residential proxies, which use real IP addresses from ISPs, are far more effective at bypassing sophisticated anti-bot systems than datacenter proxies.</p>
-                        <div class="chart-container">
-                            <canvas id="infographicProxyChart"></canvas>
-                        </div>
-                        <p class="text-center text-sm text-gray-500 mt-4">This chart shows the efficacy of different proxy types, highlighting why residential and mobile IPs are preferred for advanced evasion.</p>
-                    </div>
-                    <div class="md:col-span-2 text-center bg-main text-white p-8 rounded-lg">
-                         <div class="text-7xl font-black" style="color: var(--chart-yellow);">95%</div>
-                         <div class="text-2xl font-bold mt-2">Success Rate</div>
-                         <p class="mt-4 text-gray-200">High-quality residential proxies can achieve up to a 95% success rate against advanced bot detection, making them essential for high-security targets.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section: The Humanization Engine / Layer 3 (Combined & Enhanced) -->
-            <section id="infographic-features" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
-                <h2 class="section-title">The 'Humanization' Engine</h2>
-                 <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    To avoid being flagged as a bot, the script incorporates several layers of randomization. This engine ensures that the script's activity appears organic and unpredictable. Bots are often caught by their unnatural timing. Human reaction times follow skewed distributions, not fixed intervals. Scripts must mimic this organic inconsistency to appear genuine.
-                </p>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                     <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Randomized Gas Payments</h3>
-                         <p class="text-center text-gray-600 mb-6">
-                            Instead of using a fixed gas price, the script calculates a variable fee for each transaction, staying within a user-defined multiplier of the current network average to mimic human bidding behavior.
-                        </p>
-                        <div class="chart-container h-80">
-                            <canvas id="infographicGasPriceChart"></canvas>
-                        </div>
-                     </div>
-                     <div class="space-y-6">
-                        <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">⏱️</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Delays (Log-normal)</h4>
-                                <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions, drawn from a log-normal distribution for more human-like timing.</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">💸</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Amounts</h4>
-                                <p class="text-left text-gray-600">Sends a variable amount of ETH within a specified range.</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">🔗</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Chain & Wallet</h4>
-                                <p class="text-left text-gray-600">Picks a random wallet and a random blockchain network for each session.</p>
-                            </div>
-                        </div>
-                         <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">🎲</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Per-Wallet Probability Jitter</h4>
-                                <p class="text-left text-gray-600">Each wallet's action probabilities (send, idle, balance check) subtly vary from global settings.</p>
-                            </div>
-                        </div>
-                         <div class="kpi-card flex items-center space-x-4">
-                            <span class="text-4xl">⚙️</span>
-                            <div>
-                                <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Simulated Errors & Retries</h4>
-                                <p class="text-left text-gray-600">Introduces occasional simulated transaction failures, followed by exponential backoff retries.</p>
-                            </div>
-                        </div>
-                     </div>
-                </div>
-                <!-- NEW CHARTS FOR HUMANIZATION ENGINE -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mt-12">
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h3 class="text-2xl font-semibold text-center mb-4 text-infographic-yellow">Simulating Human Behavior</h3>
-                        <p class="text-center text-gray-600 mb-4">A comparison of robotic, fixed-interval delays versus human-like, log-normal distributed delays, demonstrating the importance of natural timing.</p>
-                        <div class="chart-container">
-                            <canvas id="infographicTimingChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h3 class="text-xl font-semibold text-accent mb-2">Natural Inputs</h3>
-                        <p class="text-gray-600 mb-4">Human mouse movements are curved and have variable speed. Typing has pauses and errors. Robotic, perfectly straight movements and constant-speed typing are dead giveaways.</p>
-                        <div class="space-y-6">
-                            <div class="p-4 bg-red-100 border-l-4 border-red-500 rounded">
-                                <h4 class="font-bold text-red-800">Robotic Mouse Path</h4>
-                                <p class="text-red-700">A direct, straight line from A to B.</p>
-                                <div class="w-full h-2 mt-2 bg-gradient-to-r from-red-500 to-red-500"></div>
-                            </div>
-                             <div class="p-4 bg-green-100 border-l-4 border-green-500 rounded">
-                                <h4 class="font-bold text-green-800">Human-like Mouse Path</h4>
-                                <p class="text-green-700">A curved, slightly erratic path using Bezier curves.</p>
-                                <div class="w-full h-20 mt-2 relative">
-                                   <div class="absolute top-1/2 left-0 w-full h-0.5 bg-green-500" style="clip-path: path('M 0 40 C 100 0, 200 80, 300 40');"></div>
-                               </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section: The Web3 Frontier: Evading On-Chain Detection / Mastering Web3 (Combined & Enhanced) -->
-            <section id="infographic-web3-frontier" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
-                <h2 class="section-title">The Web3 Frontier: Evading On-Chain Detection</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">In Web3, all transactions are public. This creates a new challenge: your script's entire history is auditable on the blockchain. Evasion is not just about avoiding blocks, but about creating a plausible on-chain persona that doesn't scream "bot" through its transaction patterns.</p>
-
-                <div class="text-center mb-8">
-                     <p class="text-lg md:text-xl text-gray-600 mb-4">On the transparent world of the blockchain, your transaction *patterns* become your new fingerprint.</p>
-                     <div class="inline-block bg-main text-white p-4 rounded-lg">
-                        <span class="text-5xl font-black" style="color: var(--chart-yellow);">~80%</span>
-                        <span class="block text-xl font-semibold">of blockchain transactions are automated.</span>
-                    </div>
-                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start px-6">
-                    <div class="bg-secondary p-6 rounded-lg shadow-lg">
-                        <h3 class="text-2xl font-bold mb-4 text-infographic-magenta">Bot vs. Human NFT Trading</h3>
-                        <p class="text-gray-600 mb-4">A bot might flip the same asset repeatedly with mechanical precision. A human collector, by contrast, shows more diverse activity, accumulates assets over time, and interacts at irregular intervals, mimicking organic market behavior.</p>
-                        <div class="chart-container h-80">
-                            <canvas id="infographicNftActivityChart"></canvas>
-                        </div>
-                        <p class="text-center text-sm text-gray-500 mt-4">A comparison of common NFT trading patterns for automated bots versus human users, emphasizing diversification and irregular timing.</p>
-                    </div>
-
-                    <div class="bg-secondary p-6 rounded-lg shadow-lg">
-                        <h3 class="text-2xl font-bold mb-4 text-infographic-magenta">Mastering Blockchain Challenges: Exponential Backoff</h3>
-                        <p class="text-gray-600 mb-6">Failed blockchain transactions can be costly due to gas fees. Instead of constant, immediate retries (a clear bot-like pattern), use <span class="font-bold text-main">Exponential Backoff</span>. This strategy significantly increases the delay after each failure, mimicking a patient human and reducing network spam, ultimately improving success rates and stealth.</p>
-                        <div class="chart-container h-80">
-                            <canvas id="infographicBackoffChart"></canvas>
-                        </div>
-                        <p class="text-center text-sm text-gray-500 mt-4">This chart visually demonstrates the increasing wait time between retry attempts, a key human-like behavior for robust Web3 interaction.</p>
-                    </div>
-                </div>
-                <div class="mt-12 bg-secondary p-6 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-accent mb-2 text-center">The Resilient Transaction Flow</h3>
-                    <p class="text-gray-600 mb-4 text-center">Blockchain interactions are costly and irreversible. Failed transactions still incur gas fees. Robust error handling with exponential backoff isn't just good practice—it's a financial necessity and mimics a patient human.</p>
-                    <div class="flex flex-col md:flex-row justify-center items-stretch gap-4">
-                        <div class="flowchart-step bg-blue-500 text-white">1. Build Transaction</div>
-                        <div class="flowchart-arrow">→</div>
-                        <div class="flowchart-step bg-blue-500 text-white">2. Estimate Gas & Set Slippage</div>
-                        <div class="flowchart-arrow">→</div>
-                        <div class="flowchart-step bg-blue-500 text-white">3. Sign & Send</div>
-                        <div class="flowchart-arrow">→</div>
-                        <div class="flowchart-step bg-blue-500 text-white">4. On Failure? Use Exponential Backoff & Retry</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 5: Recipient Strategy (Combined from both) -->
-            <section id="infographic-recipient-strategy" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
-                <h2 class="section-title">Recipient Strategy</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    The script offers multiple modes for selecting transaction recipients, allowing for a wide range of interaction patterns.
-                </p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
-                    <div class="kpi-card">
-                        <span class="text-4xl">🔍</span>
-                        <h4 class="text-lg font-bold my-2">Dynamic Pool</h4>
-                        <p class="text-gray-600 text-sm">Scans recent blocks for active wallets (EOAs) and adds them to a recipient pool.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">🎯</span>
-                        <h4 class="text-lg font-bold my-2">Fixed Address</h4>
-                        <p class="text-gray-600 text-sm">Sends all transactions to a single, predetermined address.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">📝</span>
-                        <h4 class="text-lg font-bold my-2">Custom List</h4>
-                        <p class="text-gray-600 text-sm">Uses a user-provided list of addresses for transactions.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">📄</span>
-                        <h4 class="text-lg font-bold my-2">Predefined List</h4>
-                        <p class="text-gray-600 text-sm">Loads recipients from an externally hosted or uploaded CSV file.</p>
-                    </div>
-                     <div class="kpi-card">
-                        <span class="text-4xl">🤝</span>
-                        <h4 class="text-lg font-bold my-2">Self-Interact</h4>
-                        <p class="text-gray-600 text-sm">Loaded wallets send transactions to each other, creating an internal ecosystem.</p>
-                    </div>
-                     <div class="kpi-card bg-gray-100">
-                        <span class="text-4xl">↪️</span>
-                        <h4 class="text-lg font-bold my-2">Fallback Logic</h4>
-                        <p class="text-gray-600 text-sm">If the Dynamic Pool is empty, it automatically falls back to Self-Interact mode.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Embedded Resource Section (Combined from both) -->
-            <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
-                <h2 class="section-title">Deep Dive: External Resource</h2>
-                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                    Explore further details and documentation on transaction Interaction and related topics through this embedded resource.
-                </p>
-                <div class="w-full flex justify-center px-4">
-                    <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
-                </div>
-            </section>
-
-            <!-- Section 6: Security (Combined from both) -->
-            <section id="infographic-security" class="my-16 md:my-24">
-                <div class="max-w-4xl mx-auto p-6 rounded-lg" style="background-color: #fffbe6; border: 1px solid #fde047;">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                             <span class="text-3xl">⚠️</span>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-2xl font-bold" style="color: #ca8a04;">A Critical Security Notice</h3>
-                            <div class="mt-2 text-md text-yellow-800">
-                                <p>This is a client-side application. Handling private keys in a web browser is **extremely risky**. This tool is intended for educational and testing purposes **on test networks only**. Never input mainnet private keys or keys associated with wallets holding real assets. The developer assumes no responsibility for any loss of funds.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div><!-- End infographic-content -->
-
-    </main>
-
-    <!-- Footer Section (Combined from both) -->
-    <footer class="bg-secondary text-center text-accent py-8 mt-12 border-t border-accent">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <h3 class="text-2xl font-bold text-main mb-2">We Grow Together!</h3>
-            <p class="mb-4 max-w-2xl mx-auto">
-                Consider supporting our development efforts by donating to the address below. Your contribution helps keep this project alive and continuously improving.
-            </p>
-            <div class="flex items-center justify-center bg-gray-100 p-3 rounded-lg max-w-md mx-auto mb-6">
-                <span id="donation-address" class="text-sm md:text-base text-main font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
-                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-200 transition-colors" title="Copy Address">
-                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
-                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
-                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-                    </svg>
-                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-500" viewBox="0 0 16 16">
-                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-                    </svg>
-                </button>
-                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-200 transition-colors" title="Show QR Code">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
-                        <path d="M2 2h2v2H2V2Z"/>
-                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
-                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
-                        <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
-                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
-                    </svg>
-                </button>
-            </div>
-            <p class="text-sm text-gray-500 mt-8 flex items-center justify-center">
-                &copy; 2025 FarmLabs. All rights reserved.
-            </p>
-            <div class="flex items-center justify-center space-x-4 mt-4">
-                <!-- Blogspot Icon -->
-                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-orange-500" title="Farm Labs Blog">
-                    <i class="fab fa-blogger fa-2x"></i>
-                </a>
-                <!-- Telegram Icon -->
-                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500" title="Farm Lab Telegram">
-                    <i class="fab fa-telegram fa-2x"></i>
-                </a>
-                <!-- GitHub Icon -->
-                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500" title="Farm Labs GitHub">
-                    <i class="fab fa-github fa-2x"></i>
-                </a>
-            </div>
-        </div>
-    </footer>
-
-    <!-- QR Code Modal -->
-    <div id="qr-code-modal" class="modal hidden">
-        <div class="modal-content text-main flex flex-col items-center text-center">
-            <span class="close-qr-button self-end">&times;</span>
-            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
-            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
-            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
-        </div>
+            <!-- Documentation Link (No Dropdown) -->
+            <a href="Doc.html" class="nav-link">
+                <i class="fas fa-file-alt"></i>
+                <span class="nav-text">Documentation</span>
+            </a>
+        </nav>
     </div>
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper">
+        <header class="bg-secondary shadow-md sticky top-0 z-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <!-- Header Title -->
+                        <h1 class="text-xl md:text-2xl font-bold text-main ml-4">Stealth Automation Infographic</h1>
+                    </div>
+
+                    <!-- Right-side icons -->
+                    <div class="flex items-center space-x-4">
+                         <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs Blog">
+                            <i class="fab fa-blogger text-xl"></i>
+                        </a>
+                        <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Lab Telegram">
+                            <i class="fab fa-telegram text-xl"></i>
+                        </a>
+                        <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs GitHub">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <button id="dark-toggle" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Toggle Dark Mode">
+                            <i class="fas fa-moon text-xl dark:text-yellow-300" id="theme-toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-6" style="color: var(--blue-dark);">Farm smarter, not harder — with FarmLabs.</h2>
+
+            <div id="infographic-content">
+                <!-- Section 1: Introduction & Hook (Combined from both) -->
+                <section id="infographic-overview" class="text-center my-12 md:my-16 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                    <h2 class="section-title">The Blueprint of Human-like Automation</h2>
+                    <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">
+                        A deep dive into a client-side tool designed to automate blockchain interactions for Researchers, Developers, Protocol testing, testnet farmers and airdrop eligibility , with a focus on simulating organic, human-like activity.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                        <div class="kpi-card">
+                            <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">5</span>
+                            <h3 class="text-xl font-semibold text-gray-700">Recipient Modes</h3>
+                            <p class="text-gray-500 mt-2">From dynamic address pools to self-interaction, offering diverse targeting strategies.</p>
+                        </div>
+                        <div class="kpi-card">
+                            <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">5+</span>
+                            <h3 class="text-xl font-semibold text-gray-700">Randomization Factors</h3>
+                            <p class="text-gray-500 mt-2">Simulates human behavior by randomizing amounts, delays, wallets, chains, and gas fees.</p>
+                        </div>
+                        <div class="kpi-card">
+                            <span class="text-5xl font-bold block mb-2" style="color: var(--chart-cyan);">∞</span>
+                            <h3 class="text-xl font-semibold text-gray-700">Supported Wallets</h3>
+                            <p class="text-gray-500 mt-2">Load an unlimited number of private keys to scale your operations effortlessly.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: The Core Engine (Combined from both) -->
+                <section id="infographic-how-it-works" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                    <h2 class="section-title">The Core Engine: How It Works</h2>
+                    <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                        The script follows a logical, configurable flow to execute its tasks. From initialization to the final transaction, each step is designed for automation and control.
+                    </p>
+                    <div class="flex flex-col items-center space-y-4">
+                        <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">1. Connect & Load Wallets</div>
+                        <div class="text-4xl flowchart-arrow">↓</div>
+                        <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">2. Configure Settings (Recipients, Delays, Amounts)</div>
+                        <div class="text-4xl flowchart-arrow">↓</div>
+                        <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">3. Start Interaction Process</div>
+                        <div class="text-4xl flowchart-arrow">↓</div>
+                        <div class="flowchart-step p-6 w-full md:w-2/3 text-center border-dashed border-2 border-gray-300 bg-gray-50 text-gray-700">
+                            <h4 class="font-bold text-lg mb-4">4. Execution Loop (Repeats)</h4>
+                            <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                                <div class="font-semibold">Select Chain</div>
+                                <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                                <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                                <div class="font-semibold">Select Wallet</div>
+                                <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                                <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                                <div class="font-semibold">Choose Action</div>
+                                <div class="text-2xl flowchart-arrow hidden md:block">→</div>
+                                <div class="text-2xl flowchart-arrow md:hidden">↓</div>
+                                <div class="font-semibold">Execute Tx</div>
+                            </div>
+                        </div>
+                        <div class="text-4xl flowchart-arrow">↓</div>
+                        <div class="flowchart-step bg-blue-500 text-white w-full md:w-1/2">5. Monitor via Dashboard & Logs</div>
+                    </div>
+                </section>
+
+                <!-- Section 3: KPIs (From infographic-page) -->
+                <section id="infographic-kpis" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                     <h2 class="section-title">Key Performance Indicators</h2>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-12 px-8">
+                         <div>
+                            <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Action Distribution</h3>
+                            <p class="text-center text-gray-600 mb-6">
+                                This chart shows the typical probability of the script performing a 'Send' transaction versus choosing to remain 'Idle' for an action, a key feature for simulating non-robotic behavior.
+                            </p>
+                            <div class="chart-container">
+                                <canvas id="infographicActionDistChart"></canvas>
+                            </div>
+                         </div>
+                         <div>
+                            <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Sample Wallet Balances (ETH)</h3>
+                             <p class="text-center text-gray-600 mb-6">
+                                A snapshot of balances across multiple loaded wallets. The script provides real-time updates to this data as transactions are confirmed on the network.
+                            </p>
+                            <div class="chart-container">
+                                <canvas id="infographicWalletBalanceChart"></canvas>
+                            </div>
+                         </div>
+                     </div>
+                </section>
+
+                <!-- Section: Deconstructing the Digital Fingerprint / Layer 1 (Combined & Enhanced) -->
+                <section id="infographic-fingerprinting" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                    <h2 class="section-title">Deconstructing the Digital Fingerprint</h2>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Platforms create a unique identity by collecting various data points from your browser and device—such as graphics capabilities, installed fonts, and system settings. This "fingerprint" is powerful because it persists even if you clear cookies. To evade detection, a script must address multiple, independent fingerprinting vectors simultaneously to create a consistent, plausible profile.</p>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <div class="space-y-4">
+                            <h3 class="text-2xl font-bold mb-4 text-infographic-cyan">Anatomy of a Fingerprint</h3>
+                             <div class="chart-container">
+                                <canvas id="infographicFingerprintChart"></canvas>
+                            </div>
+                            <p class="text-center text-sm text-gray-500 mt-4">A radar chart illustrates how various data points (like Canvas, WebGL, and Fonts) contribute to a user's unique digital signature. The larger the area, the more unique the user.</p>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-2xl font-bold mb-4 text-infographic-yellow">Crafting a Coherent Persona</h3>
+                            <p class="text-gray-600 mb-6">Randomizing individual attributes is not enough; modern anti-bot systems detect inconsistent profiles. The key is to build a <span class="font-bold text-main">plausible but fake identity</span>. This flowchart outlines the logic for generating a believable digital persona that can evade statistical analysis.</p>
+                            <div class="flex flex-col lg:flex-row justify-center items-stretch gap-4">
+                                <div class="flowchart-node flex flex-col justify-center">
+                                    <span class="text-4xl">🖥️</span>
+                                    <p class="mt-2 font-semibold">1. Select Realistic Base Profile</p>
+                                    <p class="text-sm text-gray-500">(e.g., Chrome on Windows 11)</p>
+                                </div>
+                                <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
+                                <div class="flowchart-node flex flex-col justify-center">
+                                    <span class="text-4xl">🛡️</span>
+                                    <p class="mt-2 font-semibold">2. Choose Plausible Hardware</p>
+                                    <p class="text-sm text-gray-500">(e.g., Common GPU, 4 CPU Cores)</p>
+                                </div>
+                                <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
+                                <div class="flowchart-node flex flex-col justify-center">
+                                    <span class="text-4xl">🎲</span>
+                                    <p class="mt-2 font-semibold">3. Randomize Attributes Logically</p>
+                                    <p class="text-sm text-gray-500">(e.g., Add noise to Canvas, spoof fonts)</p>
+                                </div>
+                                <div class="flowchart-arrow-container"><div class="flowchart-arrow">↓</div></div>
+                                <div class="flowchart-node bg-infographic-cyan text-white flex flex-col justify-center">
+                                    <span class="text-4xl">👻</span>
+                                    <p class="mt-2 font-bold">4. Output: Coherent, Spoofed Fingerprint</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: The Shifting Footprint (Proxies) (Combined & Enhanced) -->
+                <section id="proxies" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                    <h2 class="section-title">Layer 2: The Shifting Footprint (IP Rotation)</h2>
+                     <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Your IP address is a primary tracker. Strategically rotating IPs through proxies is fundamental, but the type of proxy matters significantly. Routinely changing IP addresses is critical for bypassing IP-based blocking and rate limits. However, IP rotation alone is not a silver bullet. Anti-bot systems correlate IP changes with other persistent identifiers, like device fingerprints. True evasion requires a synergistic approach, combining IP masking with coherent fingerprint spoofing to present a genuinely human-like profile across multiple detection vectors.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+                        <div class="md:col-span-3">
+                            <h3 class="text-xl font-semibold text-accent mb-2">Proxy Effectiveness Comparison</h3>
+                            <p class="text-gray-600 mb-4">Residential proxies, which use real IP addresses from ISPs, are far more effective at bypassing sophisticated anti-bot systems than datacenter proxies.</p>
+                            <div class="chart-container">
+                                <canvas id="infographicProxyChart"></canvas>
+                            </div>
+                            <p class="text-center text-sm text-gray-500 mt-4">This chart shows the efficacy of different proxy types, highlighting why residential and mobile IPs are preferred for advanced evasion.</p>
+                        </div>
+                        <div class="md:col-span-2 text-center bg-main text-white p-8 rounded-lg">
+                             <div class="text-7xl font-black" style="color: var(--chart-yellow);">95%</div>
+                             <div class="text-2xl font-bold mt-2">Success Rate</div>
+                             <p class="mt-4 text-gray-200">High-quality residential proxies can achieve up to a 95% success rate against advanced bot detection, making them essential for high-security targets.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: The Humanization Engine / Layer 3 (Combined & Enhanced) -->
+                <section id="infographic-features" class="my-16 md:my-24 bg-secondary rounded-xl shadow-lg p-6 md:p-8">
+                    <h2 class="section-title">The 'Humanization' Engine</h2>
+                     <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                        To avoid being flagged as a bot, the script incorporates several layers of randomization. This engine ensures that the script's activity appears organic and unpredictable. Bots are often caught by their unnatural timing. Human reaction times follow skewed distributions, not fixed intervals. Scripts must mimic this organic inconsistency to appear genuine.
+                    </p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                         <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-2xl font-semibold text-center mb-4 text-gray-800">Randomized Gas Payments</h3>
+                             <p class="text-center text-gray-600 mb-6">
+                                Instead of using a fixed gas price, the script calculates a variable fee for each transaction, staying within a user-defined multiplier of the current network average to mimic human bidding behavior.
+                            </p>
+                            <div class="chart-container h-80">
+                                <canvas id="infographicGasPriceChart"></canvas>
+                            </div>
+                         </div>
+                         <div class="space-y-6">
+                            <div class="kpi-card flex items-center space-x-4">
+                                <span class="text-4xl">⏱️</span>
+                                <div>
+                                    <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Delays (Log-normal)</h4>
+                                    <p class="text-left text-gray-600">Waits for a random duration (e.g., 10-30 seconds) between actions, drawn from a log-normal distribution for more human-like timing.</p>
+                                </div>
+                            </div>
+                            <div class="kpi-card flex items-center space-x-4">
+                                <span class="text-4xl">💸</span>
+                                <div>
+                                    <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Amounts</h4>
+                                    <p class="text-left text-gray-600">Sends a variable amount of ETH within a specified range.</p>
+                                </div>
+                            </div>
+                            <div class="kpi-card flex items-center space-x-4">
+                                <span class="text-4xl">🔗</span>
+                                <div>
+                                    <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Random Chain & Wallet</h4>
+                                    <p class="text-left text-gray-600">Picks a random wallet and a random blockchain network for each session.</p>
+                                </div>
+                            </div>
+                             <div class="kpi-card flex items-center space-x-4">
+                                <span class="text-4xl">🎲</span>
+                                <div>
+                                    <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Per-Wallet Probability Jitter</h4>
+                                    <p class="text-left text-gray-600">Each wallet's action probabilities (send, idle, balance check) subtly vary from global settings.</p>
+                                </div>
+                            </div>
+                             <div class="kpi-card flex items-center space-x-4">
+                                <span class="text-4xl">⚙️</span>
+                                <div>
+                                    <h4 class="text-xl font-bold text-left" style="color: var(--blue-dark);">Simulated Errors & Retries</h4>
+                                    <p class="text-left text-gray-600">Introduces occasional simulated transaction failures, followed by exponential backoff retries.</p>
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+                    <!-- NEW CHARTS FOR HUMANIZATION ENGINE -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mt-12">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-2xl font-semibold text-center mb-4 text-infographic-yellow">Simulating Human Behavior</h3>
+                            <p class="text-center text-gray-600 mb-4">A comparison of robotic, fixed-interval delays versus human-like, log-normal distributed delays, demonstrating the importance of natural timing.</p>
+                            <div class="chart-container">
+                                <canvas id="infographicTimingChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-semibold text-accent mb-2">Natural Inputs</h3>
+                            <p class="text-gray-600 mb-4">Human mouse movements are curved and have variable speed. Typing has pauses and errors. Robotic, perfectly straight movements and constant-speed typing are dead giveaways.</p>
+                            <div class="space-y-6">
+                                <div class="p-4 bg-red-100 border-l-4 border-red-500 rounded">
+                                    <h4 class="font-bold text-red-800">Robotic Mouse Path</h4>
+                                    <p class="text-red-700">A direct, straight line from A to B.</p>
+                                    <div class="w-full h-2 mt-2 bg-gradient-to-r from-red-500 to-red-500"></div>
+                                </div>
+                                 <div class="p-4 bg-green-100 border-l-4 border-green-500 rounded">
+                                    <h4 class="font-bold text-green-800">Human-like Mouse Path</h4>
+                                    <p class="text-green-700">A curved, slightly erratic path using Bezier curves.</p>
+                                    <div class="w-full h-20 mt-2 relative">
+                                       <div class="absolute top-1/2 left-0 w-full h-0.5 bg-green-500" style="clip-path: path('M 0 40 C 100 0, 200 80, 300 40');"></div>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: The Web3 Frontier: Evading On-Chain Detection / Mastering Web3 (Combined & Enhanced) -->
+                <section id="infographic-web3-frontier" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                    <h2 class="section-title">The Web3 Frontier: Evading On-Chain Detection</h2>
+                    <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">In Web3, all transactions are public. This creates a new challenge: your script's entire history is auditable on the blockchain. Evasion is not just about avoiding blocks, but about creating a plausible on-chain persona that doesn't scream "bot" through its transaction patterns.</p>
+
+                    <div class="text-center mb-8">
+                         <p class="text-lg md:text-xl text-gray-600 mb-4">On the transparent world of the blockchain, your transaction *patterns* become your new fingerprint.</p>
+                         <div class="inline-block bg-main text-white p-4 rounded-lg">
+                            <span class="text-5xl font-black" style="color: var(--chart-yellow);">~80%</span>
+                            <span class="block text-xl font-semibold">of blockchain transactions are automated.</span>
+                        </div>
+                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start px-6">
+                        <div class="bg-secondary p-6 rounded-lg shadow-lg">
+                            <h3 class="text-2xl font-bold mb-4 text-infographic-magenta">Bot vs. Human NFT Trading</h3>
+                            <p class="text-gray-600 mb-4">A bot might flip the same asset repeatedly with mechanical precision. A human collector, by contrast, shows more diverse activity, accumulates assets over time, and interacts at irregular intervals, mimicking organic market behavior.</p>
+                            <div class="chart-container h-80">
+                                <canvas id="infographicNftActivityChart"></canvas>
+                            </div>
+                            <p class="text-center text-sm text-gray-500 mt-4">A comparison of common NFT trading patterns for automated bots versus human users, emphasizing diversification and irregular timing.</p>
+                        </div>
+
+                        <div class="bg-secondary p-6 rounded-lg shadow-lg">
+                            <h3 class="text-2xl font-bold mb-4 text-infographic-magenta">Mastering Blockchain Challenges: Exponential Backoff</h3>
+                            <p class="text-gray-600 mb-6">Failed blockchain transactions can be costly due to gas fees. Instead of constant, immediate retries (a clear bot-like pattern), use <span class="font-bold text-main">Exponential Backoff</span>. This strategy significantly increases the delay after each failure, mimicking a patient human and reducing network spam, ultimately improving success rates and stealth.</p>
+                            <div class="chart-container h-80">
+                                <canvas id="infographicBackoffChart"></canvas>
+                            </div>
+                            <p class="text-center text-sm text-gray-500 mt-4">This chart visually demonstrates the increasing wait time between retry attempts, a key human-like behavior for robust Web3 interaction.</p>
+                        </div>
+                    </div>
+                    <div class="mt-12 bg-secondary p-6 rounded-lg shadow-lg">
+                        <h3 class="text-xl font-semibold text-accent mb-2 text-center">The Resilient Transaction Flow</h3>
+                        <p class="text-gray-600 mb-4 text-center">Blockchain interactions are costly and irreversible. Failed transactions still incur gas fees. Robust error handling with exponential backoff isn't just good practice—it's a financial necessity and mimics a patient human.</p>
+                        <div class="flex flex-col md:flex-row justify-center items-stretch gap-4">
+                            <div class="flowchart-step bg-blue-500 text-white">1. Build Transaction</div>
+                            <div class="flowchart-arrow">→</div>
+                            <div class="flowchart-step bg-blue-500 text-white">2. Estimate Gas & Set Slippage</div>
+                            <div class="flowchart-arrow">→</div>
+                            <div class="flowchart-step bg-blue-500 text-white">3. Sign & Send</div>
+                            <div class="flowchart-arrow">→</div>
+                            <div class="flowchart-step bg-blue-500 text-white">4. On Failure? Use Exponential Backoff & Retry</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Recipient Strategy (Combined from both) -->
+                <section id="infographic-recipient-strategy" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                    <h2 class="section-title">Recipient Strategy</h2>
+                    <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                        The script offers multiple modes for selecting transaction recipients, allowing for a wide range of interaction patterns.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
+                        <div class="kpi-card">
+                            <span class="text-4xl">🔍</span>
+                            <h4 class="text-lg font-bold my-2">Dynamic Pool</h4>
+                            <p class="text-gray-600 text-sm">Scans recent blocks for active wallets (EOAs) and adds them to a recipient pool.</p>
+                        </div>
+                         <div class="kpi-card">
+                            <span class="text-4xl">🎯</span>
+                            <h4 class="text-lg font-bold my-2">Fixed Address</h4>
+                            <p class="text-gray-600 text-sm">Sends all transactions to a single, predetermined address.</p>
+                        </div>
+                         <div class="kpi-card">
+                            <span class="text-4xl">📝</span>
+                            <h4 class="text-lg font-bold my-2">Custom List</h4>
+                            <p class="text-gray-600 text-sm">Uses a user-provided list of addresses for transactions.</p>
+                        </div>
+                         <div class="kpi-card">
+                            <span class="text-4xl">📄</span>
+                            <h4 class="text-lg font-bold my-2">Predefined List</h4>
+                            <p class="text-gray-600 text-sm">Loads recipients from an externally hosted or uploaded CSV file.</p>
+                        </div>
+                         <div class="kpi-card">
+                            <span class="text-4xl">🤝</span>
+                            <h4 class="text-lg font-bold my-2">Self-Interact</h4>
+                            <p class="text-gray-600 text-sm">Loaded wallets send transactions to each other, creating an internal ecosystem.</p>
+                        </div>
+                         <div class="kpi-card bg-gray-100">
+                            <span class="text-4xl">↪️</span>
+                            <h4 class="text-lg font-bold my-2">Fallback Logic</h4>
+                            <p class="text-gray-600 text-sm">If the Dynamic Pool is empty, it automatically falls back to Self-Interact mode.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Embedded Resource Section (Combined from both) -->
+                <section id="embedded-resource" class="my-16 md:my-24 py-12 bg-secondary rounded-xl shadow-lg">
+                    <h2 class="section-title">Deep Dive: External Resource</h2>
+                    <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                        Explore further details and documentation on transaction Interaction and related topics through this embedded resource.
+                    </p>
+                    <div class="w-full flex justify-center px-4">
+                        <iframe src="https://raviku.notion.site/ebd/222dcb3afd088043aad3e7b8ea15fa64" width="100%" height="600" frameborder="0" allowfullscreen class="rounded-lg shadow-xl"></iframe>
+                    </div>
+                </section>
+
+                <!-- Section 6: Security (Combined from both) -->
+                <section id="infographic-security" class="my-16 md:my-24">
+                    <div class="max-w-4xl mx-auto p-6 rounded-lg" style="background-color: #fffbe6; border: 1px solid #fde047;">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                 <span class="text-3xl">⚠️</span>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-2xl font-bold" style="color: #ca8a04;">A Critical Security Notice</h3>
+                                <div class="mt-2 text-md text-yellow-800">
+                                    <p>This is a client-side application. Handling private keys in a web browser is **extremely risky**. This tool is intended for educational and testing purposes **on test networks only**. Never input mainnet private keys or keys associated with wallets holding real assets. The developer assumes no responsibility for any loss of funds.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div><!-- End infographic-content -->
+
+        </main>
+
+        <!-- Footer Section -->
+        <footer class="bg-gray-800 text-white py-12">
+            <div class="container mx-auto px-6 text-center">
+                <h3 class="text-2xl font-bold mb-2">We Grow Together!</h3>
+                <p class="mb-4 max-w-2xl mx-auto text-gray-300">
+                    Your contributions help keep this project alive, ad-free, and continuously improving. Consider supporting our development efforts by donating.
+                </p>
+                <div class="flex items-center justify-center bg-gray-700 p-3 rounded-lg max-w-md mx-auto mb-6 shadow-md">
+                    <span id="donation-address" class="text-sm md:text-base text-white font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                    <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-600 transition-colors" title="Copy Address">
+                        <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                         <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-400" viewBox="0 0 16 16">
+                            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                        </svg>
+                    </button>
+                    <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-600 transition-colors" title="Show QR Code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                            <path d="M2 2h2v2H2V2Z"/>
+                            <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                            <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                            <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                            <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                        </svg>
+                    </button>
+                </div>
+                 <p class="text-sm text-gray-400 mt-8">
+                    &copy; 2025 FarmLabs. All rights reserved.
+                </p>
+                <div class="flex items-center justify-center mt-4 space-x-6">
+                    <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Blog">
+                        <i class="fab fa-blogger fa-lg"></i>
+                    </a>
+                    <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Telegram">
+                        <i class="fab fa-telegram fa-lg"></i>
+                    </a>
+                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="GitHub">
+                        <i class="fab fa-github fa-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div><!-- End content-wrapper -->
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -947,7 +1097,7 @@
                 if (appState.charts.infographicTiming) {
                     appState.charts.infographicTiming.destroy();
                 }
-                const labels = Array.from({length: 20}, (_, i) => i + 1);
+                const labels = Array.from({length: 20}, (_, i) => `Action ${i + 1}`);
                 const humanDelays = labels.map(() => {
                     const mu = 4.5;
                     const sigma = 0.5;
@@ -956,7 +1106,7 @@
                 });
 
                 const data = {
-                    labels: labels.map(l => `Action ${l}`),
+                    labels: labels,
                     datasets: [
                         {
                             label: 'Robotic Delay (Fixed)',
@@ -1095,11 +1245,46 @@
                         if (targetElement) {
                             targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
-                        // Update active class for internal links
-                        document.querySelectorAll('nav a[href^="#"]').forEach(navLink => navLink.classList.remove('active'));
-                        this.classList.add('active');
+                        // Removed active class logic for internal links
                     });
                 });
+
+                // Dark mode toggle
+                const themeToggle = document.getElementById('dark-toggle');
+                const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+                themeToggle.addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                    themeToggleIcon.classList.toggle('fa-sun', isDarkMode);
+                    themeToggleIcon.classList.toggle('fa-moon', !isDarkMode);
+                    // Re-initialize charts to apply new theme colors
+                    initInfographicActionDistChart();
+                    initInfographicWalletBalanceChart();
+                    initInfographicGasPriceChart();
+                    initInfographicFingerprintChart();
+                    initInfographicProxyChart();
+                    initInfographicTimingChart();
+                    initInfographicNftActivityChart();
+                    initInfographicBackoffChart();
+                    initInfographicBehaviorChart();
+                });
+
+                // Apply saved theme on load
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    themeToggleIcon.classList.add('fa-sun');
+                    themeToggleIcon.classList.remove('fa-moon');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    themeToggleIcon.classList.add('fa-moon');
+                    themeToggleIcon.classList.remove('fa-sun');
+                }
+
+                // Removed submenu toggle logic for Documentation
+                // Removed active link highlighting on scroll for sidebar
             };
 
             // Initialize all infographic charts on page load
@@ -1115,11 +1300,8 @@
 
             setupEventListeners();
 
-            // Set the initial active navigation link for Infographic
-            const initialActiveLink = document.querySelector('nav a[href="#infographic-overview"]');
-            if (initialActiveLink) {
-                initialActiveLink.classList.add('active');
-            }
+            // Removed initial active navigation link setting for Infographic
+
 
             // --- FOOTER FUNCTIONALITY ---
             const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
