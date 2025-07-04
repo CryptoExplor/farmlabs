@@ -4,36 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FarmLabs - Automate Your Blockchain Interactions</title>
+
+    <!-- Meta Tags for SEO + Social Sharing -->
+    <meta name="description" content="FarmLabs – Automate Web3 wallet behavior testing, EVM chain interaction simulation, and stealth research from your browser. No code required.">
+    <meta property="og:title" content="FarmLabs – Web3 Automation Suite" />
+    <meta property="og:image" content="https://d.cess.network/n1/1075188011.png" />
+    <meta property="og:url" content="https://farmlabs.pages.dev/" />
+    <meta property="og:description" content="No-code, local-first console for simulating EVM wallet behavior and research. For developers, by explorers." />
+    <!-- End Meta Tags -->
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Required for QR Code and Typed.js functionality -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Base styles from home.html and advance.html for consistency */
+        /* Base styles for consistency */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f4f1eb; /* bg-primary from advance.html */
-            color: #2d3748; /* text-main from advance.html */
+            background-color: #f4f1eb; /* bg-primary */
+            color: #2d3748; /* text-main */
         }
+        /* Dark mode styles - applied to html.dark */
+        html.dark {
+            background-color: #1a202c; /* Dark Slate */
+            color: #e2e8f0; /* Light Gray */
+        }
+        html.dark body {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        html.dark .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://placehold.co/1920x1080/1a202c/e2e8f0?text=FarmLabs');
+            background-size: cover;
+            background-position: center;
+        }
+        html.dark header {
+            background-color: #2d3748;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        html.dark header h1, html.dark header a {
+            color: #e2e8f0;
+        }
+        html.dark #sidebar {
+            background-color: #2d3748;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+            border-right: 1px solid #4a5568;
+        }
+        html.dark #sidebar h2, html.dark #sidebar .nav-link {
+            color: #e2e8f0;
+        }
+        html.dark #sidebar .nav-link:hover, html.dark #sidebar .nav-link.active {
+            background-color: #4a5568;
+            color: #63b3ed;
+        }
+        html.dark .security-banner {
+            background-color: #4a5568;
+            color: #fefcbf;
+        }
+        html.dark #how-it-works, html.dark #why-farmlabs, html.dark .metric-card, html.dark .feature-card, html.dark .tool-card, html.dark .modal-content, html.dark .testimonial-card {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        html.dark .text-gray-600, html.dark .text-gray-500, html.dark .text-gray-400 {
+            color: #cbd5e0;
+        }
+        html.dark .tool-card.bg-yellow-100 {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        html.dark .tool-card.bg-yellow-100 .text-yellow-700 {
+            color: #fefcbf;
+        }
+        html.dark .btn-secondary {
+            background-color: #4a5568;
+            border-color: #63b3ed;
+            color: #63b3ed;
+        }
+        html.dark .btn-secondary:hover {
+            background-color: #63b3ed;
+            color: #1a202c;
+        }
+        html.dark .bg-gray-50 { /* For tool-card */
+            background-color: #2d3748;
+        }
+        html.dark .bg-gray-200 { /* For theme toggle button */
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        html.dark .bg-gray-200:hover {
+            background-color: #63b3ed;
+        }
+        html.dark .bg-gray-700 { /* For donation address container */
+            background-color: #4a5568;
+        }
+        html.dark .modal-content {
+            border-color: #4a5568;
+        }
+        html.dark .close-qr-button {
+            color: #cbd5e0;
+        }
+        html.dark .close-qr-button:hover {
+            color: #e2e8f0;
+        }
+        html.dark .bg-blue-100 { /* For "How it Works" icons */
+            background-color: #4a5568;
+        }
+        html.dark .text-blue-500 { /* For "How it Works" icons */
+            color: #63b3ed;
+        }
+        html.dark footer {
+            background-color: #1f2937; /* Darker footer for dark mode */
+        }
+        html.dark .text-accent {
+            color: #90cdf4; /* Lighter accent for dark mode */
+        }
+        html.dark .text-blue-600 { /* For links */
+            color: #63b3ed;
+        }
+        html.dark .text-red-600 {
+            color: #fc8181; /* Lighter red for dark mode warnings */
+        }
+
+        /* Hero section background */
         .hero-section {
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://placehold.co/1920x1080/2d3748/f4f1eb?text=FarmLabs');
             background-size: cover;
             background-position: center;
         }
+        /* Modal for QR code */
         .modal {
             display: none; /* Hidden by default */
         }
         .modal.flex {
             display: flex;
         }
+        /* Typed.js cursor styling */
         .typed-cursor {
             color: #3b82f6; /* Blue-500 */
         }
 
-        /* --- Sidebar Navigation Styles (from advance.html) --- */
+        /* --- Sidebar Navigation Styles --- */
         #sidebar {
             position: fixed;
             top: 0;
@@ -125,6 +241,48 @@
                 width: 0; /* Hide sidebar on mobile */
             }
         }
+
+        /* Custom styles for the new layout (from index2.html) */
+        .text-accent {
+            color: #63b3ed; /* Example accent color */
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-full font-bold text-white transition duration-300;
+        }
+        .btn-secondary {
+            @apply bg-white border border-blue-600 text-blue-700 px-6 py-3 rounded-full font-bold transition duration-300;
+        }
+        .feature-card {
+            @apply bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300 transform hover:scale-105;
+        }
+        .tool-card {
+            @apply bg-gray-50 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-lg;
+        }
+        .security-banner {
+            background-color: #fefcbf; /* bg-yellow-100 */
+            color: #8a6a00; /* text-yellow-800 */
+            padding: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+        /* Additional styles from index.html for metric cards and coming soon */
+        .metric-card {
+            @apply bg-white p-6 rounded-lg shadow-md text-center;
+        }
+        .coming-soon-card {
+            @apply bg-gray-50 p-4 rounded-lg shadow-md flex flex-col items-center text-center;
+        }
+        .coming-soon-card .icon {
+            font-size: 2.5rem; /* Adjust icon size */
+            margin-bottom: 0.5rem;
+        }
+        .coming-soon-card .badge {
+            @apply bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full mt-2;
+        }
+        /* Testimonial card specific styling */
+        .testimonial-card {
+            @apply bg-white p-8 rounded-lg shadow-lg;
+        }
     </style>
 </head>
 <body class="text-main">
@@ -136,7 +294,7 @@
             <h2 class="text-xl font-bold text-gray-800 nav-text">FarmLabs</h2>
         </div>
         <nav class="flex flex-col mt-4">
-            <a href="home.html" class="nav-link active"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
+            <a href="index.html" class="nav-link active"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
             <a href="basic.html" class="nav-link"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
             <a href="advance.html" class="nav-link"><i class="fas fa-tools"></i><span class="nav-text">Advanced Console</span></a>
             <hr class="border-gray-300 my-2 mx-4">
@@ -151,7 +309,7 @@
             <div class="flex items-center">
                 <h1 class="text-2xl font-bold text-gray-800">FarmLabs</h1>
             </div>
-            <!-- Right-side icons from advance.html -->
+            <!-- Right-side social icons and dark mode toggle -->
             <div class="flex items-center space-x-4">
                  <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500" title="Farm Labs Blog">
                     <i class="fab fa-blogger text-xl"></i>
@@ -162,6 +320,10 @@
                 <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-500" title="Farm Labs GitHub">
                     <i class="fab fa-github text-xl"></i>
                 </a>
+                <!-- Dark Mode Toggle -->
+                <button id="theme-toggle" aria-label="Toggle Dark Mode" class="p-2 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors" title="Toggle Dark Mode">
+                    <i class="fas fa-moon text-xl" id="theme-toggle-icon"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -171,14 +333,22 @@
         <!-- Hero Section -->
         <section class="hero-section text-white py-20 md:py-32">
             <div class="container mx-auto text-center px-6">
-                <h2 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Farm <span id="typed-output"></span>, Not Harder</h2>
-                <p class="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl mx-auto">An advanced, interactive console for automating your blockchain interactions with human-like stealth and precision.</p>
+                <!-- Combined hero headlines with Typed.js -->
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Simulate <span id="typed-output"></span>, Interact Stealthily, and Build Faster.</h1>
+                <p class="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl mx-auto">FarmLabs is your browser-based no-code automation suite for EVM development, wallet behavior testing, and smart interaction research. Fully client-side, privacy-preserving, and stealth-optimized.</p>
                 <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <a href="basic.html" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-bold transition-colors w-full sm:w-auto">Go to Basic Console</a>
-                    <a href="#features" class="bg-white text-blue-500 border border-blue-500 hover:bg-blue-50 px-8 py-3 rounded-full text-lg font-bold transition-colors w-full sm:w-auto">Learn More</a>
+                    <a href="basic.html" class="btn-primary">🛠️ Basic Console</a>
+                    <a href="advance.html" class="btn-primary">🧠 Advanced Console</a>
+                    <a href="doc.html" class="btn-secondary">📘 Documentation</a>
+                    <a href="infographic.html" class="btn-secondary">📊 Infographic</a>
                 </div>
                 <p class="mt-8 text-sm text-gray-300"><i class="fas fa-lock mr-2"></i>Client-side processing ensures your private keys never leave your browser. Safe for testnets.</p>
             </div>
+        </section>
+
+        <!-- Security Notice -->
+        <section class="security-banner py-6">
+            <p class="text-yellow-800 font-medium">⚠️ This tool is for testing and development only. Do not use wallets with real assets. All execution is local in-browser.</p>
         </section>
 
         <!-- How it Works Section -->
@@ -214,72 +384,131 @@
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section id="features" class="py-20">
+        <!-- Powerful Features at Your Fingertips Section -->
+        <section id="powerful-features" class="py-20">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h3 class="text-4xl font-bold text-gray-800">Powerful Features at Your Fingertips</h3>
-                    <p class="text-gray-600 mt-2">Everything you need to manage complex blockchain tasks efficiently.</p>
+                    <h3 class="text-4xl font-bold text-gray-800 dark:text-gray-100">Powerful Features at Your Fingertips</h3>
+                    <p class="text-gray-600 mt-2 dark:text-gray-300">Everything you need to manage complex blockchain tasks efficiently.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <!-- Feature 1 -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
                         <i class="fas fa-cogs text-4xl text-blue-500 mb-4"></i>
-                        <h4 class="text-xl font-bold mb-2">Advanced Configuration</h4>
-                        <p class="text-gray-600">Fine-tune every aspect of your script, from gas fees and transaction delays to human-like behavior simulation.</p>
+                        <h4 class="text-xl font-bold mb-2 dark:text-gray-100">Advanced Configuration</h4>
+                        <p class="text-gray-600 dark:text-gray-300">Fine-tune every aspect of your script, from gas fees and transaction delays to human-like behavior simulation.</p>
                     </div>
                     <!-- Feature 2 -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
                         <i class="fas fa-tachometer-alt text-4xl text-blue-500 mb-4"></i>
-                        <h4 class="text-xl font-bold mb-2">Live Dashboard</h4>
-                        <p class="text-gray-600">Monitor your wallets, track performance, and view real-time logs and analytics all in one place.</p>
+                        <h4 class="text-xl font-bold mb-2 dark:text-gray-100">Live Dashboard</h4>
+                        <p class="text-gray-600 dark:text-gray-300">Monitor your wallets, track performance, and view real-time logs and analytics all in one place.</p>
                     </div>
                     <!-- Feature 3 -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer">
                         <i class="fas fa-shield-alt text-4xl text-blue-500 mb-4"></i>
-                        <h4 class="text-xl font-bold mb-2">Security First</h4>
-                        <p class="text-gray-600">Client-side processing ensures your private keys never leave your browser. Use with testnets for full peace of mind.</p>
+                        <h4 class="text-xl font-bold mb-2 dark:text-gray-100">Security First</h4>
+                        <p class="text-gray-600 dark:text-gray-300">Client-side processing ensures your private keys never leave your browser. Use with testnets for full peace of mind.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Comparison Section -->
-        <section class="py-20 bg-white">
+        <!-- Why FarmLabs? Section -->
+        <section id="why-farmlabs" class="py-20 bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h3 class="text-4xl font-bold text-gray-800">Choose Your Console</h3>
-                    <p class="text-gray-600 mt-2">We offer two powerful options to fit your needs.</p>
+                    <h3 class="text-4xl font-bold text-gray-800 dark:text-gray-100">Why FarmLabs?</h3>
+                    <p class="text-gray-600 mt-2 dark:text-gray-300">Empowering developers and researchers with cutting-edge Web3 automation.</p>
                 </div>
-                <div class="flex flex-col md:flex-row justify-center gap-8">
-                    <!-- Basic Console Card -->
-                    <div class="w-full md:w-1/3 bg-gray-50 p-8 rounded-lg shadow-lg border-2 border-transparent">
-                        <h4 class="text-2xl font-bold mb-4 text-center">✅ Basic</h4>
-                        <ul class="space-y-3 text-gray-600">
-                            <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Quick Setup</li>
-                            <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Simple Interface</li>
-                            <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Ideal for Beginners</li>
-                            <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-3"></i>Core Automation</li>
-                        </ul>
-                        <a href="basic.html" class="mt-8 block w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-full font-bold transition-colors">Launch Basic</a>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="feature-card">
+                        <div class="text-4xl text-blue-500 mb-4">🧠</div>
+                        <h4 class="text-xl font-bold mb-2">Human-like Behavior Simulation</h4>
+                        <p class="text-gray-600">Simulate realistic wallet interactions and transaction patterns for robust testing and research.</p>
                     </div>
-                    <!-- Advanced Console Card -->
-                    <div class="w-full md:w-1/3 bg-blue-50 p-8 rounded-lg shadow-2xl border-2 border-blue-500">
-                        <h4 class="text-2xl font-bold mb-4 text-center">🧠 Advanced</h4>
-                        <ul class="space-y-3 text-gray-600">
-                            <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Stealth Profiles</li>
-                            <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Live Analytics & Charts</li>
-                            <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Human-like Behavior</li>
-                            <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-3"></i>Full Customization</li>
-                        </ul>
-                        <a href="advance.html" class="mt-8 block w-full text-center bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-bold transition-colors">Launch Advanced</a>
+                    <div class="feature-card">
+                        <div class="text-4xl text-blue-500 mb-4">🔐</div>
+                        <h4 class="text-xl font-bold mb-2">100% Client-Side Execution</h4>
+                        <p class="text-gray-600">Your operations run entirely in your browser, ensuring maximum privacy and security. No keys ever leave your device.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="text-4xl text-blue-500 mb-4">⚙️</div>
+                        <h4 class="text-xl font-bold mb-2">Custom Delay and Randomness</h4>
+                        <p class="text-gray-600">Fine-tune timing and introduce variability to mimic organic user behavior and avoid detection.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="text-4xl text-blue-500 mb-4">🌐</div>
+                        <h4 class="text-xl font-bold mb-2">Multi-Chain & RPC Rotation</h4>
+                        <p class="text-gray-600">Seamlessly interact with various EVM-compatible chains and rotate RPCs for enhanced reliability and decentralization.</p>
                     </div>
                 </div>
-                <!-- NEW: Infographic and Doc links -->
-                <p class="mt-6 text-center text-sm text-gray-500">
-                   📊 <a href="infographic.html" class="text-blue-600 hover:underline">View Infographic</a> |
-                   📄 <a href="doc.html" class="text-blue-600 hover:underline">Read Documentation</a>
-                </p>
+            </div>
+        </section>
+
+        <!-- Our Impact Section (Animated Counters) -->
+        <section id="our-impact-section" class="py-20 bg-gray-100 dark:bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-4xl font-bold text-gray-800 dark:text-gray-100">Our Impact</h3>
+                    <p class="text-gray-600 mt-2 dark:text-gray-300">Driving efficiency and innovation in Web3 development.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="metric-card">
+                        <div class="text-5xl font-bold text-blue-600" id="wallets-managed">0+</div>
+                        <p class="text-gray-600 dark:text-gray-300">Wallets Simulated</p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="text-5xl font-bold text-blue-600" id="chains-supported">0+</div>
+                        <p class="text-gray-600 dark:text-gray-300">Chains Supported</p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="text-5xl font-bold text-blue-600" id="gas-variants">0+</div>
+                        <p class="text-gray-600 dark:text-gray-300">Interaction Variants</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features Section (formerly "Coming Soon" from index2.html) -->
+        <section id="key-features" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-4xl font-bold text-gray-800 dark:text-gray-100">Key Features</h3>
+                    <p class="text-gray-600 mt-2 dark:text-gray-300">Tools to streamline your EVM development and interaction research.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="tool-card">
+                        <div class="text-3xl mb-2">👤</div>
+                        <h4 class="text-xl font-semibold mb-1">Wallet Simulation</h4>
+                        <p class="text-sm text-gray-500">Model persona-based wallet behaviors</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="text-3xl mb-2">🧪</div>
+                        <h4 class="text-xl font-semibold mb-1">Protocol Testing</h4>
+                        <p class="text-sm text-gray-500">Automate protocol interactions</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="text-3xl mb-2">🛠️</div>
+                        <h4 class="text-xl font-semibold mb-1">Deploy Contracts</h4>
+                        <p class="text-sm text-gray-500">Push bytecode to testnet RPCs</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="text-3xl mb-2">🌉</div>
+                        <h4 class="text-xl font-semibold mb-1">Bridge Simulator</h4>
+                        <p class="text-sm text-gray-500">Emulate cross-chain tx patterns</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="text-3xl mb-2">🖊️</div>
+                        <h4 class="text-xl font-semibold mb-1">TX Signer</h4>
+                        <p class="text-sm text-gray-500">Build & send raw EVM txs</p>
+                    </div>
+                    <div class="tool-card bg-yellow-100">
+                        <div class="text-3xl mb-2">🧠</div>
+                        <h4 class="text-xl font-semibold mb-1">Configurator</h4>
+                        <p class="text-sm text-yellow-700">No-code UI to customize logic</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -287,26 +516,26 @@
         <section class="py-20">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h3 class="text-4xl font-bold text-gray-800">What Users Are Saying</h3>
+                    <h3 class="text-4xl font-bold text-gray-800 dark:text-gray-100">What Users Are Saying</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-white p-8 rounded-lg shadow-lg">
-                        <p class="text-gray-600 italic mb-4">"Used this on 10 testnets, 0 bans. The stealth features are a game-changer. Love it!"</p>
+                    <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-lg">
+                        <p class="text-gray-600 italic mb-4 dark:text-gray-300">"FarmLabs has revolutionized my Web3 development workflow. The ability to simulate complex interactions locally is invaluable!"</p>
                         <div class="flex items-center">
                             <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=A" class="h-10 w-10 rounded-full mr-4" alt="User Avatar">
                             <div>
-                                <p class="font-bold">Alex_Crypto</p>
-                                <p class="text-sm text-gray-500">Airdrop Hunter</p>
+                                <p class="font-bold dark:text-gray-100">Alex_Crypto</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Web3 Researcher</p>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white p-8 rounded-lg shadow-lg">
-                        <p class="text-gray-600 italic mb-4">"The advanced console saved me hours of manual work. The real-time dashboard is incredibly useful for tracking everything."</p>
+                    <div class="bg-white dark:bg-gray-700 p-8 rounded-lg shadow-lg">
+                        <p class="text-gray-600 italic mb-4 dark:text-gray-300">"The advanced console saved me hours of manual work. The real-time dashboard is incredibly useful for tracking everything."</p>
                         <div class="flex items-center">
                             <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=J" class="h-10 w-10 rounded-full mr-4" alt="User Avatar">
                             <div>
-                                <p class="font-bold">Jane_DeFi</p>
-                                <p class="text-sm text-gray-500">Testnet Farmer</p>
+                                <p class="font-bold dark:text-gray-100">Jane_DeFi</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Advanced User</p>
                             </div>
                         </div>
                     </div>
@@ -315,14 +544,14 @@
         </section>
     </main>
 
-    <!-- UNIFIED DARK FOOTER -->
-    <footer class="bg-gray-800 text-white py-12">
+    <!-- UNIFIED DARK FOOTER with Donation -->
+    <footer class="bg-gray-800 text-white py-12 dark:bg-gray-900">
         <div class="container mx-auto px-6 text-center">
             <h3 class="text-2xl font-bold mb-2">We Grow Together!</h3>
             <p class="mb-4 max-w-2xl mx-auto text-gray-300">
                 Your contributions help keep this project alive, ad-free, and continuously improving. Consider supporting our development efforts by donating.
             </p>
-            <div class="flex items-center justify-center bg-gray-700 p-3 rounded-lg max-w-md mx-auto mb-6 shadow-md">
+            <div class="flex items-center justify-center bg-gray-700 p-3 rounded-lg max-w-md mx-auto mb-6 shadow-md dark:bg-gray-800">
                 <span id="donation-address" class="text-sm md:text-base text-white font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
                 <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-600 transition-colors" title="Copy Address">
                     <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
@@ -372,16 +601,74 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Typed.js Hero Animation (Updated) ---
+            // --- Dark Mode Toggle ---
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const htmlElement = document.documentElement;
+            const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+            // Check for saved theme preference
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'dark') {
+                htmlElement.classList.add('dark');
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun');
+            } else {
+                htmlElement.classList.remove('dark');
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon');
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                htmlElement.classList.toggle('dark');
+                const isDarkMode = htmlElement.classList.contains('dark');
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                themeToggleIcon.classList.toggle('fa-sun', isDarkMode);
+                themeToggleIcon.classList.toggle('fa-moon', !isDarkMode);
+            });
+
+            // --- Typed.js Hero Animation ---
             if (typeof Typed !== 'undefined') {
                 new Typed('#typed-output', {
-                    strings: ['Smarter', 'Stealthier', 'Safer'],
+                    strings: ['Smarter', 'Stealthily', 'Faster'], // Updated strings for the new sentence structure
                     typeSpeed: 60,
                     backSpeed: 40,
                     loop: true
                 });
             } else {
-                document.getElementById('typed-output').textContent = 'Smarter';
+                document.getElementById('typed-output').textContent = 'smarter';
+            }
+
+            // --- Animated Counters for "Our Impact" Section ---
+            function animateValue(id, start, end, duration) {
+                let range = end - start;
+                let current = start;
+                let increment = end > start ? 1 : -1;
+                let stepTime = Math.abs(Math.floor(duration / range));
+                let obj = document.getElementById(id);
+                let timer = setInterval(function() {
+                    current += increment;
+                    obj.textContent = current + "+";
+                    if (current === end) {
+                        clearInterval(timer);
+                    }
+                }, stepTime);
+            }
+
+            // Call animations when the "Our Impact" section comes into view
+            const impactSection = document.getElementById('our-impact-section'); 
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateValue('wallets-managed', 0, 1200, 2000); // Updated to 1200
+                        animateValue('chains-supported', 0, 100, 1800);
+                        animateValue('gas-variants', 0, 99, 2200); // Updated to 99
+                        observer.unobserve(entry.target); // Stop observing once animated
+                    }
+                });
+            }, { threshold: 0.5 }); // Trigger when 50% of the section is visible
+
+            if (impactSection) {
+                observer.observe(impactSection);
             }
 
             // --- Footer & Modal Functionality ---
@@ -417,6 +704,8 @@
 
             // --- QR Code Modal Functionality ---
             if (typeof QRCode !== 'undefined') {
+                // Clear previous QR code if any
+                qrCodeContainer.innerHTML = ''; 
                 new QRCode(qrCodeContainer, {
                     text: donationAddressStr,
                     width: 200,
