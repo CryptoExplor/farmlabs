@@ -1,166 +1,135 @@
+# 🚀 FarmLabs: Web3 Automation Suite for Testing & Research
 
-# 🚜 FarmLabs: Interactive Transaction Farming Console
+**Farm smarter, not harder — with FarmLabs. Built for developers, ready for the future.**
 
-**Farm smarter, not harder — with FarmLabs.**
-
-A lightweight, client-side app to simulate and automate blockchain transaction activity across EVM chains. Built for researchers, developers, and testnet farmers — with randomized behavior, analytics, and multi-wallet orchestration.
+FarmLabs is a local-first, no-code, client-side automation suite for simulating EVM wallet behavior, testing RPC infrastructure, and researching user interaction patterns — all without writing code. Designed for developers, researchers, and advanced testers.
 
 ---
 
 <p align="center">
-  <a href="https://farmlabs.pages.dev"><img src="https://img.shields.io/badge/FarmLabs-pages.dev-00C897?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Live Demo"></a>
-  <a href="https://farmlabs.vercel.app"><img src="https://img.shields.io/badge/FarmLabs-vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
-  <a href="https://cryptoexplor.github.io/farmlabs"><img src="https://img.shields.io/badge/FarmLabs-github.io-24292e?style=for-the-badge&logo=github&logoColor=white" alt="Live Demo"></a>
+  <a href="https://farmlabs.pages.dev"><img src="https://img.shields.io/badge/FarmLabs-pages.dev-00C897?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Live Demo"></a>
+  <a href="https://farmlabs.vercel.app"><img src="https://img.shields.io/badge/FarmLabs-vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+  <a href="https://cryptoexplor.github.io/farmlabs"><img src="https://img.shields.io/badge/FarmLabs-github.io-24292e?style=for-the-badge&logo=github&logoColor=white" alt="Live Demo"></a>
 </p>
 
 ---
 
 ## ⚠️ Security Notice
 
-> 🛑 **For testing & development only**
+> 🛑 **For testing & development purposes only**
 >
-> - **Never** use real private keys or wallets with funds.  
-> - Use only testnets like Goerli or Sepolia.  
-> - App runs **entirely client-side** in your browser.  
-> - You are responsible for your own security.
+> - Do **not** use wallets with mainnet funds.  
+> - Use only on testnets (e.g., Sepolia, Goerli, Base Goerli, etc.).  
+> - App runs **entirely in-browser** with no server or backend.  
+> - You are fully responsible for wallet and key security.
 
 ---
 
 ## ✨ Features
 
-### 🧠 Intelligent Wallet Simulation
-- Load multiple private keys
-- Auto-balance check per key
-- Wallet rotation & idle simulation
-- Randomized delays + gas values
+### 🧠 Human-Like Wallet Simulation
+- Load multiple testnet private keys
+- Check balances, rotate wallets
+- Persona-based delays and behavior (Night Owl, Gas Saver, etc.)
+- Randomized gas, ETH amount, action matrix
 
-### 🌐 Multi-Chain Farming
-- Works with any EVM-compatible chain
-- Input custom RPCs & Chain IDs
-- Configurable ETH ranges per tx
-- Supports EIP-1559 & legacy gas
+### 🌐 Multi-Chain Support
+- Connect to any EVM-compatible testnet
+- Custom RPC/Chain ID support
+- Fallback RPC rotation and dead-RPC detection
 
-### 👥 Recipient Modes
-- Dynamic pool: scan recent EOAs
-- Fixed: set a target address
-- Custom list: paste addresses
-- CSV upload: your own list
-- Self-interact: wallets talk to each other
+### 🎯 Recipient Control
+- Dynamic: scan active addresses
+- Fixed: target single recipient
+- CSV Upload: paste your own list
+- Self-Interaction: wallet-to-wallet txs
 
-### ⚖️ Action Matrix Engine
-- Set action weights (e.g., Send: 70%, Idle: 30%)
-- All actions randomized per loop
+### ⚙️ Action Engine
+- Adjustable action weights (send, idle, balance-check, etc.)
+- Adjustable loop delay & behavior profiles
+- Adjustable max TX/session per wallet
 
-### 📊 Dashboard & Logs
-- Live logs of txs per wallet
-- Balance tracking per wallet
-- Charts for actions & wallet activity
-- Export CSV logs
+### 📊 Live Dashboard
+- Real-time wallet logs and TX console
+- Charts for action types and wallet balance changes
+- Export logs (CSV)
 
-### 🤖 Gemini AI Assistant
-- Get transaction risk analysis
-- Gemini Flash 2.0 integration
+### 🔍 Configurator (Coming Soon)
+- No-code UI to build, save & apply custom profiles
+- Drag-and-drop behavior templates
 
 ---
 
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository
-
 ```bash
 git clone https://github.com/CryptoExplor/farmlabs.git
 cd farmlabs
-````
+```
 
-### 2\. Open the App
+### 2. Open the App
+- Launch `index.html` in any browser (Chrome, Brave, Firefox)
 
-  * Launch `index.html` in any modern browser.
+### 3. Connect or Load Wallets
+- Paste private keys (testnet only!) or connect MetaMask
 
-### 3\. Connect MetaMask
+### 4. Configure Recipients & Delay Logic
+- Select from multiple recipient modes
+- Define stealth profile, delay, and gas behavior
 
-  * Click **Connect Wallet** to enable browser wallet integration.
+### 5. Start Interaction
+- Press ▶️ Start to begin cycles
+- Logs and charts update in real time
+- Stop anytime and download logs
 
-### 4\. Load Wallets
+---
 
-  * Go to **Wallets** → Paste testnet private keys (one per line) → Click **Load Wallets & Check Balances**.
+## 🌍 Live Demos
 
-### 5\. Configure Recipients
+| Host | Link |
+|------|------|
+| Cloudflare Pages | [farmlabs.pages.dev](https://farmlabs.pages.dev) |
+| Vercel | [farmlabs.vercel.app](https://farmlabs.vercel.app) |
+| GitHub Pages | [cryptoexplor.github.io/farmlabs](https://cryptoexplor.github.io/farmlabs) |
 
-  * Choose from: Dynamic Pool, Fixed Address, Custom List, CSV Upload, or Self-Interact.
+---
 
-### 6\. Set Parameters
+## 🛠 Tech Stack
 
-| Setting                   | Description                                        |
-| ------------------------- | -------------------------------------------------- |
-| Max Actions per Session   | Total txs per wallet before cooldown or stop       |
-| Delay Between Actions     | In seconds (min-max)                               |
-| ETH Amount Range          | For each transfer                                  |
-| Gas Price Multiplier      | Dynamic adjustment over base                       |
-| Wallet Idle Chance (%)    | Chance to do nothing on a given loop               |
-| Blocks to Scan            | For recent addresses (EOAs only)                   |
-| Recipient Mode            | Dynamic, Fixed, CSV, Custom List, or Self-Interact |
-| Action Probability Matrix | Must add up to 100%                                |
+| Layer | Technology |
+|-------|------------|
+| UI | HTML + TailwindCSS |
+| Web3 | Ethers.js v6.7.0 |
+| Charts | Chart.js + Plotly |
+| QR | QRCode.js |
+| AI | Gemini Flash 2 (planned) |
 
-> Click **⚡ Test RPC Connections** to validate before starting.
-
-### 📊 Live Demo Options
-
-| Host             | Link                                                                       |
-| ---------------- | -------------------------------------------------------------------------- |
-| Cloudflare Pages | [farmlabs.pages.dev](https://farmlabs.pages.dev)                           |
-| Vercel           | [farmlabs.vercel.app](https://farmlabs.vercel.app)                         |
-| GitHub Pages     | [cryptoexplor.github.io/farmlabs](https://cryptoexplor.github.io/farmlabs) |
-
-### 7\. Start & Monitor
-
-  * Click **▶️ Start Farming** to begin.
-  * Watch logs and charts update in real time.
-  * Stop anytime with **⏹️ Stop Farming**.
-
-### 8\. Export or Reset
-
-  * **Download Logs** as CSV.
-  * Use **🗑️ Clear All Data** to reset the app.
-
------
-
-## 🧰 Tech Stack
-
-| Layer        | Technology               |
-| ------------ | ------------------------ |
-| UI           | HTML + Tailwind CSS      |
-| Web3         | Ethers.js v6.7.0         |
-| Charts       | Chart.js                 |
-| AI Assistant | Gemini Flash 2 (via API) |
-| QR Codes     | QRCode.js                |
-
------
+---
 
 ## 🤝 Contributing
 
-1.  Fork the repository
-2.  Create a feature branch: `git checkout -b feature-name`
-3.  Commit and push changes: `git push origin feature-name`
-4.  Open a Pull Request with details of your updates
+1. Fork the repo
+2. Create a branch: `git checkout -b feature-name`
+3. Push changes: `git push origin feature-name`
+4. Open a PR describing your contribution
 
-Bug reports, feature suggestions, and improvements are always welcome\!
+Bug reports and suggestions are very welcome!
 
------
+---
 
 ## 📄 License
 
-This project is released under the [MIT License](https://www.google.com/search?q=LICENSE).
+Released under the [MIT License](https://opensource.org/licenses/MIT)
 
------
+---
 
-## ❤️ Support & Donations
+## ❤️ Support the Project
 
-If this tool helps you, consider supporting its future development:
+If you find FarmLabs useful, consider donating:
 
-**EVM Donation Address:**
-
-```
-0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954
+```txt
+EVM: 0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954
 ```
 
-Thank you for supporting open-source innovation\!
+Thanks for supporting open-source innovation!
