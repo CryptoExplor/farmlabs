@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 – Page Not Found | FarmLabs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f1eb;
+      color: #2d3748;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .dark body {
+      background-color: #1a202c;
+      color: #e2e8f0;
+    }
+    .logo {
+      height: 48px;
+      width: 48px;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      background-color: #3b82f6;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 1.5rem;
+    }
+    .btn:hover {
+      background-color: #2563eb;
+    }
+    .fade {
+      animation: fadein 1s ease;
+    }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .search-bar input {
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid #cbd5e0;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+    }
+    .suggested-links {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+    .suggested-links a {
+      color: #3b82f6;
+      text-decoration: underline;
+      margin: 0 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="flex flex-col items-center justify-center min-h-screen fade">
+    <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="logo" />
+    <h1 class="text-6xl font-extrabold text-blue-500 mb-4">404</h1>
+    <p class="text-xl mb-2">Oops! Page not found.</p>
+    <p class="text-gray-500">You’ll be redirected to the homepage in <span id="countdown" class="font-bold text-blue-600">7</span> seconds.</p>
+    <a href="index.html" class="btn">🌾 Go to Homepage</a>
+
+    <div class="search-bar mt-4">
+      <input type="text" placeholder="Search for something...">
+    </div>
+
+    <div class="suggested-links">
+      Try:
+      <a href="basic.html">Basic Console</a>,
+      <a href="advance.html">Advanced Console</a>,
+      <a href="doc.html">Documentation</a>
+    </div>
+
+    <p class="text-sm text-gray-400 mt-6">Still lost? <a href="https://t.me/farm_lab" class="underline text-blue-500">Ask Help</a></p>
+  </div>
+
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+
+    let seconds = 7;
+    const countdown = document.getElementById('countdown');
+
+    const interval = setInterval(() => {
+      seconds--;
+      countdown.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        window.location.href = "index.html";
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
