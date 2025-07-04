@@ -426,14 +426,14 @@
             <!-- Basic Console Link (Activated) -->
             <a href="basic.html" class="nav-link"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
 
-            <!-- Advanced Console Submenu -->
+            <!-- Advance Console Submenu -->
             <div>
-                <div id="advanced-console-toggle" class="submenu-toggle">
+                <div id="advance-console-toggle" class="submenu-toggle">
                     <i class="fas fa-tools"></i>
-                    <span class="nav-text">Advanced Console</span>
+                    <span class="nav-text">Advance Console</span>
                     <i class="fas fa-chevron-down text-xs nav-text"></i>
                 </div>
-                <div id="advanced-console-submenu" class="submenu">
+                <div id="advance-console-submenu" class="submenu">
                     <a href="#dashboard" class="nav-link" data-section="dashboard"><i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span></a>
                     <a href="#wallets" class="nav-link" data-section="wallets"><i class="fas fa-wallet"></i><span class="nav-text">Wallets</span></a>
                     <a href="#recipient-settings" class="nav-link" data-section="recipients"><i class="fas fa-users"></i><span class="nav-text">Recipients</span></a>
@@ -1316,8 +1316,8 @@ https://rpc.goerli.dev,5</textarea>
                 closeConfirmBtn: document.querySelector('#confirmation-modal .close-confirm-button'),
                 humanSpikeDisplay: document.getElementById('human-spike-display'), // NEW
                 stealthProfileSelector: document.getElementById('stealth-profile'), // NEW UI element
-                advancedConsoleToggle: document.getElementById('advanced-console-toggle'),
-                advancedConsoleSubmenu: document.getElementById('advanced-console-submenu'),
+                advanceConsoleToggle: document.getElementById('advance-console-toggle'),
+                advanceConsoleSubmenu: document.getElementById('advance-console-submenu'),
                 themeToggle: document.getElementById('theme-toggle'), // NEW
                 themeToggleIcon: document.getElementById('theme-toggle-icon'), // NEW
                 apiKeyInput: document.getElementById('api-key-input'), // NEW
@@ -2571,9 +2571,9 @@ https://rpc.goerli.dev,5</textarea>
                 });
                 
                 // Submenu toggle functionality
-                ui.advancedConsoleToggle.addEventListener('click', () => {
-                    ui.advancedConsoleToggle.classList.toggle('active');
-                    ui.advancedConsoleSubmenu.classList.toggle('open');
+                ui.advanceConsoleToggle.addEventListener('click', () => {
+                    ui.advanceConsoleToggle.classList.toggle('active');
+                    ui.advanceConsoleSubmenu.classList.toggle('open');
                 });
 
                 // Handle navigation links for internal sections
@@ -2638,7 +2638,7 @@ https://rpc.goerli.dev,5</textarea>
             setUIEnabled(false); // Initially disable features, but connect wallet button remains enabled
 
             // Set the initial active navigation link for Dashboard by default
-            const initialActiveToggle = document.getElementById('advanced-console-toggle');
+            const initialActiveToggle = document.getElementById('advance-console-toggle');
             initialActiveToggle.classList.add('active');
             initialActiveToggle.nextElementSibling.classList.add('open');
 
