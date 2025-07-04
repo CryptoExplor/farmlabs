@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb;
+            color: #2d3748;
+        }
+
+        /* Dark mode styles */
+        html.dark body {
+            background-color: #1a202c; /* Dark Slate */
+            color: #e2e8f0; /* Light Gray */
+        }
+        
+        .bg-primary { background-color: #f4f1eb; }
+        html.dark .bg-primary { background-color: #1a202c; }
+
+        .bg-secondary { background-color: #ffffff; }
+        html.dark .bg-secondary { background-color: #2d3748; }
+
+        .text-main { color: #2d3748; }
+        html.dark .text-main { color: #e2e8f0; }
+
+        .text-accent { color: #4a5568; }
+        html.dark .text-accent { color: #a0aec0; }
+        
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            margin-bottom: 1.5rem;
+        }
+        html.dark .section-card {
+            background-color: #2d3748;
+        }
+
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .accordion-header:hover {
+            background-color: #f9fafb;
+        }
+        html.dark .accordion-header:hover {
+            background-color: #4a5568;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 2000px; /* Adjust as needed */
+        }
+        
+        .table-auto th, .table-auto td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        html.dark .table-auto th, html.dark .table-auto td {
+             border-color: #4a5568;
+        }
+        .table-auto th {
+            background-color: #f8fafc;
+        }
+        html.dark .table-auto th {
+            background-color: #4a5568;
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 80px; /* Collapsed width */
+            background-color: #ffffff;
+            color: #2d3748;
+            padding-top: 1rem;
+            transition: width 0.3s ease-in-out;
+            z-index: 50;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-x: hidden;
+            border-right: 1px solid #e2e8f0;
+        }
+        html.dark #sidebar {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-right: 1px solid #4a5568;
+        }
+
+        #sidebar:hover {
+            width: 250px; /* Expanded width */
+        }
+        
+        #sidebar .logo-container {
+            transition: justify-content 0.3s ease-in-out;
+        }
+        #sidebar:hover .logo-container {
+            justify-content: flex-start;
+        }
+
+        #sidebar .nav-link, #sidebar .submenu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            color: #4a5568;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, justify-content 0.3s ease-in-out;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        html.dark #sidebar .nav-link, html.dark .submenu-toggle {
+            color: #a0aec0;
+        }
+        #sidebar .nav-link:hover, #sidebar .nav-link.active,
+        #sidebar .submenu-toggle:hover, #sidebar .submenu-toggle.active {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+        html.dark #sidebar .nav-link:hover, html.dark #sidebar .nav-link.active,
+        html.dark #sidebar .submenu-toggle:hover, html.dark #sidebar .submenu-toggle.active {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        #sidebar:hover .nav-link, #sidebar:hover .submenu-toggle {
+            justify-content: flex-start;
+        }
+
+        #sidebar .nav-link i, #sidebar .submenu-toggle i {
+            min-width: 24px;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        #sidebar .nav-text {
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            margin-left: 0;
+            transition: opacity 0.2s ease-in-out, max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+            transition-delay: 0.1s;
+        }
+
+        #sidebar:hover .nav-text {
+            opacity: 1;
+            max-width: 200px;
+            margin-left: 0.75rem;
+        }
+
+        /* Submenu styles */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            background-color: #f8fafc; /* Slightly different bg for submenu */
+        }
+        html.dark .submenu {
+            background-color: #1f2937;
+        }
+        
+        .submenu.open {
+            max-height: 500px; /* Large enough to show all items */
+        }
+
+        .submenu .nav-link {
+            padding-left: 3.5rem; /* Indent submenu items */
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .submenu-toggle .fa-chevron-down {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        header, main, footer {
+            margin-left: 80px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        #sidebar:hover ~ header,
+        #sidebar:hover ~ main,
+        #sidebar:hover ~ footer {
+            margin-left: 250px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        html.dark .modal-content {
+            background-color: #2d3748;
+            border-color: #4a5568;
+        }
+        .close-qr-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        html.dark .close-qr-button {
+            color: #cbd5e0;
+        }
+        .close-qr-button:hover,
+        .close-qr-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        html.dark .close-qr-button:hover, html.dark .close-qr-button:focus {
+             color: #e2e8f0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-primary text-main">
+    
+    <!-- Sidebar Navigation -->
+    <div id="sidebar">
+        <div class="p-4 mt-8 flex items-center justify-center logo-container">
+            <img src="https://d.cess.network/n1/1075188011.png" alt="FarmLabs Logo" class="h-10 w-10 rounded-full">
+            <h2 class="text-xl font-bold nav-text">FarmLabs</h2>
+        </div>
+        <nav class="flex flex-col mt-4">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span class="nav-text">Home</span></a>
+            <a href="basic.html" class="nav-link"><i class="fas fa-terminal"></i><span class="nav-text">Basic Console</span></a>
+            <a href="advance.html" class="nav-link"><i class="fas fa-tools"></i><span class="nav-text">Advance Console</span></a>
+            <hr class="border-gray-300 dark:border-gray-600 my-2 mx-4">
+            <a href="infographic.html" class="nav-link"><i class="fas fa-chart-pie"></i><span class="nav-text">Infographic</span></a>
+
+            <!-- Documentation Dropdown -->
+            <div>
+                <div id="doc-menu-toggle" class="submenu-toggle">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="nav-text">Documentation</span>
+                    <i class="fas fa-chevron-down text-xs nav-text ml-auto transition-transform"></i>
+                </div>
+                <div id="doc-menu-submenu" class="submenu">
+                    <a href="#intro" class="nav-link"><i class="fas fa-rocket w-5"></i><span class="nav-text">Introduction</span></a>
+                    <a href="#comparison" class="nav-link"><i class="fas fa-exchange-alt w-5"></i><span class="nav-text">Comparison</span></a>
+                    <a href="#getting-started" class="nav-link"><i class="fas fa-play-circle w-5"></i><span class="nav-text">Getting Started</span></a>
+                    <a href="#wallet-management" class="nav-link"><i class="fas fa-wallet w-5"></i><span class="nav-text">Wallets</span></a>
+                    <a href="#recipient-config" class="nav-link"><i class="fas fa-users-cog w-5"></i><span class="nav-text">Recipients</span></a>
+                    <a href="#stealth" class="nav-link"><i class="fas fa-user-secret w-5"></i><span class="nav-text">Stealth</span></a>
+                    <a href="#charts" class="nav-link"><i class="fas fa-chart-pie w-5"></i><span class="nav-text">Charts</span></a>
+                    <a href="#modules" class="nav-link"><i class="fas fa-puzzle-piece w-5"></i><span class="nav-text">Modules</span></a>
+                    <a href="#security" class="nav-link"><i class="fas fa-shield-alt w-5"></i><span class="nav-text">Security</span></a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <header class="bg-secondary shadow-md sticky top-0 z-20">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl md:text-2xl font-bold text-main ml-4">User Guide</h1>
+                </div>
+                <!-- Right-side icons -->
+                <div class="flex items-center space-x-4">
+                     <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs Blog">
+                        <i class="fab fa-blogger text-xl"></i>
+                    </a>
+                    <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Lab Telegram">
+                        <i class="fab fa-telegram text-xl"></i>
+                    </a>
+                    <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-accent hover:text-blue-500" title="Farm Labs GitHub">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="text-accent hover:text-blue-500 p-2 rounded-full transition-colors duration-200" title="Toggle Dark Mode">
+                        <i class="fas fa-moon text-xl" id="theme-toggle-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 sm:p-6 lg:p-8">
+        <div class="container mx-auto">
+            <!-- Introduction -->
+            <section id="intro" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">📌 Welcome to FarmLabs</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-lg text-accent mb-4">The Modular, No-Code EVM Automation Console.</p>
+                    <p class="text-accent">Use this guide to learn how to safely automate testnet interactions, manage wallet behavior, and configure stealth options for advanced EVM farming and testing strategies. All operations are client-side, meaning your keys and data never leave your browser.</p>
+                </div>
+            </section>
+
+            <!-- Console Comparison -->
+            <section id="comparison" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">🔄 Console Comparison</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-accent mb-4">Not sure which console to use? Here’s a quick breakdown to help you decide.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr>
+                                    <th class="text-left font-bold text-main">Feature</th>
+                                    <th class="text-center font-bold text-main">Basic Console</th>
+                                    <th class="text-center font-bold text-main">Advance Console</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Wallet Connect</td><td class="text-center text-green-500">✅</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr><td>Multiple Private Keys</td><td class="text-center text-red-500">❌</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr><td>Wallet Personas</td><td class="text-center text-red-500">❌</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr><td>Recipient Modes</td><td class="text-center text-green-500">✅</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr><td>Gas-aware logic</td><td class="text-center text-red-500">❌</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr><td>Live Charts</td><td class="text-center text-green-500">✅</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr><td>Persona Profiles</td><td class="text-center text-red-500">❌</td><td class="text-center text-green-500">✅</td></tr>
+                                <tr class="bg-gray-50 dark:bg-gray-700">
+                                    <td class="font-bold">Best For</td>
+                                    <td class="text-center font-semibold">Quick Testnet Tasks</td>
+                                    <td class="text-center font-semibold">Long-Term Automation</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started -->
+            <section id="getting-started" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">🚀 Getting Started (Step-by-Step)</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <ol class="list-decimal list-inside space-y-3 text-accent">
+                        <li>Open <strong>basic.html</strong> or <strong>advance.html</strong> depending on your use case.</li>
+                        <li>Connect a wallet or paste private keys (Advance only).</li>
+                        <li>Select your recipient mode or upload a list of addresses.</li>
+                        <li>Configure stealth options like delays, chain, and personas (Advance only).</li>
+                        <li>Press <strong>Start Interaction</strong> and watch the logs and charts in real-time.</li>
+                        <li>Monitor the process and export logs or configuration as needed.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Wallet Management -->
+            <section id="wallet-management" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">👛 Wallet Management</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <ul class="list-disc list-inside space-y-3 text-accent">
+                        <li><strong>Multiple Keys (Advance):</strong> Paste multiple private keys—one per line—to run automations from several wallets simultaneously.</li>
+                        <li><strong>Wallet Personas (Advance):</strong> Simulate human-like behavior with presets like <em>Night Owl</em>, <em>Gas Saver</em>, or <em>XP Farmer</em>. These profiles automatically adjust timing and action frequency.</li>
+                        <li><strong>Balance Check:</strong> Always check wallet balances before starting automation to ensure you have enough funds for gas fees.</li>
+                        <li class="font-bold text-red-600"><strong>Safety First:</strong> Never use wallets that contain mainnet funds or any real assets. This tool is for testnets only.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Recipient Configuration -->
+            <section id="recipient-config" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">📤 Recipient Configuration</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-accent mb-4">Choose where your automated transactions are sent:</p>
+                    <ul class="list-disc list-inside space-y-3 text-accent">
+                        <li><strong>Dynamic Pool:</strong> Automatically fetches recently active addresses on the target chain to use as recipients.</li>
+                        <li><strong>Fixed:</strong> Sends all transactions to a single, specified target address.</li>
+                        <li><strong>CSV Upload:</strong> Provide a complete list of recipients by uploading a CSV file.</li>
+                        <li><strong>Self Interaction (Advance):</strong> Shuffles your loaded wallets and has them send transactions to each other, creating internal activity.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Stealth & Config -->
+            <section id="stealth" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">⚙️ Stealth & Config</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-accent mb-4">The Advance Console offers powerful stealth features to mimic human behavior:</p>
+                    <ul class="list-disc list-inside space-y-3 text-accent">
+                        <li><strong>Custom Delays:</strong> Set minimum and maximum delay ranges (in seconds) between actions to avoid predictable, bot-like timing.</li>
+                        <li><strong>Gas Awareness:</strong> Use the gas multiplier to automatically pause activity when network gas prices spike, saving on fees.</li>
+                        <li><strong>Randomization:</strong> The script automatically randomizes transaction amounts and action types (send, idle, check balance) to create a more organic activity pattern.</li>
+                        <li><strong>RPC Rotation:</strong> Add multiple RPC endpoints for a single chain. The console will automatically rotate between them to improve reliability and avoid rate-limiting.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Charts & Logs -->
+            <section id="charts" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">📊 Charts & Logs</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-accent mb-4">Get real-time visual feedback and detailed records of all activity:</p>
+                    <ul class="list-disc list-inside space-y-3 text-accent">
+                        <li><strong>Wallet Balance Chart:</strong> A bar chart displaying the current ETH balance of all loaded wallets.</li>
+                        <li><strong>Action Distribution Chart:</strong> A pie chart showing the breakdown of actions performed (e.g., Send, Idle, Balance Check).</li>
+                        <li><strong>Spike Tracker:</strong> A display that shows when the last "human-like" random spike in activity or delay occurred.</li>
+                        <li><strong>Live Log:</strong> A detailed, timestamped log of every action, success, and error. You can download the full log as a CSV or JSON file.</li>
+                        <li><strong>AI Log Summarizer (Advance):</strong> Use your Gemini API key to get an AI-powered summary of the log, highlighting key events and potential issues.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Modules Coming Soon -->
+            <section id="modules" class="section-card">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-main">🧩 Modules (Coming Soon)</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-accent mb-4">We're constantly developing new tools to expand FarmLabs' capabilities. Here's a preview of what's next:</p>
+                    <ul class="list-disc list-inside space-y-3 text-accent">
+                        <li><strong>Mint Tool:</strong> Automatically call the `mint()` function on supported NFT and token contracts.</li>
+                        <li><strong>Deploy Tool:</strong> Push new smart contracts to any testnet using bytecode or a simple UI.</li>
+                        <li><strong>Bridge Simulator:</strong> Mimic cross-chain transactions to test bridging protocols and generate related activity.</li>
+                        <li><strong>Airdrop Claimer:</strong> Simulate interactions with airdrop claim contracts.</li>
+                        <li><strong>Transaction Signer:</strong> Build, sign, and send raw EIP-1559 transactions with full control over gas and nonce.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Security Notice -->
+            <section id="security" class="section-card border-l-4 border-red-500">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h2 class="text-3xl font-extrabold text-red-600">🔒 Security Notice</h2>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </div>
+                <div class="accordion-content p-4 border-t">
+                    <p class="text-accent mb-4 font-semibold">Your security is our top priority. Please read this carefully.</p>
+                    <ul class="list-disc list-inside space-y-3 text-accent">
+                        <li><strong>Client-Side Only:</strong> Your private keys, configuration, and all sensitive data <strong>never</strong> leave your browser. There is no backend server involved in processing your data.</li>
+                        <li><strong>Testnet Use Only:</strong> This tool is designed exclusively for testnets. <strong>Do not use real funds or mainnet wallets.</strong> You are solely responsible for the keys you use.</li>
+                        <li><strong>Local Execution:</strong> All automation logic is executed locally within your browser. This ensures you have full control and transparency over the process.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- UPDATED FOOTER SECTION -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-2xl font-bold mb-2">We Grow Together!</h3>
+            <p class="mb-4 max-w-2xl mx-auto text-gray-300">
+                Your contributions help keep this project alive, ad-free, and continuously improving. Consider supporting our development efforts by donating.
+            </p>
+            <div class="flex items-center justify-center bg-gray-700 p-3 rounded-lg max-w-md mx-auto mb-6 shadow-md">
+                <span id="donation-address" class="text-sm md:text-base text-white font-mono break-all mr-2">0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954</span>
+                <button id="copy-address-btn" class="ml-auto p-2 rounded-md hover:bg-gray-600 transition-colors" title="Copy Address">
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                     <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2 hidden text-green-400" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button id="show-qr-btn" class="ml-2 p-2 rounded-md hover:bg-gray-600 transition-colors" title="Show QR Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                        <path d="M2 2h2v2H2V2Z"/>
+                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                        <path d="M10 0v6h6V0h-6ZM5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1v-1h-3Zm-4-3v1h1v-2H7v1h2v1H7Z"/>
+                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                    </svg>
+                </button>
+            </div>
+             <p class="text-sm text-gray-400 mt-8">
+                &copy; 2025 FarmLabs. All rights reserved.
+            </p>
+            <div class="flex items-center justify-center mt-4 space-x-6">
+                <a href="https://farm-labs.blogspot.com/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Blog">
+                    <i class="fab fa-blogger fa-lg"></i>
+                </a>
+                <a href="https://t.me/farm_lab" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="Telegram">
+                    <i class="fab fa-telegram fa-lg"></i>
+                </a>
+                <a href="https://github.com/CryptoExplor/farmlabs" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white" title="GitHub">
+                    <i class="fab fa-github fa-lg"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    <div id="qr-code-modal" class="modal hidden">
+        <div class="modal-content text-main flex flex-col items-center text-center">
+            <span class="close-qr-button self-end">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Donation Address</h3>
+            <div id="qr-code-container" class="p-4 bg-white inline-block rounded-lg shadow-inner"></div>
+            <p class="font-mono text-xs mt-4 break-all" id="qr-address-display"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Accordion functionality
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('i.fa-chevron-down');
+                    
+                    const isOpen = content.classList.contains('open');
+
+                    // Close all accordions
+                    document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
+                    document.querySelectorAll('.accordion-header i.fa-chevron-down').forEach(i => i.classList.remove('rotate-180'));
+
+                    // Toggle current accordion
+                    if (!isOpen) {
+                        content.classList.add('open');
+                        icon.classList.add('rotate-180');
+                    }
+                });
+            });
+
+            // Open the first accordion by default
+            const firstAccordion = document.querySelector('.accordion-header');
+            if(firstAccordion) {
+                firstAccordion.click();
+            }
+
+            // --- Dark Mode Toggle Logic ---
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+            themeToggle.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                themeToggleIcon.classList.toggle('fa-sun', isDarkMode);
+                themeToggleIcon.classList.toggle('fa-moon', !isDarkMode);
+            });
+
+            // Apply saved theme on load
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleIcon.classList.add('fa-sun');
+                themeToggleIcon.classList.remove('fa-moon');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleIcon.classList.add('fa-moon');
+                themeToggleIcon.classList.remove('fa-sun');
+            }
+            
+            // --- Sidebar Logic ---
+            const docMenuToggle = document.getElementById('doc-menu-toggle');
+            const docMenuSubmenu = document.getElementById('doc-menu-submenu');
+            const allNavLinks = document.querySelectorAll('#sidebar .nav-link, #sidebar .submenu-toggle');
+            const allSections = document.querySelectorAll('main section');
+
+            // Submenu toggle
+            if (docMenuToggle && docMenuSubmenu) {
+                docMenuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    docMenuSubmenu.classList.toggle('open');
+                    docMenuToggle.querySelector('.fa-chevron-down').classList.toggle('rotate-180');
+                });
+            }
+
+            // Active link highlighting on scroll
+            const activateLinkOnScroll = () => {
+                let currentSectionId = '';
+                allSections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (window.scrollY >= sectionTop - 100) {
+                        currentSectionId = section.getAttribute('id');
+                    }
+                });
+
+                allNavLinks.forEach(link => {
+                    link.classList.remove('active');
+                    const linkHref = link.getAttribute('href');
+                    if (linkHref && linkHref.includes(currentSectionId)) {
+                        link.classList.add('active');
+                        const parentSubmenu = link.closest('.submenu');
+                        if (parentSubmenu) {
+                            const toggle = parentSubmenu.previousElementSibling;
+                            toggle.classList.add('active');
+                            if (!parentSubmenu.classList.contains('open')) {
+                                parentSubmenu.classList.add('open');
+                                toggle.querySelector('.fa-chevron-down').classList.add('rotate-180');
+                            }
+                        }
+                    }
+                });
+            };
+            
+            window.addEventListener('scroll', activateLinkOnScroll);
+            activateLinkOnScroll(); // Initial check
+
+            // --- Footer functionality ---
+            const copyToClipboard = (text) => { // Removed 'button' parameter
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    // Use directly defined copyIcon and checkIcon
+                    copyIcon.classList.add('hidden');
+                    checkIcon.classList.remove('hidden');
+                    setTimeout(() => {
+                        copyIcon.classList.remove('hidden');
+                        checkIcon.classList.add('hidden');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy to clipboard.', err);
+                }
+                document.body.removeChild(textarea);
+            };
+
+            const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
+            const copyBtn = document.getElementById('copy-address-btn');
+            const copyIcon = document.getElementById('copy-icon'); // Added
+            const checkIcon = document.getElementById('check-icon'); // Added
+            checkIcon.classList.add('hidden'); // Ensure hidden on load
+            const showQrBtn = document.getElementById('show-qr-btn');
+            const qrModal = document.getElementById('qr-code-modal');
+            const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrAddressDisplay = document.getElementById('qr-address-display');
+
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeContainer, {
+                    text: donationAddressStr,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#2d3748",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                qrAddressDisplay.textContent = donationAddressStr;
+            } else {
+                console.error("QRCode library is not loaded.");
+                qrCodeContainer.innerHTML = "QR Code library failed to load.";
+            }
+
+            copyBtn.addEventListener('click', () => { // Modified event listener
+                copyToClipboard(donationAddressStr);
+            });
+
+            showQrBtn.addEventListener('click', () => {
+                qrModal.classList.remove('hidden');
+            });
+
+            const closeQrModal = () => {
+                qrModal.classList.add('hidden');
+            }
+            closeQrModalBtn.addEventListener('click', closeQrModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
