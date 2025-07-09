@@ -2568,6 +2568,7 @@ https://rpc.goerli.dev,5</textarea>
                     if (selected !== "custom") {
                         applyProfile(selected);
                     }
+                    loadConfiguration(); // Ensure config is reloaded after applying profile
                 });
                 
                 // Submenu toggle functionality
