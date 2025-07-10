@@ -2563,12 +2563,16 @@ https://rpc.goerli.dev,5</textarea>
                 ui.apiKeyInput.addEventListener('input', loadConfiguration); // NEW
 
                 // Event listener for Stealth Profile Selector
+                // --- FIX APPLIED HERE ---
                 ui.stealthProfileSelector.addEventListener("change", (e) => {
                     const selected = e.target.value;
                     if (selected !== "custom") {
                         applyProfile(selected);
+                    } else {
+                        // When switching to 'custom', we need to load the configuration
+                        // from the current values in the UI fields.
+                        loadConfiguration();
                     }
-                    loadConfiguration(); // Ensure config is reloaded after applying profile
                 });
                 
                 // Submenu toggle functionality
