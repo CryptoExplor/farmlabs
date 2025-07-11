@@ -1634,7 +1634,10 @@ https://rpc.goerli.dev,5</textarea>
                 return true;
             };
 
-            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
 
             const chooseAction = (walletSessionProbs) => {
                 const rand = Math.random() * 100;
@@ -2718,7 +2721,6 @@ https://rpc.goerli.dev,5</textarea>
             initConsoleCharts();
             setupEventListeners();
             loadConfiguration();
-            updateWalletBalanceChart();
             setUIEnabled(false);
 
             const initialActiveToggle = document.getElementById('advance-console-toggle');
