@@ -1191,46 +1191,20 @@ https://rpc.goerli.dev,5</textarea>
 
         const applyProfile = (profileName) => {
             const profile = stealthProfiles[profileName];
-            if (!profile) return;
-
-            Object.entries(profile).forEach(([id, value]) => {
-                // Convert id from kebab-case to camelCase for direct mapping to HTML element IDs
-                const elementId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-                const el = document.getElementById(elementId);
-
-                if (el) {
-                    if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") {
-                        el.value = value; // ✅ set visually
-                        el.dispatchEvent(new Event("input")); // ✅ trigger any input listeners
-                        el.dispatchEvent(new Event("change")); // ✅ trigger change listeners
-                    }
-                }
-
-                // Also update internal config/app state if needed
-                // This part assumes `setConfigValue` and `appState` are accessible globally or passed appropriately.
-                // In this specific HTML file, `setConfigValue` is global, and `appState` is defined within DOMContentLoaded.
-                // For this to work correctly, `applyProfile` should ideally be called after `appState` is defined,
-                // or `appState` should be made global. For now, we'll assume `setConfigValue` is sufficient
-                // for updating the UI elements, and `loadConfiguration` will handle syncing with `appState`.
-                if (typeof setConfigValue === "function") {
-                    setConfigValue(elementId, value);
-                } else {
-                    appState[elementId] = value;
-                    // Fallback if setConfigValue is not available or if appState needs direct update
-                    // This part might need adjustment depending on how appState is managed.
-                    // For the current structure, setConfigValue directly updates the UI,
-                    // and loadConfiguration() called afterwards will sync config values to appState.
-                    // So, direct appState manipulation here might be redundant or incorrect.
-                    // Keeping it as a comment for awareness:
-                    // appState[elementId] = value; 
-                }
-            });
-
-            // If you need to reload config logic after setting UI
-            if (typeof loadConfiguration === "function") {
-                loadConfiguration();
+            if (!profile) {
+                log(`Error: Stealth profile '${profileName}' not found.`, 'error');
+                return;
             }
+            // Directly set UI values from the profile
+            Object.entries(profile).forEach(([id, value]) => {
+                // FIX: The key 'id' from the profile object already matches the element ID. No conversion needed.
+                setConfigValue(id, value);
+            });
+            // After setting UI values, immediately load them into the application's state
+            loadConfiguration();
+            log(`Applied '${profileName}' stealth profile. Configuration updated.`, 'success');
         };
+
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2597,8 +2571,13 @@ https://rpc.goerli.dev,5</textarea>
                 ui.stealthProfileSelector.addEventListener("change", (e) => {
                     const selected = e.target.value;
                     if (selected !== "custom") {
+                        // Apply the selected predefined profile
                         applyProfile(selected);
+                    } else {
+                        // When switching to 'custom', the current UI values are kept.
+                        // We just need to ensure they are loaded into the app's config state.
                         loadConfiguration();
+                        log(`Switched to 'Manual Custom' profile. Current settings will be used.`, 'info');
                     }
                 });
                 
