@@ -1215,6 +1215,7 @@ https://rpc.goerli.dev,5</textarea>
                 if (typeof setConfigValue === "function") {
                     setConfigValue(elementId, value);
                 } else {
+                    appState[elementId] = value;
                     // Fallback if setConfigValue is not available or if appState needs direct update
                     // This part might need adjustment depending on how appState is managed.
                     // For the current structure, setConfigValue directly updates the UI,
