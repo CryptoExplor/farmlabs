@@ -699,6 +699,14 @@
                             <input type="number" id="gas-multiplier" value="2" step="0.1" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
                             <p class="text-sm text-gray-500 mt-1">Skip wallet activity if current gas price exceeds average by this multiplier.</p>
                         </div>
+                        <!-- NEW: Max Retries Field -->
+                        <div>
+                            <label for="max-retries" class="block font-medium mb-1 text-accent">Max Retries on Failure
+                                <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">The maximum number of times to retry a failed transaction before skipping it. Set to 0 for no retries.</span></span>
+                            </label>
+                            <input type="number" id="max-retries" value="1" min="0" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <p class="text-sm text-gray-500 mt-1">Number of retries for a failed transaction.</p>
+                        </div>
                         <!-- NEW: Min Gas Factor -->
                         <div>
                             <label for="min-gas-factor" class="block font-medium mb-1 text-accent">Min Gas Factor (x)
@@ -1044,6 +1052,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-gas-factor": 0.9,
                 "max-gas-factor": 1.5,
                 "gas-multiplier": 2,
+                "max-retries": 2, // NEW
                 "prob-jitter-factor": 5,
                 "think-time-chance": 10,
                 "min-think-time": 60,
@@ -1054,7 +1063,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-lull-time": 300,
                 "max-lull-time": 900,
                 "rpc-switch-delay": 5,
-                "wallet-switch-delay": 5, // NEW: walletSwitchDelay default
+                "wallet-switch-delay": 5,
                 "rpc-urls": [
                     "https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1",
                     "https://rpc.goerli.dev,5"
@@ -1108,6 +1117,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-gas-factor": 0.9,
                 "max-gas-factor": 1.1,
                 "gas-multiplier": 2,
+                "max-retries": 2, // NEW
                 "prob-jitter-factor": 5,
                 "think-time-chance": 10,
                 "min-think-time": 60,
@@ -1118,7 +1128,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-lull-time": 300,
                 "max-lull-time": 900,
                 "rpc-switch-delay": 5,
-                "wallet-switch-delay": 5, // NEW: walletSwitchDelay
+                "wallet-switch-delay": 5,
                 "rpc-urls": [
                     "https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1",
                     "https://rpc.goerli.dev,5"
@@ -1140,6 +1150,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-gas-factor": 1.0,
                 "max-gas-factor": 1.3,
                 "gas-multiplier": 3,
+                "max-retries": 1, // NEW
                 "prob-jitter-factor": 2,
                 "think-time-chance": 2,
                 "min-think-time": 10,
@@ -1150,7 +1161,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-lull-time": 60,
                 "max-lull-time": 180,
                 "rpc-switch-delay": 2,
-                "wallet-switch-delay": 2, // NEW: walletSwitchDelay
+                "wallet-switch-delay": 2,
                 "rpc-urls": [
                     "https://rpc.ankr.com/eth,1",
                     "https://rpc.ankr.com/eth_goerli,5"
@@ -1172,6 +1183,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-gas-factor": 0.8,
                 "max-gas-factor": 1.0,
                 "gas-multiplier": 1.5,
+                "max-retries": 3, // NEW
                 "prob-jitter-factor": 8,
                 "think-time-chance": 25,
                 "min-think-time": 90,
@@ -1182,7 +1194,7 @@ https://rpc.goerli.dev,5</textarea>
                 "min-lull-time": 900,
                 "max-lull-time": 1800,
                 "rpc-switch-delay": 8,
-                "wallet-switch-delay": 8, // NEW: walletSwitchDelay
+                "wallet-switch-delay": 8,
                 "rpc-urls": [
                     "https://rpc.ankr.com/eth_sepolia,11155111"
                 ]
@@ -1195,12 +1207,9 @@ https://rpc.goerli.dev,5</textarea>
                 log(`Error: Stealth profile '${profileName}' not found.`, 'error');
                 return;
             }
-            // Directly set UI values from the profile
             Object.entries(profile).forEach(([id, value]) => {
-                // FIX: The key 'id' from the profile object already matches the element ID. No conversion needed.
                 setConfigValue(id, value);
             });
-            // After setting UI values, immediately load them into the application's state
             loadConfiguration();
             log(`Applied '${profileName}' stealth profile. Configuration updated.`, 'success');
         };
@@ -1221,20 +1230,18 @@ https://rpc.goerli.dev,5</textarea>
                     totalActions: 0,
                     successfulActions: 0,
                     failedActions: 0,
-                    // Updated actionCounts to include 'balance-check'
                     actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 }
                 },
                 logEntries: [], // For CSV export
                 charts: {
-                    walletBalance: null, // Console's wallet balance chart
-                    actionDist: null,    // Console's action distribution chart
+                    walletBalance: null, 
+                    actionDist: null,
                 },
-                pendingConfirmation: null, // Callback for confirmation modal
+                pendingConfirmation: null, 
                 connectedAddress: null,
-                lastHumanLikeSpike: null, // To track the last "human-like" spike
+                lastHumanLikeSpike: null,
             };
 
-            // Inject default stealth config values on load
             injectStealthDefaults();
 
             // UI elements for sidebar
@@ -1243,7 +1250,6 @@ https://rpc.goerli.dev,5</textarea>
             const ui = {
                 connectWalletBtn: document.getElementById('connect-wallet-btn'),
                 walletStatusDisplay: document.getElementById('wallet-status-display'),
-                // IMPORTANT: Exclude connectWalletBtn from walletFeatureControls
                 walletFeatureControls: document.querySelectorAll('.wallet-feature-control'),
                 startBtn: document.getElementById('start-btn'),
                 stopBtn: document.getElementById('stop-btn'),
@@ -1255,10 +1261,11 @@ https://rpc.goerli.dev,5</textarea>
                 minDelay: document.getElementById('min-delay'),
                 maxDelay: document.getElementById('max-delay'),
                 gasMultiplier: document.getElementById('gas-multiplier'),
+                maxRetries: document.getElementById('max-retries'), // NEW
                 minGasFactor: document.getElementById('min-gas-factor'),
                 maxGasFactor: document.getElementById('max-gas-factor'),
                 blockLookback: document.getElementById('block-lookback'),
-                probJitterFactor: document.getElementById('prob-jitter-factor'), // NEW
+                probJitterFactor: document.getElementById('prob-jitter-factor'),
                 simulatedErrorChance: document.getElementById('simulated-error-chance'), // NEW
                 thinkTimeChance: document.getElementById('think-time-chance'), // NEW
                 minThinkTime: document.getElementById('min-think-time'), // NEW
@@ -1268,14 +1275,14 @@ https://rpc.goerli.dev,5</textarea>
                 maxBurstActions: document.getElementById('max-burst-actions'), // NEW
                 minLullTime: document.getElementById('min-lull-time'), // NEW
                 maxLullTime: document.getElementById('max-lull-time'), // NEW
-                enableTimeOfDayBias: document.getElementById('enable-time-of-day-bias'), // NEW
+                enableTimeOfDayBias: document.getElementById('enable-time-of-day-bias'),
                 rpcSwitchDelay: document.getElementById('rpc-switch-delay'), // NEW
                 walletSwitchDelay: document.getElementById('wallet-switch-delay'), // NEW UI element for walletSwitchDelay
                 rpcUrls: document.getElementById('rpc-urls'),
                 testRpcBtn: document.getElementById('test-rpc-btn'),
                 probSend: document.getElementById('prob-send'),
                 probIdleAction: document.getElementById('prob-idle-action'),
-                probBalanceCheck: document.getElementById('prob-balance-check'), // NEW
+                probBalanceCheck: document.getElementById('prob-balance-check'),
                 probSumWarning: document.getElementById('prob-sum-warning'),
                 privateKeys: document.getElementById('private-keys'),
                 loadKeysBtn: document.getElementById('load-keys-btn'),
@@ -1328,49 +1335,36 @@ https://rpc.goerli.dev,5</textarea>
                 apiKeyInput: document.getElementById('api-key-input'), // NEW
             };
 
-            // Function to enable/disable UI elements
             const setUIEnabled = (enabled) => {
                 ui.walletFeatureControls.forEach(control => {
                     control.disabled = !enabled;
-                    // Adjust opacity/cursor for radio buttons based on enabled state
                     if (control.type === 'radio' || control.type === 'checkbox') {
                          control.parentElement.style.opacity = enabled ? '1' : '0.6';
                          control.parentElement.style.cursor = enabled ? 'default' : 'not-allowed';
                     }
                 });
-
-                // The connect wallet button should ALWAYS be enabled.
                 ui.connectWalletBtn.disabled = false;
-
-
-                // Correctly show/hide recipient sections based on selected mode
                 const selectedRecipientMode = Array.from(ui.recipientMode).find(r => r.checked)?.value;
                 if (enabled) {
                     ui.fixedAddressSection.classList.toggle('hidden', selectedRecipientMode !== 'fixed');
                     ui.listAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'list');
                     ui.predefinedAddressesSection.classList.toggle('hidden', selectedRecipientMode !== 'predefined');
                 } else {
-                    // When disabled, hide all recipient specific sections
                     ui.fixedAddressSection.classList.add('hidden');
                     ui.listAddressesSection.classList.add('hidden');
                     ui.predefinedAddressesSection.classList.add('hidden');
                 }
-
-                // Reset specific elements when disabled
                 if (!enabled) {
                     ui.privateKeys.value = '';
                     ui.keysLoadedCount.textContent = '';
                     appState.wallets = [];
-                    updateWalletBalanceChart(); // Update console's chart
-                    // Reset RPC URLs to default if no wallet is connected
+                    updateWalletBalanceChart(); 
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5`;
-                    // Reset action probabilities to default
-                    ui.probSend.value = "60"; // New default
-                    ui.probIdleAction.value = "20"; // New default
-                    ui.probBalanceCheck.value = "20"; // New default
-                    // Reset stealth profile to balanced
+                    ui.probSend.value = "60"; 
+                    ui.probIdleAction.value = "20"; 
+                    ui.probBalanceCheck.value = "20"; 
                     ui.stealthProfileSelector.value = "balanced";
-                    injectStealthDefaults(); // Re-inject defaults to reset all fields
+                    injectStealthDefaults();
                 }
             };
 
@@ -1424,12 +1418,11 @@ https://rpc.goerli.dev,5</textarea>
                     Action: actionData.action || 'Log',
                     Status: type.toUpperCase(),
                     Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';'),
-                    DelayUsedMs: actionData.delayUsedMs || '', // New log field
-                    GasFactorUsed: actionData.gasFactorUsed || '', // New log field
+                    DelayUsedMs: actionData.delayUsedMs || '',
+                    GasFactorUsed: actionData.gasFactorUsed || '',
                 });
             };
 
-            // Global utility functions for chart labels and tooltips
             const wrapLabel = (str, maxLen = 16) => {
                 if (str.length <= maxLen) {
                     return str;
@@ -1477,7 +1470,6 @@ https://rpc.goerli.dev,5</textarea>
                     }
                 };
 
-                // Destroy existing charts if they exist to prevent re-initialization errors
                 if (appState.charts.walletBalance) {
                     appState.charts.walletBalance.destroy();
                 }
@@ -1607,25 +1599,25 @@ https://rpc.goerli.dev,5</textarea>
                     minGasFactor: minGasFactor || 0.9,
                     maxGasFactor: maxGasFactor || 1.1,
                     blockLookback: parseInt(ui.blockLookback.value) || 100,
-                    probJitterFactor: parseInt(ui.probJitterFactor.value) || 5, // NEW config
-                    simulatedErrorChance: parseInt(ui.simulatedErrorChance.value) || 0, // NEW config
-                    thinkTimeChance: parseInt(ui.thinkTimeChance.value) || 10, // NEW config
-                    minThinkTime: minThinkTime * 1000 || 60000, // Convert to ms
-                    maxThinkTime: maxThinkTime * 1000 || 120000, // Convert to ms
-                    activityBurstChance: parseInt(ui.activityBurstChance.value) || 50, // NEW config
-                    minBurstActions: minBurstActions || 2, // NEW config
-                    maxBurstActions: maxBurstActions || 5, // NEW config
-                    minLullTime: minLullTime * 1000 || 300000, // Convert to ms
-                    maxLullTime: maxLullTime * 1000 || 900000, // Convert to ms
-                    enableTimeOfDayBias: ui.enableTimeOfDayBias.checked, // NEW config
-                    rpcSwitchDelay: parseInt(ui.rpcSwitchDelay.value) * 1000 || 5000, // NEW config
-                    walletSwitchDelay: parseInt(ui.walletSwitchDelay.value) * 1000 || 5000, // NEW config
+                    probJitterFactor: parseInt(ui.probJitterFactor.value) || 5,
+                    simulatedErrorChance: parseInt(ui.simulatedErrorChance.value) || 0,
+                    thinkTimeChance: parseInt(ui.thinkTimeChance.value) || 10,
+                    minThinkTime: parseInt(ui.minThinkTime.value) * 1000 || 60000,
+                    maxThinkTime: parseInt(ui.maxThinkTime.value) * 1000 || 120000,
+                    activityBurstChance: parseInt(ui.activityBurstChance.value) || 50,
+                    minBurstActions: parseInt(ui.minBurstActions.value) || 2,
+                    maxBurstActions: parseInt(ui.maxBurstActions.value) || 5,
+                    minLullTime: parseInt(ui.minLullTime.value) * 1000 || 300000,
+                    maxLullTime: parseInt(ui.maxLullTime.value) * 1000 || 900000,
+                    enableTimeOfDayBias: ui.enableTimeOfDayBias.checked,
+                    rpcSwitchDelay: parseInt(ui.rpcSwitchDelay.value) * 1000 || 5000,
+                    walletSwitchDelay: parseInt(ui.walletSwitchDelay.value) * 1000 || 5000,
                     recipientMode: Array.from(ui.recipientMode).find(r => r.checked).value,
                     fixedAddress: ui.fixedAddress.value.trim(),
                     probabilities: {
-                        send: parseInt(ui.probSend.value) || 60, // Updated default
-                        idle: parseInt(ui.probIdleAction.value) || 20, // Updated default
-                        'balance-check': parseInt(ui.probBalanceCheck.value) || 20, // NEW default
+                        send: parseInt(ui.probSend.value) || 60,
+                        idle: parseInt(ui.probIdleAction.value) || 20,
+                        'balance-check': parseInt(ui.probBalanceCheck.value) || 20,
                     }
                 };
 
@@ -1644,7 +1636,6 @@ https://rpc.goerli.dev,5</textarea>
 
             const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-            // Modified chooseAction to use per-wallet probabilities
             const chooseAction = (walletSessionProbs) => {
                 const rand = Math.random() * 100;
                 let cumulativeProb = 0;
@@ -1652,7 +1643,7 @@ https://rpc.goerli.dev,5</textarea>
                 if (rand < (cumulativeProb += walletSessionProbs.send)) return 'send';
                 if (rand < (cumulativeProb += walletSessionProbs.idle)) return 'idle-action';
                 if (rand < (cumulativeProb += walletSessionProbs['balance-check'])) return 'balance-check';
-                return 'idle-action'; // Fallback, should not be reached if sum is 100
+                return 'idle-action'; 
             };
 
             const scanRecentBlocks = async (rpc, chainId) => {
@@ -1687,7 +1678,7 @@ https://rpc.goerli.dev,5</textarea>
             async function callGeminiApi(prompt) {
                 log('Calling Gemini API for explanation...', 'info');
                 openGeminiModal('Getting Explanation...', '<div class="modal-loader"></div><p class="text-center mt-4">Generating explanation...</p>');
-                const apiKey = ui.apiKeyInput.value.trim() || ""; // Use user provided key, or empty string
+                const apiKey = ui.apiKeyInput.value.trim() || "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -1719,7 +1710,6 @@ https://rpc.goerli.dev,5</textarea>
                     return `Failed to get explanation: ${error.message}.`;
                 }
             }
-
 
             const loadWallets = async () => {
                 const keys = ui.privateKeys.value.split('\n').map(k => k.trim()).filter(Boolean);
@@ -1893,6 +1883,51 @@ https://rpc.goerli.dev,5</textarea>
                     ui.predefinedAddressesDisplay.innerHTML = '<li>No predefined addresses loaded.</li>';
                 }
             };
+            
+            // NEW: Function to send a transaction with retries
+            async function sendWithRetryOrSkip(wallet, txParams, maxRetries, chainId, gasFactorUsed) {
+                for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
+                    try {
+                        // The simulated error chance is now handled within this function
+                        if (Math.random() * 100 < appState.config.simulatedErrorChance) {
+                            throw new Error("Simulated network error: Transaction dropped/failed.");
+                        }
+
+                        log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
+                        const txResponse = await wallet.sendTransaction(txParams);
+                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress: wallet.address, action: 'send', gasFactorUsed: gasFactorUsed.toFixed(2) });
+
+                        const receipt = await txResponse.wait();
+                        log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
+                        return { success: true, receipt: receipt };
+                    } catch (err) {
+                        console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
+                        log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', { chainId, walletAddress: wallet.address, action: 'send' });
+
+                        if (attempt <= maxRetries) {
+                            const delay = Stealth.generateLogNormalDelay(3000, 8000); // Use a specific, shorter delay for retries
+                            log(`Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
+                            await sleep(delay);
+                        }
+                    }
+                }
+                log("⚠️ Tx skipped after max retries.", 'log-skipped', { chainId, walletAddress: wallet.address, action: 'skipped' });
+                updateActionDistChart('skipped'); // Update chart specifically for skipped-after-retry
+                return { success: false, receipt: null };
+            }
+
+            // NEW: Function to perform a harmless "dummy" read call
+            async function maybeDummyCall(provider) {
+                if (Math.random() < 0.1) { // 10% chance
+                    log("Doing dummy blockNumber check…", 'info');
+                    try {
+                        await provider.getBlockNumber();
+                        log("Dummy blockNumber check successful.", 'info');
+                    } catch (e) {
+                        log(`Dummy blockNumber check failed: ${e.message}`, 'warning');
+                    }
+                }
+            }
 
 
             const startInteraction = async () => {
@@ -1934,10 +1969,8 @@ https://rpc.goerli.dev,5</textarea>
                     
                     appState.isRunning = true;
                     appState.stopFlag = false;
-                    // Reset action counts for all action types
                     appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
                     appState.logEntries = [];
-                    // Update chart with new labels and reset data
                     appState.charts.actionDist.data.labels = ['Send', 'Idle', 'Balance Check', 'Skipped'];
                     appState.charts.actionDist.data.datasets[0].data = [0, 0, 0, 0];
                     appState.charts.actionDist.update();
@@ -1972,13 +2005,11 @@ https://rpc.goerli.dev,5</textarea>
                         const chainId = rpcConfig.chainId;
                         const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-                        // NEW: RPC Switch Delay
                         if (appState.rpcConfigs.length > 1 && appState.config.rpcSwitchDelay > 0) {
                             log(`Pausing for RPC switch delay (${appState.config.rpcSwitchDelay / 1000}s)...`, 'info');
                             await sleep(appState.config.rpcSwitchDelay);
                         }
 
-                        // Randomly select a wallet for this session
                         const walletInfoIndex = Math.floor(Math.random() * appState.wallets.length);
                         const walletInfo = appState.wallets[walletInfoIndex];
                         const walletAddress = walletInfo.address;
@@ -1986,13 +2017,11 @@ https://rpc.goerli.dev,5</textarea>
 
                         log(`🌐 Initiating session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} (${rpcUrl})...`, 'info');
 
-                        // NEW: Wallet Switch Delay
                         if (appState.wallets.length > 1 && appState.config.walletSwitchDelay > 0) {
                             log(`Pausing for wallet switch delay (${appState.config.walletSwitchDelay / 1000}s)...`, 'info');
                             await sleep(appState.config.walletSwitchDelay);
                         }
 
-                        // Check for idle chance for the wallet session
                         if (Math.random() * 100 < appState.config.walletIdleChance) {
                             log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId}.`, 'info', { chainId, walletAddress, action: 'idle' });
                             updateActionDistChart('idle');
@@ -2001,7 +2030,6 @@ https://rpc.goerli.dev,5</textarea>
                             continue; // Move to next wallet/chain session
                         }
 
-                        // Balance check for the current wallet on the current chain
                         try {
                             const balanceWei = await provider.getBalance(walletAddress);
                             if (balanceWei < ethers.parseEther("0.001")) { // Ensure sufficient balance for gas
@@ -2021,7 +2049,6 @@ https://rpc.goerli.dev,5</textarea>
                             continue; // Move to next wallet/chain session
                         }
 
-                        // NEW: Activity Bursts & Lulls logic
                         let actionsForWallet;
                         let currentSessionType = 'normal';
                         if (Math.random() * 100 < appState.config.activityBurstChance) {
@@ -2062,19 +2089,21 @@ https://rpc.goerli.dev,5</textarea>
                                     (maxFeePerGas && thresholdMaxFeePerGas && maxFeePerGas > thresholdMaxFeePerGas)) {
                                     log(`Gas price (${(Number(ethers.formatUnits(currentGasPrice || maxFeePerGas, 'gwei'))).toFixed(2)} gwei) is too high. Skipping action for ...${walletAddress.slice(-6)} on Chain ID ${chainId}.`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                     updateActionDistChart('skipped');
-                                    // Breaking the inner loop, will move to the next wallet/chain session.
                                     break;
                                 }
                             } catch (gasError) {
                                 log(`Failed to get gas price for Chain ID ${chainId}: ${gasError.message}. Proceeding without high gas check.`, 'warning', { chainId, walletAddress, action: 'skipped' });
                             }
                             
-                            // Choose action using per-wallet probabilities
+                            // NEW: Perform a dummy call before the main action
+                            await maybeDummyCall(provider);
+                            if (appState.stopFlag) break;
+
                             const chosenBehavior = chooseAction(walletInfo.sessionProbabilities);
                             log(`[Action ${i}/${actionsForWallet}] Wallet ...${walletAddress.slice(-6)} chose to: ${chosenBehavior.toUpperCase()}`, 'info', { chainId, walletAddress, action: chosenBehavior });
 
                             let actionSuccess = false;
-                            let delayUsed = 0; // Initialize delayUsed
+                            let delayUsed = 0;
 
                             switch (chosenBehavior) {
                                 case "send":
@@ -2136,20 +2165,17 @@ https://rpc.goerli.dev,5</textarea>
                                         break;
                                     }
 
-
                                     const amount = Stealth.getRandomInRange(appState.config.minAmount, appState.config.maxAmount);
                                     const tx = {
                                         to: recipientAddress,
                                         value: ethers.parseEther(amount.toFixed(12))
                                     };
 
-                                    // Apply random gas factor
                                     const randomGasFactor = Stealth.getRandomInRange(appState.config.minGasFactor, appState.config.maxGasFactor);
                                     if (maxFeePerGas && maxPriorityFeePerGas) { // EIP-1559 chain
                                         // Apply random factor to base fee and priority fee
                                         tx.maxFeePerGas = (maxFeePerGas * BigInt(Math.round(randomGasFactor * 100))) / BigInt(100);
                                         tx.maxPriorityFeePerGas = (maxPriorityFeePerGas * BigInt(Math.round(randomGasFactor * 100))) / BigInt(100);
-                                        // Ensure maxFeePerGas is at least maxPriorityFeePerGas
                                         if (tx.maxFeePerGas < tx.maxPriorityFeePerGas) {
                                             tx.maxFeePerGas = tx.maxPriorityFeePerGas + ethers.parseUnits('1', 'gwei'); // Add a small buffer if needed
                                         }
@@ -2186,7 +2212,7 @@ https://rpc.goerli.dev,5</textarea>
                                     actionSuccess = true;
                                     break;
 
-                                case "balance-check": // NEW action
+                                case "balance-check":
                                     try {
                                         const currentBalanceWei = await provider.getBalance(walletAddress);
                                         log(`Wallet ...${walletAddress.slice(-6)} checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ETH`, 'info', { chainId, walletAddress, action: 'balance-check' });
@@ -2201,12 +2227,19 @@ https://rpc.goerli.dev,5</textarea>
                             if (actionSuccess) {
                                 appState.stats.successfulActions++;
                             } else {
+                                // Only count failure if it wasn't already counted as skipped (e.g. by sendWithRetry)
+                                if (chosenBehavior === 'send') {
+                                    const lastLog = appState.logEntries[appState.logEntries.length - 1];
+                                    if (!lastLog.Details.includes('skipped after max retries')) {
                                 appState.stats.failedActions++;
                             }
-                            // Update counts on UI immediately after each action attempt
+                                } else {
+                                     appState.stats.failedActions++;
+                                }
+                            }
                             ui.successCount.textContent = appState.stats.successfulActions.toString();
                             ui.failCount.textContent = appState.stats.failedActions.toString();
-                            updateActionDistChart(chosenBehavior); // Update chart with the chosen behavior
+                            if(chosenBehavior !== 'send') updateActionDistChart(chosenBehavior);
 
                             try {
                                 const newBalanceWei = await provider.getBalance(wallet.address);
@@ -2220,18 +2253,15 @@ https://rpc.goerli.dev,5</textarea>
                                 let currentMinDelay = appState.config.minDelay;
                                 let currentMaxDelay = appState.config.maxDelay;
 
-                                // NEW: Time-of-Day Bias
                                 if (appState.config.enableTimeOfDayBias) {
                                     const currentHour = new Date().getHours();
-                                    // Reduce activity during simulated night hours (e.g., 1 AM to 6 AM)
                                     if (currentHour >= 1 && currentHour < 6) {
-                                        currentMinDelay *= 2; // Double min delay
-                                        currentMaxDelay *= 2; // Double max delay
+                                        currentMinDelay *= 2;
+                                        currentMaxDelay *= 2;
                                         log(`Applying time-of-day bias: increased delay due to night hours.`, 'info');
                                     }
                                 }
 
-                                // NEW: Think Time Bursts
                                 if (Math.random() * 100 < appState.config.thinkTimeChance) {
                                     delayUsed = Stealth.generateLogNormalDelay(appState.config.minThinkTime, appState.config.maxThinkTime);
                                     log(`Waiting for a human-like "think time" burst of ${Math.round(delayUsed/1000)} seconds...`, 'info');
@@ -2244,11 +2274,10 @@ https://rpc.goerli.dev,5</textarea>
                                     await sleep(delayUsed);
                                 }
                             }
-                        } // End of actionsForWallet loop
+                        }
 
-                        if (appState.stopFlag) break; // Break main loop if stop requested during inner loop
+                        if (appState.stopFlag) break;
 
-                        // NEW: Lull period after an activity burst
                         if (currentSessionType === 'burst' && appState.config.minLullTime > 0) {
                             const lullDelay = Stealth.generateLogNormalDelay(appState.config.minLullTime, appState.config.maxLullTime);
                             log(`Activity burst completed. Entering lull period for ${Math.round(lullDelay/1000)} seconds...`, 'info');
@@ -2256,12 +2285,11 @@ https://rpc.goerli.dev,5</textarea>
                             ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
                             await sleep(lullDelay);
                         } else {
-                            // Original session delay, if not a burst session
                             const sessionDelay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
                             log(`Session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
                             await sleep(sessionDelay);
                         }
-                    } // End of while (appState.isRunning && !appState.stopFlag)
+                    }
                     log('Interaction process finished.', 'success');
                     stopInteraction();
                 });
@@ -2291,21 +2319,18 @@ https://rpc.goerli.dev,5</textarea>
                         ui.predefinedAddressesInfo.textContent = 'No file loaded.';
                         updatePredefinedAddressesDisplay();
                         appState.config = {};
-                        // Updated appState.stats reset for all action types
                         appState.stats = { totalActions: 0, successfulActions: 0, failedActions: 0, actionCounts: { send: 0, idle: 0, 'balance-check': 0, skipped: 0 } };
                         appState.logEntries = [];
                         appState.lastHumanLikeSpike = null;
                         ui.humanSpikeDisplay.textContent = 'Never';
 
                         ui.privateKeys.value = '';
-                        // Reset all config fields by re-injecting defaults
                         injectStealthDefaults();
-                        ui.stealthProfileSelector.value = "balanced"; // Reset profile selector
+                        ui.stealthProfileSelector.value = "balanced";
 
                         setUIEnabled(false);
-                        // Re-initialize console charts after clearing data to ensure they reflect the empty state correctly
                         initConsoleCharts();
-                        updateWalletBalanceChart(); // Ensure wallet balance chart is empty
+                        updateWalletBalanceChart();
                     }
                 });
             };
@@ -2338,14 +2363,12 @@ https://rpc.goerli.dev,5</textarea>
                 await callGeminiApi(prompt);
             };
 
-            // NEW: handleSummarizeLog function
             const handleSummarizeLog = async () => {
                 if (appState.logEntries.length === 0) {
                     openGeminiModal('No Log Data', '<p class="text-accent">There are no log entries to summarize yet. Start Interaction to generate logs!</p>');
                     return;
                 }
 
-                // Take the last 100 log entries to avoid sending excessively large prompts
                 const recentLogEntries = appState.logEntries.slice(-100);
                 const formattedLog = recentLogEntries.map(entry => {
                     return `${entry.Timestamp} [${entry.Status}] ${entry.Action} - ${entry.Details}`;
@@ -2430,12 +2453,12 @@ https://rpc.goerli.dev,5</textarea>
                 if (typeof window.ethereum === 'undefined') {
                     log('MetaMask or compatible wallet not detected. Please install one.', 'error');
                     ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a> or a compatible browser extension.`;
-                    setUIEnabled(false); // Disable other features as no wallet is connected
+                    setUIEnabled(false);
                     return;
                 }
 
                 log('window.ethereum detected. Requesting accounts...', 'info');
-                ui.walletStatusDisplay.innerHTML = 'Connecting... (Check your wallet extension for a pop-up)'; // Inform user to look for pop-up
+                ui.walletStatusDisplay.innerHTML = 'Connecting... (Check your wallet extension for a pop-up)';
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
@@ -2449,9 +2472,8 @@ https://rpc.goerli.dev,5</textarea>
                     appState.connectedAddress = accounts[0];
                     log(`Wallet connected: ${appState.connectedAddress}`, 'success');
                     ui.walletStatusDisplay.innerHTML = `Connected: <strong>${appState.connectedAddress.slice(0, 6)}...${appState.connectedAddress.slice(-4)}</strong>`;
-                    setUIEnabled(true); // Enable all features now that a wallet is connected
+                    setUIEnabled(true);
 
-                    // Set up event listeners for window.ethereum
                     window.ethereum.on('accountsChanged', (newAccounts) => {
                         log('Wallet accounts changed event detected.', 'info');
                         if (newAccounts.length === 0) {
@@ -2498,10 +2520,10 @@ https://rpc.goerli.dev,5</textarea>
                 ui.clearAllDataBtn.addEventListener('click', clearAllData);
                 ui.loadKeysBtn.addEventListener('click', loadWallets);
                 ui.testRpcBtn.addEventListener('click', testRpcConnections);
-                ui.downloadLogCsvBtn.addEventListener('click', downloadLogCsv); // NEW
-                ui.downloadLogJsonBtn.addEventListener('click', downloadLogJson); // NEW
-                ui.clearLogBtn.addEventListener('click', clearLog); // NEW
-                ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog); // NEW event listener
+                ui.downloadLogCsvBtn.addEventListener('click', downloadLogCsv);
+                ui.downloadLogJsonBtn.addEventListener('click', downloadLogJson);
+                ui.clearLogBtn.addEventListener('click', clearLog);
+                ui.summarizeLogBtn.addEventListener('click', handleSummarizeLog);
                 ui.explainSendTxBtn.addEventListener('click', handleExplainSendTx);
                 ui.loadAddressesFromListBtn.addEventListener('click', loadAddressesFromList);
                 ui.loadPredefinedFileBtn.addEventListener('click', loadPredefinedListFromFile);
@@ -2571,23 +2593,18 @@ https://rpc.goerli.dev,5</textarea>
                 ui.stealthProfileSelector.addEventListener("change", (e) => {
                     const selected = e.target.value;
                     if (selected !== "custom") {
-                        // Apply the selected predefined profile
                         applyProfile(selected);
                     } else {
-                        // When switching to 'custom', the current UI values are kept.
-                        // We just need to ensure they are loaded into the app's config state.
                         loadConfiguration();
                         log(`Switched to 'Manual Custom' profile. Current settings will be used.`, 'info');
                     }
                 });
                 
-                // Submenu toggle functionality
                 ui.advanceConsoleToggle.addEventListener('click', () => {
                     ui.advanceConsoleToggle.classList.toggle('active');
                     ui.advanceConsoleSubmenu.classList.toggle('open');
                 });
 
-                // Handle navigation links for internal sections
                 document.querySelectorAll('#sidebar .nav-link').forEach(link => {
                     link.addEventListener('click', function(e) {
                         // For external links, let the browser handle it
@@ -2596,15 +2613,12 @@ https://rpc.goerli.dev,5</textarea>
                         }
                         e.preventDefault();
                         
-                        // Handle active states
                         document.querySelectorAll('#sidebar .nav-link, #sidebar .submenu-toggle').forEach(el => el.classList.remove('active'));
                         
                         const parentSubmenu = this.closest('.submenu');
                         if (parentSubmenu) {
-                            // It's a submenu link, make the toggle active
                             parentSubmenu.previousElementSibling.classList.add('active');
                         } else {
-                            // It's a top-level link
                              this.classList.add('active');
                         }
                         
@@ -2616,20 +2630,17 @@ https://rpc.goerli.dev,5</textarea>
                     });
                 });
 
-                // Dark Mode Toggle Logic
                 ui.themeToggle.addEventListener('click', () => {
                     document.documentElement.classList.toggle('dark');
                     const isDarkMode = document.documentElement.classList.contains('dark');
                     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
                     ui.themeToggleIcon.classList.toggle('fa-sun', isDarkMode);
                     ui.themeToggleIcon.classList.toggle('fa-moon', !isDarkMode);
-                    // Re-initialize charts to update colors based on new theme
                     initConsoleCharts();
                     updateWalletBalanceChart();
-                    updateActionDistChart('send'); // Trigger a dummy update to refresh action chart colors
+                    updateActionDistChart('send'); 
                 });
 
-                // Apply saved theme on load
                 const savedTheme = localStorage.getItem('theme');
                 if (savedTheme === 'dark') {
                     document.documentElement.classList.add('dark');
@@ -2642,19 +2653,17 @@ https://rpc.goerli.dev,5</textarea>
                 }
             };
 
-            initConsoleCharts(); // Initialize charts for the console
+            initConsoleCharts();
             setupEventListeners();
-            loadConfiguration(); // Load initial configuration values from UI elements
-            updateWalletBalanceChart(); // Initial chart update (will be empty)
-            setUIEnabled(false); // Initially disable features, but connect wallet button remains enabled
+            loadConfiguration();
+            updateWalletBalanceChart();
+            setUIEnabled(false);
 
-            // Set the initial active navigation link for Dashboard by default
             const initialActiveToggle = document.getElementById('advance-console-toggle');
             initialActiveToggle.classList.add('active');
             initialActiveToggle.nextElementSibling.classList.add('open');
 
 
-            // Initial check for window.ethereum and existing connection on page load
             if (typeof window.ethereum !== 'undefined') {
                  log('MetaMask or compatible wallet detected on startup. Checking for existing connection...', 'info');
                  window.ethereum.request({ method: 'eth_accounts' })
@@ -2667,13 +2676,13 @@ https://rpc.goerli.dev,5</textarea>
                         } else {
                              ui.walletStatusDisplay.innerHTML = `No wallet connected.`;
                              log('No existing wallet connection found on startup.', 'info');
-                             setUIEnabled(false); // Ensure features are disabled if no existing connection
+                             setUIEnabled(false);
                         }
                     })
                     .catch(error => {
                         log(`Error checking existing wallet connection: ${error.message}`, 'error');
                          ui.walletStatusDisplay.innerHTML = `Error: ${error.message}`;
-                         setUIEnabled(false); // Ensure features are disabled on error
+                         setUIEnabled(false);
                     });
 
                  window.ethereum.on('accountsChanged', (newAccounts) => {
@@ -2705,7 +2714,7 @@ https://rpc.goerli.dev,5</textarea>
             } else {
                 ui.walletStatusDisplay.innerHTML = `No wallet detected. Please install <a href="https://metamask.io/" target="_blank" class="underline text-blue-500">MetaMask</a>.`;
                 log('MetaMask or compatible wallet not detected on startup.', 'error');
-                setUIEnabled(false); // Ensure features are disabled if MetaMask is not detected
+                setUIEnabled(false);
             }
 
             log('Console initialized. Please connect your wallet to begin.');
@@ -2714,15 +2723,14 @@ https://rpc.goerli.dev,5</textarea>
             const donationAddressStr = '0x1C46ccEA4D62d3eEC4DCE3501aa96d0Ff5FcA954';
             const copyBtn = document.getElementById('copy-address-btn');
             const copyIcon = document.getElementById('copy-icon');
-            const checkIcon = document.getElementById('check-icon'); // Ensure checkIcon is defined
-            checkIcon.classList.add('hidden'); // Ensure check icon is hidden initially
+            const checkIcon = document.getElementById('check-icon');
+            checkIcon.classList.add('hidden');
             const showQrBtn = document.getElementById('show-qr-btn');
             const qrModal = document.getElementById('qr-code-modal');
             const closeQrModalBtn = qrModal.querySelector('.close-qr-button');
             const qrCodeContainer = document.getElementById('qr-code-container');
             const qrAddressDisplay = document.getElementById('qr-address-display');
 
-            // Initialize QR Code once
             if(typeof QRCode !== 'undefined') {
                 new QRCode(qrCodeContainer, {
                     text: donationAddressStr,
@@ -2738,7 +2746,6 @@ https://rpc.goerli.dev,5</textarea>
                 qrCodeContainer.innerHTML = "QR Code library failed to load. Please check your connection.";
             }
 
-            // Copy to clipboard
             copyBtn.addEventListener('click', () => {
                 copyToClipboard(donationAddressStr);
                 copyIcon.classList.add('hidden');
@@ -2749,12 +2756,10 @@ https://rpc.goerli.dev,5</textarea>
                 }, 2000);
             });
 
-            // Show QR Modal
             showQrBtn.addEventListener('click', () => {
                 qrModal.classList.remove('hidden');
             });
 
-            // Close QR Modal logic
             const closeQrModal = () => {
                 qrModal.classList.add('hidden');
             }
