@@ -1192,13 +1192,43 @@ https://rpc.goerli.dev,5</textarea>
         const applyProfile = (profileName) => {
             const profile = stealthProfiles[profileName];
             if (!profile) return;
+
             Object.entries(profile).forEach(([id, value]) => {
                 // Convert id from kebab-case to camelCase for direct mapping to HTML element IDs
                 const elementId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-                setConfigValue(elementId, value);
+                const el = document.getElementById(elementId);
+
+                if (el) {
+                    if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") {
+                        el.value = value; // ✅ set visually
+                        el.dispatchEvent(new Event("input")); // ✅ trigger any input listeners
+                        el.dispatchEvent(new Event("change")); // ✅ trigger change listeners
+                    }
+                }
+
+                // Also update internal config/app state if needed
+                // This part assumes `setConfigValue` and `appState` are accessible globally or passed appropriately.
+                // In this specific HTML file, `setConfigValue` is global, and `appState` is defined within DOMContentLoaded.
+                // For this to work correctly, `applyProfile` should ideally be called after `appState` is defined,
+                // or `appState` should be made global. For now, we'll assume `setConfigValue` is sufficient
+                // for updating the UI elements, and `loadConfiguration` will handle syncing with `appState`.
+                if (typeof setConfigValue === "function") {
+                    setConfigValue(elementId, value);
+                } else {
+                    // Fallback if setConfigValue is not available or if appState needs direct update
+                    // This part might need adjustment depending on how appState is managed.
+                    // For the current structure, setConfigValue directly updates the UI,
+                    // and loadConfiguration() called afterwards will sync config values to appState.
+                    // So, direct appState manipulation here might be redundant or incorrect.
+                    // Keeping it as a comment for awareness:
+                    // appState[elementId] = value; 
+                }
             });
-            // After applying a profile, re-load the configuration to update appState
-            loadConfiguration();
+
+            // If you need to reload config logic after setting UI
+            if (typeof loadConfiguration === "function") {
+                loadConfiguration();
+            }
         };
 
 
@@ -2563,15 +2593,10 @@ https://rpc.goerli.dev,5</textarea>
                 ui.apiKeyInput.addEventListener('input', loadConfiguration); // NEW
 
                 // Event listener for Stealth Profile Selector
-                // --- FIX APPLIED HERE ---
                 ui.stealthProfileSelector.addEventListener("change", (e) => {
                     const selected = e.target.value;
                     if (selected !== "custom") {
                         applyProfile(selected);
-                    } else {
-                        // When switching to 'custom', we need to load the configuration
-                        // from the current values in the UI fields.
-                        loadConfiguration();
                     }
                 });
                 
