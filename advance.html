@@ -2598,6 +2598,7 @@ https://rpc.goerli.dev,5</textarea>
                     const selected = e.target.value;
                     if (selected !== "custom") {
                         applyProfile(selected);
+                        loadConfiguration();
                     }
                 });
                 
