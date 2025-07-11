@@ -805,7 +805,7 @@
                                 <span class="tooltip-container ml-1 text-gray-400 cursor-pointer">ℹ️<span class="tooltip-text">Maximum duration for a "lull" period after an activity burst.</span></span>
                             </label>
                             <input type="number" id="max-lull-time" value="900" min="60" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
-                            <p class="text-sm text-gray-500 mt-1">Maximum seconds for a lull period.</p>
+                            <p class="text-sm text-gray-500 mt-1">Maximum seconds for a "lull" period.</p>
                         </div>
 
                         <!-- NEW: Time-of-Day Bias -->
@@ -1927,6 +1927,25 @@ https://rpc.goerli.dev,5</textarea>
                         log(`Dummy blockNumber check failed: ${e.message}`, 'warning');
                     }
                 }
+                if (Math.random() < 0.1) { // 10% chance for gas price check
+                    log("Doing dummy gas price check…", 'info');
+                    try {
+                        await provider.getGasPrice();
+                        log("Dummy gas price check successful.", 'info');
+                    } catch (e) {
+                        log(`Dummy gas price check failed: ${e.message}`, 'warning');
+                    }
+                }
+                if (Math.random() < 0.05 && appState.wallets.length > 0) { // 5% chance to check a random wallet balance
+                    const randomWallet = appState.wallets[Math.floor(Math.random() * appState.wallets.length)];
+                    log(`Doing dummy balance check for ...${randomWallet.address.slice(-6)}...`, 'info');
+                    try {
+                        const bal = await provider.getBalance(randomWallet.address);
+                        log(`Dummy balance check successful: ${ethers.formatEther(bal).slice(0,8)} ETH`, 'info');
+                    } catch (e) {
+                        log(`Dummy balance check failed: ${e.message}`, 'warning');
+                    }
+                }
             }
 
 
@@ -1996,14 +2015,37 @@ https://rpc.goerli.dev,5</textarea>
                         log('Pre-scanning complete.', 'info');
                     }
 
+                    // Chain-switch jitter: occasionally stay on the same chain
+                    let lastRpcIndex = -1;
+
                     // Main Interaction loop: continuously runs until stop button is clicked
                     while (appState.isRunning && !appState.stopFlag) {
                         // Randomly select an RPC configuration for this session
-                        const rpcConfigIndex = Math.floor(Math.random() * appState.rpcConfigs.length);
+                        let rpcConfigIndex;
+                        if (lastRpcIndex !== -1 && Math.random() < 0.2) { // 20% chance to reuse last chain
+                            rpcConfigIndex = lastRpcIndex;
+                        } else {
+                            rpcConfigIndex = Math.floor(Math.random() * appState.rpcConfigs.length);
+                        }
+                        lastRpcIndex = rpcConfigIndex;
                         const rpcConfig = appState.rpcConfigs[rpcConfigIndex];
                         const rpcUrl = rpcConfig.url;
                         const chainId = rpcConfig.chainId;
                         const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+                        // RPC health probing
+                        try {
+                            await provider.getBlockNumber();
+                        } catch (rpcError) {
+                            log(`❌ Failed to connect to RPC ${rpcUrl}: ${rpcError.message}. Removing this RPC and continuing.`, 'error');
+                            appState.rpcConfigs.splice(rpcConfigIndex, 1);
+                            if (appState.rpcConfigs.length === 0) {
+                                log('❌ No RPC endpoints left. Stopping interaction.', 'error');
+                                appState.stopFlag = true;
+                                break;
+                            }
+                            continue; // Skip to next iteration with remaining RPCs
+                        }
 
                         if (appState.rpcConfigs.length > 1 && appState.config.rpcSwitchDelay > 0) {
                             log(`Pausing for RPC switch delay (${appState.config.rpcSwitchDelay / 1000}s)...`, 'info');
@@ -2184,27 +2226,38 @@ https://rpc.goerli.dev,5</textarea>
                                     }
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
+                                    // NONCE JITTER: randomize nonce offset
                                     try {
-                                        // Simulate random transaction error
-                                        if (Math.random() * 100 < appState.config.simulatedErrorChance) {
-                                            throw new Error("Simulated network error: Transaction dropped/failed.");
-                                        }
-
-                                        log(`Sending ${amount.toFixed(6)} ETH to ${recipientAddress}...`, 'info');
-                                        const txResponse = await wallet.sendTransaction(tx);
-                                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress, action: 'send', gasFactorUsed: randomGasFactor });
-
-                                        await txResponse.wait();
-                                        log(`Tx confirmed!`, 'success');
-                                        actionSuccess = true;
-                                    } catch (error) {
-                                    if (error.message.includes("Simulated network error")) {
-                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send', gasFactorUsed: randomGasFactor });
-                                        } else {
-                                            log(`Tx failed: ${error.message}`, 'error', { chainId, walletAddress, action: 'send', gasFactorUsed: randomGasFactor });
-                                        }
+                                        const currentNonce = await provider.getTransactionCount(walletAddress);
+                                        const nonceOffset = Math.floor(Stealth.getRandomInRange(0, 3)); // jitter 0-2
+                                        tx.nonce = currentNonce + nonceOffset;
+                                        log(`Nonce jitter applied: using nonce ${tx.nonce}`, 'info');
+                                    } catch (nonceError) {
+                                        log(`Failed to get nonce for wallet ...${walletAddress.slice(-6)}: ${nonceError.message}`, 'warning');
                                     }
-                                    break;
+                                    // Simulated error (before actual send)
+                                    if (Math.random() * 100 < appState.config.simulatedErrorChance) {
+                                        log(`⚠️ Simulated network error (pre-send). Transaction will be skipped.`, 'warning', { chainId, walletAddress });
+                                        actionSuccess = false;
+                                        updateActionDistChart('skipped');
+                                        break; // Skip to next wallet/session
+                                    }
+                                    const sendResult = await sendWithRetryOrSkip(wallet, tx, appState.config.maxRetries, chainId, randomGasFactor);
+                                    actionSuccess = sendResult.success;
+                                    
+                                    if (actionSuccess) {
+                                        appState.stats.actionCounts.send++;
+                                        log(`✅ Transaction sent successfully to ${recipientAddress.slice(0, 6)}...${recipientAddress.slice(-4)} with ${amount} ETH.`, 'success', {
+                                            chainId,
+                                            walletAddress,
+                                            action: 'send',
+                                            gasFactorUsed: randomGasFactor.toFixed(2)
+                                        });
+                                        updateActionDistChart('send');
+                                    } else {
+                                        log(`❌ Transaction failed after retries.`, 'error', { chainId, walletAddress, action: 'send' });
+                                        updateActionDistChart('skipped');
+                                    }
 
                                 case "idle-action":
                                     log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle' });
@@ -2289,7 +2342,16 @@ https://rpc.goerli.dev,5</textarea>
                             log(`Session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
                             await sleep(sessionDelay);
                         }
+
+                        // Random UI interaction: toggle theme as a human-like behavior
+                        if (Math.random() < 0.05) {
+                            ui.themeToggle.click();
+                            await sleep(500);
+                            ui.themeToggle.click();
+                            log('Performed a random theme toggle for UI interaction.', 'info');
+                        }
                     }
+
                     log('Interaction process finished.', 'success');
                     stopInteraction();
                 });
