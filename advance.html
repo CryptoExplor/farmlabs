@@ -1927,54 +1927,71 @@ https://rpc.goerli.dev,5</textarea>
             
             // NEW: Function to send a transaction with retries
             async function sendWithRetryOrSkip(wallet, txParams, maxRetries, chainId, gasFactorUsed) {
-                // Keep a copy of the original txParams for retries
-                const originalTxParams = { ...txParams };
+                const originalTxParams = { ...txParams }; // Clone for retry fallback
 
                 for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
                     try {
-                        // The simulated error chance is now handled within this function
-                        if (Math.random() * 100 < appState.config.simulatedErrorChance) {
-                            throw new Error("Simulated network error: Transaction dropped/failed.");
-                        }
+                    // Simulate random failure
+                    if (Math.random() * 100 < appState.config.simulatedErrorChance) {
+                        throw new Error("Simulated network error: Transaction dropped/failed.");
+                    }
 
-                        log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
-                        const txResponse = await wallet.sendTransaction(txParams);
-                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', { chainId, walletAddress: wallet.address, action: 'send', gasFactorUsed: gasFactorUsed.toFixed(2) });
+                    log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
 
-                        const receipt = await txResponse.wait();
-                        log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
-                        return { success: true, receipt: receipt };
-                    } catch (err) {
-                        console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
-                        log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', { chainId, walletAddress: wallet.address, action: 'send' });
+                    const txResponse = await wallet.sendTransaction(txParams);
+                    log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
+                        chainId,
+                        walletAddress: wallet.address,
+                        action: 'send',
+                        gasFactorUsed: gasFactorUsed.toFixed(2)
+                    });
 
-                        // Nonce mismatch handling
-                        if (/nonce/i.test(err.message)) {
-                            log(`🔁 Nonce mismatch. Refetching nonce and retrying…`, 'warning');
-                            try {
-                                const correctNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                                txParams.nonce = correctNonce; // Update the nonce in the current txParams for retry
-                                log(`Retrying with corrected nonce ${correctNonce}...`, 'info');
-                                const txResponse = await wallet.sendTransaction(txParams);
-                                await txResponse.wait();
-                                log(`✅ Retry with corrected nonce ${correctNonce} succeeded.`, 'success');
-                                return { success: true, receipt: txResponse };
-                            } catch (retryErr) {
-                                log(`❌ Retry failed after nonce fix: ${retryErr.message}`, 'error');
-                            }
-                        }
+                    const receipt = await txResponse.wait();
+                    log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
+                    return { success: true, receipt };
+                } catch (err) {
+                    console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
+                    log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', {
+                        chainId,
+                        walletAddress: wallet.address,
+                        action: 'send'
+                    });
 
-                        if (attempt <= maxRetries) {
-                            const delay = Stealth.generateLogNormalDelay(3000, 8000); // Use a specific, shorter delay for retries
-                            log(`Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
-                            await sleep(delay);
-                        }
+                    // Fallback for nonce-related errors
+                    if (/nonce/i.test(err.message)) {
+                        log(`🔁 Nonce mismatch detected. Refetching and retrying with correct nonce…`, 'warning');
+
+                        try {
+                        const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
+                        const retryTx = { ...originalTxParams };
+                        retryTx.nonce = freshNonce;
+
+                        log(`Retrying with corrected nonce ${freshNonce}...`, 'info');
+                        const retryResponse = await wallet.sendTransaction(retryTx);
+                        await retryResponse.wait();
+                        log(`✅ Retry with corrected nonce ${freshNonce} succeeded.`, 'success');
+                        return { success: true, receipt: retryResponse };
+                    } catch (retryError) {
+                        log(`❌ Retry after nonce fix failed: ${retryError.message}`, 'error');
                     }
                 }
-                log("⚠️ Tx skipped after max retries.", 'log-skipped', { chainId, walletAddress: wallet.address, action: 'skipped' });
-                updateActionDistChart('skipped'); // Update chart specifically for skipped-after-retry
-                return { success: false, receipt: null };
+
+                if (attempt <= maxRetries) {
+                    const delay = Stealth.generateLogNormalDelay(3000, 8000);
+                    log(`🔄 Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
+                    await sleep(delay);
+                }
             }
+        }
+
+    log("⚠️ Tx skipped after max retries.", 'log-skipped', {
+        chainId,
+        walletAddress: wallet.address,
+        action: 'skipped'
+    });
+    updateActionDistChart('skipped');
+    return { success: false, receipt: null };
+}
 
             // NEW: Function to perform a harmless "dummy" read call
             async function maybeDummyCall(provider) {
