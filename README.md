@@ -19,7 +19,7 @@ FarmLabs is a local-first, no-code, client-side automation suite for simulating 
 > 🛑 **For testing & development purposes only**
 >
 > - Do **not** use wallets with mainnet funds.  
-> - Use only on testnets (e.g., Sepolia, Goerli, Base Goerli, etc.).  
+> - Use only on testnets (e.g., Sepolia, Base Sepolia, etc.).  
 > - App runs **entirely in-browser** with no server or backend.  
 > - You are fully responsible for wallet and key security.
 
