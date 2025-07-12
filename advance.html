@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">\
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -1927,6 +1927,9 @@ https://rpc.goerli.dev,5</textarea>
             
             // NEW: Function to send a transaction with retries
             async function sendWithRetryOrSkip(wallet, txParams, maxRetries, chainId, gasFactorUsed) {
+                // Keep a copy of the original txParams for retries
+                const originalTxParams = { ...txParams };
+
                 for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
                     try {
                         // The simulated error chance is now handled within this function
@@ -1944,6 +1947,22 @@ https://rpc.goerli.dev,5</textarea>
                     } catch (err) {
                         console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
                         log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', { chainId, walletAddress: wallet.address, action: 'send' });
+
+                        // Nonce mismatch handling
+                        if (/nonce/i.test(err.message)) {
+                            log(`🔁 Nonce mismatch. Refetching nonce and retrying…`, 'warning');
+                            try {
+                                const correctNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
+                                txParams.nonce = correctNonce; // Update the nonce in the current txParams for retry
+                                log(`Retrying with corrected nonce ${correctNonce}...`, 'info');
+                                const txResponse = await wallet.sendTransaction(txParams);
+                                await txResponse.wait();
+                                log(`✅ Retry with corrected nonce ${correctNonce} succeeded.`, 'success');
+                                return { success: true, receipt: txResponse };
+                            } catch (retryErr) {
+                                log(`❌ Retry failed after nonce fix: ${retryErr.message}`, 'error');
+                            }
+                        }
 
                         if (attempt <= maxRetries) {
                             const delay = Stealth.generateLogNormalDelay(3000, 8000); // Use a specific, shorter delay for retries
@@ -2268,15 +2287,21 @@ https://rpc.goerli.dev,5</textarea>
                                     }
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
-                                    // NONCE JITTER: randomize nonce offset
+                                    // Nonce Jitter Logic (FIXED)
+                                    let currentNonce;
                                     try {
-                                        const currentNonce = await provider.getTransactionCount(walletAddress);
-                                        const nonceOffset = Math.floor(Stealth.getRandomInRange(0, 3)); // jitter 0-2
-                                        tx.nonce = currentNonce + nonceOffset;
-                                        log(`Nonce jitter applied: using nonce ${tx.nonce}`, 'info');
-                                    } catch (nonceError) {
-                                        log(`Failed to get nonce for wallet ...${walletAddress.slice(-6)}: ${nonceError.message}`, 'warning');
+                                        currentNonce = await provider.getTransactionCount(walletAddress, 'latest');
+
+                                        // 30% chance to jitter nonce
+                                        const jitterEnabled = Math.random() < 0.3;
+                                        const offset = jitterEnabled ? Math.floor(Stealth.getRandomInRange(-1, 2)) : 0; // -1, 0, or 1
+                                        tx.nonce = currentNonce + offset;
+
+                                        log(`Nonce applied: ${tx.nonce} (jitter ${offset >= 0 ? '+' : ''}${offset})`, 'info');
+                                    } catch (e) {
+                                        log(`⚠️ Failed to fetch nonce: ${e.message}`, 'error');
                                     }
+                                    
                                     // Simulated error (before actual send)
                                     if (Math.random() * 100 < appState.config.simulatedErrorChance) {
                                         log(`⚠️ Simulated network error (pre-send). Transaction will be skipped.`, 'warning', { chainId, walletAddress });
@@ -2778,7 +2803,6 @@ https://rpc.goerli.dev,5</textarea>
 
             initConsoleCharts();
             setupEventListeners();
-            loadConfiguration();
             setUIEnabled(false);
 
             const initialActiveToggle = document.getElementById('advance-console-toggle');
