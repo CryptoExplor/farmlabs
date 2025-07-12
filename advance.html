@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advance Interactive Script Console</title>
+    <!-- Google AdSense Account Meta Tag (Recommended in <head>) -->
+    <meta name="google-adsense-account" content="ca-pub-3062851685354753">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -1978,55 +1980,22 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                             action: 'send'
                         });
 
-                        // Fallback for nonce-related errors or "Failed to fetch"
-                        if (/nonce/i.test(err.message) || /Failed to fetch/i.test(err.message)) {
-                            log(`🔁 Nonce mismatch or network error detected. Attempting to get a fresh provider and retry…`, 'warning');
-
-                            const rpcUrlsForChain = appState.rpcConfigs.get(chainId);
-                            if (!rpcUrlsForChain || rpcUrlsForChain.length === 0) {
-                                log(`❌ No RPCs configured for Chain ID ${chainId}. Cannot retry.`, 'error');
-                                break; // Break out of retry loop
-                            }
-
-                            let newProvider = null;
-                            let newRpcUrl = null;
-                            let providerReestablished = false;
-
-                            // Try to find an alternative working RPC for the same chain
-                            for (const rpcEntry of rpcUrlsForChain) {
-                                const tempProvider = new ethers.JsonRpcProvider(rpcEntry.url);
-                                try {
-                                    await tempProvider.getBlockNumber(); // Health check
-                                    newProvider = tempProvider;
-                                    newRpcUrl = rpcEntry.url;
-                                    providerReestablished = true;
-                                    log(`✅ Re-established RPC connection using: ${newRpcUrl} for Chain ID ${chainId}`, 'info');
-                                    break;
-                                } catch (re_e) {
-                                    log(`❌ Alternative RPC ${rpcEntry.url} for Chain ID ${chainId} failed health check during retry: ${re_e.message}. Trying next.`, 'warning');
-                                }
-                            }
-
-                            if (!providerReestablished) {
-                                log(`❌ All RPCs for Chain ID ${chainId} failed during retry. Cannot re-establish connection.`, 'error');
-                                break; // Break out of retry loop if no working provider found
-                            }
-
-                            // Update the wallet's provider to the newly established one
-                            wallet = new ethers.Wallet(wallet.privateKey, newProvider);
+                        // Fallback for nonce-related errors
+                        if (/nonce/i.test(err.message)) {
+                            log(`🔁 Nonce mismatch detected. Refetching and retrying with correct nonce…`, 'warning');
 
                             try {
                                 const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
                                 const retryTx = { ...originalTxParams };
                                 retryTx.nonce = freshNonce;
 
-                                log(`Retrying with corrected nonce ${freshNonce} via new RPC...`, 'info');
+                                log(`Retrying with corrected nonce ${freshNonce}...`, 'info');
                                 const retryResponse = await wallet.sendTransaction(retryTx);
                                 await retryResponse.wait();
                                 log(`✅ Retry with corrected nonce ${freshNonce} succeeded.`, 'success');
                                 return { success: true, receipt: retryResponse };
                             } catch (retryError) {
-                                log(`❌ Retry after nonce/network fix failed: ${retryError.message}`, 'error');
+                                log(`❌ Retry after nonce fix failed: ${retryError.message}`, 'error');
                             }
                         }
 
@@ -2038,7 +2007,11 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                     }
                 }
 
-                // Removed: log("⚠️ Tx skipped after max retries.", 'log-skipped', { ... });
+                log("⚠️ Tx skipped after max retries.", 'log-skipped', {
+                    chainId,
+                    walletAddress: wallet.address,
+                    action: 'skipped'
+                });
                 updateActionDistChart('skipped');
                 return { success: false, receipt: null };
             }
