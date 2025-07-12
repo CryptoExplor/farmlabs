@@ -1025,7 +1025,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
             getRandomInRange: (min, max) => Math.random() * (max - min) + min,
 
             // Generates a random delay using a log-normal distribution
-            // min and max are in milliseconds
+            // min and max are in milliseconds, delayFactor from persona
             generateLogNormalDelay: (min, max, delayFactor = 1) => {
                 const mu = Math.log(min);
                 const sigma = (Math.log(max) - Math.log(min)) / 4; // Adjust sigma for desired spread
@@ -1391,8 +1391,8 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                     ui.privateKeys.value = '';
                     ui.keysLoadedCount.textContent = '';
                     appState.wallets = [];
-                    updateWalletBalanceChart(); 
-                    ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5\nhttps://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111`; // Reset to include Sepolia
+                    updateWalletBalanceChart();
+                    ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5\nhttps://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111`;
                     ui.probSend.value = "60"; 
                     ui.probIdleAction.value = "20"; 
                     ui.probBalanceCheck.value = "20"; 
