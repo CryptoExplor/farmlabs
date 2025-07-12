@@ -1954,6 +1954,8 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
 
                 for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
                     try {
+                        txParams = { ...originalTxParams };
+                        txParams.nonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
                         // Simulate random failure
                         if (Math.random() * 100 < appState.config.simulatedErrorChance) {
                             throw new Error("Simulated network error: Transaction dropped/failed.");
@@ -1963,8 +1965,9 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
 
                         // For retries, update nonce if it's not the first attempt
                         if (attempt > 1) {
-                            const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                            txParams.nonce = freshNonce;
+                           const correctNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
+                           txParams.nonce = correctNonce;
+
                             log(`Retrying with fresh nonce ${freshNonce}...`, 'info');
                         }
 
