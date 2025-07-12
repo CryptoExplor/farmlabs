@@ -1948,7 +1948,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                 }
             };
             
-            // NEW: Function to send a transaction with retries
+            // Function to send a transaction with retries
             async function sendWithRetryOrSkip(wallet, txParams, maxRetries, chainId, gasFactorUsed) {
                 const originalTxParams = { ...txParams }; // Clone for retry fallback
 
@@ -1960,6 +1960,13 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                         }
 
                         log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
+
+                        // For retries, update nonce if it's not the first attempt
+                        if (attempt > 1) {
+                            const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
+                            txParams.nonce = freshNonce;
+                            log(`Retrying with fresh nonce ${freshNonce}...`, 'info');
+                        }
 
                         const txResponse = await wallet.sendTransaction(txParams);
                         log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
@@ -1983,21 +1990,54 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                         // Fallback for nonce-related errors
                         if (/nonce/i.test(err.message)) {
                             log(`🔁 Nonce mismatch detected. Refetching and retrying with correct nonce…`, 'warning');
+                            // The nonce will be fetched and applied at the start of the next loop iteration (attempt > 1)
+                        } else if (/Failed to fetch/i.test(err.message)) { // Re-added network error specific handling
+                            log(`🔁 Network error detected. Attempting to get a fresh provider and retry…`, 'warning');
 
+                            const rpcUrlsForChain = appState.rpcConfigs.get(chainId);
+                            if (!rpcUrlsForChain || rpcUrlsForChain.length === 0) {
+                                log(`❌ No RPCs configured for Chain ID ${chainId}. Cannot retry.`, 'error');
+                                break; // Break out of retry loop
+                            }
+
+                            let newProvider = null;
+                            let newRpcUrl = null;
+                            let providerReestablished = false;
+
+                            // Try to find an alternative working RPC for the same chain
+                            for (const rpcEntry of rpcUrlsForChain) {
+                                const tempProvider = new ethers.JsonRpcProvider(rpcEntry.url);
+                                try {
+                                    await tempProvider.getBlockNumber(); // Health check
+                                    newProvider = tempProvider;
+                                    newRpcUrl = rpcEntry.url;
+                                    providerReestablished = true;
+                                    log(`✅ Re-established RPC connection using: ${newRpcUrl} for Chain ID ${chainId}`, 'info');
+                                    break;
+                                } catch (re_e) {
+                                    log(`❌ Alternative RPC ${rpcEntry.url} for Chain ID ${chainId} failed health check during retry: ${re_e.message}. Trying next.`, 'warning');
+                                }
+                            }
+
+                            if (!providerReestablished) {
+                                log(`❌ All RPCs for Chain ID ${chainId} failed during retry. Cannot re-establish connection.`, 'error');
+                                break; // Break out of retry loop if no working provider found
+                            }
+
+                            // Update the wallet's provider to the newly established one
+                            wallet = new ethers.Wallet(wallet.privateKey, newProvider);
+
+                            // For network errors, we also need to ensure the nonce is fresh for the retry
                             try {
                                 const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                                const retryTx = { ...originalTxParams };
-                                retryTx.nonce = freshNonce;
-
-                                log(`Retrying with corrected nonce ${freshNonce}...`, 'info');
-                                const retryResponse = await wallet.sendTransaction(retryTx);
-                                await retryResponse.wait();
-                                log(`✅ Retry with corrected nonce ${freshNonce} succeeded.`, 'success');
-                                return { success: true, receipt: retryResponse };
-                            } catch (retryError) {
-                                log(`❌ Retry after nonce fix failed: ${retryError.message}`, 'error');
+                                txParams.nonce = freshNonce; // Update txParams for the next attempt
+                                log(`Updated nonce to ${freshNonce} for retry after network error.`, 'info');
+                            } catch (nonceFetchError) {
+                                log(`❌ Failed to fetch fresh nonce after network error: ${nonceFetchError.message}`, 'error');
+                                break; // If nonce can't be fetched, can't retry
                             }
                         }
+
 
                         if (attempt <= maxRetries) {
                             const delay = Stealth.generateLogNormalDelay(3000, 8000);
@@ -2359,12 +2399,13 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                                     }
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
-                                    // Nonce Logic (NO JITTER)
+                                    // Nonce Logic (Apply jitter for the first attempt)
                                     let currentNonce;
                                     try {
                                         currentNonce = await wallet.provider.getTransactionCount(walletAddress, 'latest'); // Use wallet.provider
-                                        tx.nonce = currentNonce; // Assign current nonce directly
-                                        log(`Nonce applied: ${tx.nonce}`, 'info');
+                                        const nonceOffset = Math.floor(Stealth.getRandomInRange(0, 3)); // 0, 1, or 2
+                                        tx.nonce = currentNonce + nonceOffset;
+                                        log(`Nonce applied: ${tx.nonce} (jitter ${nonceOffset >= 0 ? '+' : ''}${nonceOffset})`, 'info');
                                     } catch (e) {
                                         log(`⚠️ Failed to fetch nonce: ${e.message}. Skipping send.`, 'error');
                                         actionSuccess = false;
