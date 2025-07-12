@@ -1391,7 +1391,8 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                     ui.privateKeys.value = '';
                     ui.keysLoadedCount.textContent = '';
                     appState.wallets = [];
-                    updateWalletBalanceChart();
+                    updateWalletBalanceChart(); 
+                    // Reset RPC URLs to include Sepolia by default
                     ui.rpcUrls.value = `https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1\nhttps://rpc.goerli.dev,5\nhttps://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111`;
                     ui.probSend.value = "60"; 
                     ui.probIdleAction.value = "20"; 
@@ -2037,11 +2038,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                     }
                 }
 
-                log("⚠️ Tx skipped after max retries.", 'log-skipped', {
-                    chainId,
-                    walletAddress: wallet.address,
-                    action: 'skipped'
-                });
+                // Removed: log("⚠️ Tx skipped after max retries.", 'log-skipped', { ... });
                 updateActionDistChart('skipped');
                 return { success: false, receipt: null };
             }
