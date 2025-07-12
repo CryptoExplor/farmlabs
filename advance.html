@@ -2389,17 +2389,12 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                                     }
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
-                                    // Nonce Jitter Logic (FIXED)
+                                    // Nonce Logic (NO JITTER)
                                     let currentNonce;
                                     try {
                                         currentNonce = await wallet.provider.getTransactionCount(walletAddress, 'latest'); // Use wallet.provider
-
-                                        // 30% chance to jitter nonce
-                                        const jitterEnabled = Math.random() < 0.3;
-                                        const offset = jitterEnabled ? Math.floor(Stealth.getRandomInRange(-1, 2)) : 0; // -1, 0, or 1
-                                        tx.nonce = currentNonce + offset;
-
-                                        log(`Nonce applied: ${tx.nonce} (jitter ${offset >= 0 ? '+' : ''}${offset})`, 'info');
+                                        tx.nonce = currentNonce; // Assign current nonce directly
+                                        log(`Nonce applied: ${tx.nonce}`, 'info');
                                     } catch (e) {
                                         log(`⚠️ Failed to fetch nonce: ${e.message}. Skipping send.`, 'error');
                                         actionSuccess = false;
