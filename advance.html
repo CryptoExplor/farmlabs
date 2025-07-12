@@ -1003,7 +1003,10 @@ https://rpc.goerli.dev,5</textarea>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import the WalletPersonaManager module
+        import { WalletPersonaManager } from './walletPersonaManager.js';
+
         // Utility for random number generation (used in Stealth.js)
         const Stealth = {
             // Generates a random number within a specified range (min inclusive, max exclusive)
@@ -1011,15 +1014,15 @@ https://rpc.goerli.dev,5</textarea>
 
             // Generates a random delay using a log-normal distribution
             // min and max are in milliseconds
-            generateLogNormalDelay: (min, max) => {
+            generateLogNormalDelay: (min, max, delayFactor = 1) => {
                 const mu = Math.log(min);
                 const sigma = (Math.log(max) - Math.log(min)) / 4; // Adjust sigma for desired spread
                 let u1 = Math.random();
                 let u2 = Math.random();
                 // Box-Muller transform to get a standard normal deviate
                 let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-                // Scale and shift to log-normal distribution
-                return Math.exp(mu + sigma * z0);
+                // Scale and shift to log-normal distribution, then apply persona delayFactor
+                return Math.exp(mu + sigma * z0) * delayFactor;
             }
         };
 
@@ -1218,7 +1221,7 @@ https://rpc.goerli.dev,5</textarea>
             const appState = {
                 isRunning: false,
                 stopFlag: false,
-                wallets: [],
+                wallets: [], // Each wallet object will now include a 'persona' property
                 rpcConfigs: [], // [{url, chainId}]
                 currentRecipientPool: {}, // {chainId: [addresses]}
                 manualRecipientList: [], // For user-provided list
@@ -1418,6 +1421,8 @@ https://rpc.goerli.dev,5</textarea>
                     Details: message.replace(/<[^>]*>?/gm, '').replace(/,/g, ';'),
                     DelayUsedMs: actionData.delayUsedMs || '',
                     GasFactorUsed: actionData.gasFactorUsed || '',
+                    Persona: actionData.personaName || '', // Add persona name to log
+                    UserAgent: actionData.userAgent || '', // Add user agent to log
                 });
             };
 
@@ -1508,7 +1513,7 @@ https://rpc.goerli.dev,5</textarea>
                 if (appState.wallets.length > 0) {
                     ui.noWalletsMsg.classList.add('hidden');
                     ui.walletListDisplay.innerHTML = appState.wallets.map(w =>
-                        `<li>Wallet: ...${w.address.slice(-10)} | Balance: ${w.balance} ETH</li>`
+                        `<li>Wallet: ...${w.address.slice(-10)} | Balance: ${w.balance} ETH | Persona: ${w.persona.name}</li>`
                     ).join('');
                 } else {
                     ui.noWalletsMsg.classList.remove('hidden');
@@ -1737,6 +1742,9 @@ https://rpc.goerli.dev,5</textarea>
                         const balanceWei = await defaultProvider.getBalance(wallet.address);
                         const balanceEth = ethers.formatEther(balanceWei);
 
+                        // Assign a persona to the wallet
+                        const persona = WalletPersonaManager.getRandomPersona();
+
                         // Calculate per-wallet probabilities with jitter
                         let sendJitter = Stealth.getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
                         let idleJitter = Stealth.getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.idle;
@@ -1758,7 +1766,8 @@ https://rpc.goerli.dev,5</textarea>
                             privateKey: keys[i],
                             address: wallet.address,
                             balance: parseFloat(balanceEth).toFixed(6),
-                            sessionProbabilities: walletSessionProbs // Store per-wallet probabilities
+                            sessionProbabilities: walletSessionProbs, // Store per-wallet probabilities
+                            persona: persona // Store the assigned persona
                         });
                         ui.keysLoadedCount.textContent = `Loaded ${i + 1} / ${keys.length} wallets.`;
                     } catch (error) {
@@ -2058,17 +2067,18 @@ https://rpc.goerli.dev,5</textarea>
                         const walletAddress = walletInfo.address;
                         let wallet = new ethers.Wallet(walletInfo.privateKey, provider);
 
-                        log(`🌐 Initiating session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} (${rpcUrl})...`, 'info');
+                        log(`🌐 Initiating session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} (${rpcUrl}). Persona: ${walletInfo.persona.name}`, 'info', { personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
 
                         if (appState.wallets.length > 1 && appState.config.walletSwitchDelay > 0) {
                             log(`Pausing for wallet switch delay (${appState.config.walletSwitchDelay / 1000}s)...`, 'info');
                             await sleep(appState.config.walletSwitchDelay);
                         }
 
-                        if (Math.random() * 100 < appState.config.walletIdleChance) {
-                            log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId}.`, 'info', { chainId, walletAddress, action: 'idle' });
+                        // Use persona's idleChance
+                        if (Math.random() * 100 < walletInfo.persona.behavior.idleChance * 100) { // Convert 0-1 to 0-100
+                            log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId} (Persona Idle).`, 'info', { chainId, walletAddress, action: 'idle' });
                             updateActionDistChart('idle');
-                            const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
+                            const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay, walletInfo.persona.behavior.delayFactor);
                             await sleep(delay);
                             continue; // Move to next wallet/chain session
                         }
@@ -2078,7 +2088,7 @@ https://rpc.goerli.dev,5</textarea>
                             if (balanceWei < ethers.parseEther("0.001")) { // Ensure sufficient balance for gas
                                 log(`Skipping wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} due to critically low balance (${ethers.formatEther(balanceWei)} ETH).`, 'warning', { chainId, walletAddress, action: 'skipped' });
                                 updateActionDistChart('skipped');
-                                const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
+                                const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay, walletInfo.persona.behavior.delayFactor);
                                 await sleep(delay); // Add delay even for skipped
                                 continue; // Move to next wallet/chain session
                             } else if (balanceWei < ethers.parseEther("0.005")) { // Warning for slightly low balance
@@ -2087,7 +2097,7 @@ https://rpc.goerli.dev,5</textarea>
                         } catch (balanceError) {
                             log(`Failed to check balance for ...${walletAddress.slice(-6)} on Chain ID ${chainId}: ${balanceError.message}`, 'error', { chainId, walletAddress, action: 'skipped' });
                             updateActionDistChart('skipped');
-                            const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
+                            const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay, walletInfo.persona.behavior.delayFactor);
                             await sleep(delay);
                             continue; // Move to next wallet/chain session
                         }
@@ -2252,16 +2262,18 @@ https://rpc.goerli.dev,5</textarea>
                                             chainId,
                                             walletAddress,
                                             action: 'send',
-                                            gasFactorUsed: randomGasFactor.toFixed(2)
+                                            gasFactorUsed: randomGasFactor.toFixed(2),
+                                            personaName: walletInfo.persona.name,
+                                            userAgent: walletInfo.persona.userAgent
                                         });
                                         updateActionDistChart('send');
                                     } else {
-                                        log(`❌ Transaction failed after retries.`, 'error', { chainId, walletAddress, action: 'send' });
+                                        log(`❌ Transaction failed after retries.`, 'error', { chainId, walletAddress, action: 'send', personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
                                         updateActionDistChart('skipped');
                                     }
 
                                 case "idle-action":
-                                    log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle' });
+                                    log(`Wallet ...${walletAddress.slice(-6)} is idling for this action.`, 'info', { chainId, walletAddress, action: 'idle', personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
                                     updateActionDistChart('idle');
                                     actionSuccess = true;
                                     break;
@@ -2269,10 +2281,10 @@ https://rpc.goerli.dev,5</textarea>
                                 case "balance-check":
                                     try {
                                         const currentBalanceWei = await provider.getBalance(walletAddress);
-                                        log(`Wallet ...${walletAddress.slice(-6)} checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ETH`, 'info', { chainId, walletAddress, action: 'balance-check' });
+                                        log(`Wallet ...${walletAddress.slice(-6)} checked balance: ${ethers.formatEther(currentBalanceWei).slice(0, 8)} ETH`, 'info', { chainId, walletAddress, action: 'balance-check', personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
                                         actionSuccess = true;
                                     } catch (error) {
-                                        log(`Failed to check balance for ...${walletAddress.slice(-6)}: ${error.message}`, 'error', { chainId, walletAddress, action: 'balance-check' });
+                                        log(`Failed to check balance for ...${walletAddress.slice(-6)}: ${error.message}`, 'error', { chainId, walletAddress, action: 'balance-check', personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
                                     }
                                     updateActionDistChart('balance-check');
                                     break;
@@ -2317,13 +2329,13 @@ https://rpc.goerli.dev,5</textarea>
                                 }
 
                                 if (Math.random() * 100 < appState.config.thinkTimeChance) {
-                                    delayUsed = Stealth.generateLogNormalDelay(appState.config.minThinkTime, appState.config.maxThinkTime);
+                                    delayUsed = Stealth.generateLogNormalDelay(appState.config.minThinkTime, appState.config.maxThinkTime, walletInfo.persona.behavior.delayFactor);
                                     log(`Waiting for a human-like "think time" burst of ${Math.round(delayUsed/1000)} seconds...`, 'info');
                                     appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
                                     ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
                                     await sleep(delayUsed);
                                 } else {
-                                    delayUsed = Stealth.generateLogNormalDelay(currentMinDelay, currentMaxDelay);
+                                    delayUsed = Stealth.generateLogNormalDelay(currentMinDelay, currentMaxDelay, walletInfo.persona.behavior.delayFactor);
                                     log(`Waiting for ${Math.round(delayUsed/1000)} seconds before next action...`, 'info', { delayUsedMs: delayUsed });
                                     await sleep(delayUsed);
                                 }
@@ -2333,13 +2345,13 @@ https://rpc.goerli.dev,5</textarea>
                         if (appState.stopFlag) break;
 
                         if (currentSessionType === 'burst' && appState.config.minLullTime > 0) {
-                            const lullDelay = Stealth.generateLogNormalDelay(appState.config.minLullTime, appState.config.maxLullTime);
+                            const lullDelay = Stealth.generateLogNormalDelay(appState.config.minLullTime, appState.config.maxLullTime, walletInfo.persona.behavior.delayFactor);
                             log(`Activity burst completed. Entering lull period for ${Math.round(lullDelay/1000)} seconds...`, 'info');
                             appState.lastHumanLikeSpike = new Date().toLocaleTimeString();
                             ui.humanSpikeDisplay.textContent = appState.lastHumanLikeSpike;
                             await sleep(lullDelay);
                         } else {
-                            const sessionDelay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay);
+                            const sessionDelay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay, walletInfo.persona.behavior.delayFactor);
                             log(`Session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} completed. Waiting for ${Math.round(sessionDelay/1000)} seconds before next session...`, 'info', { delayUsedMs: sessionDelay });
                             await sleep(sessionDelay);
                         }
