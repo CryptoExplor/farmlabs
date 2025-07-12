@@ -1931,67 +1931,80 @@ https://rpc.goerli.dev,5</textarea>
 
                 for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
                     try {
-                    // Simulate random failure
-                    if (Math.random() * 100 < appState.config.simulatedErrorChance) {
-                        throw new Error("Simulated network error: Transaction dropped/failed.");
-                    }
+                        // Simulate random failure
+                        if (Math.random() * 100 < appState.config.simulatedErrorChance) {
+                            throw new Error("Simulated network error: Transaction dropped/failed.");
+                        }
 
-                    log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
+                        log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
 
-                    const txResponse = await wallet.sendTransaction(txParams);
-                    log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
-                        chainId,
-                        walletAddress: wallet.address,
-                        action: 'send',
-                        gasFactorUsed: gasFactorUsed.toFixed(2)
-                    });
+                        const txResponse = await wallet.sendTransaction(txParams);
+                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
+                            chainId,
+                            walletAddress: wallet.address,
+                            action: 'send',
+                            gasFactorUsed: gasFactorUsed.toFixed(2)
+                        });
 
-                    const receipt = await txResponse.wait();
-                    log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
-                    return { success: true, receipt };
-                } catch (err) {
-                    console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
-                    log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', {
-                        chainId,
-                        walletAddress: wallet.address,
-                        action: 'send'
-                    });
+                        const receipt = await txResponse.wait();
+                        log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
+                        return { success: true, receipt };
+                    } catch (err) {
+                        console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
+                        log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', {
+                            chainId,
+                            walletAddress: wallet.address,
+                            action: 'send'
+                        });
 
-                    // Fallback for nonce-related errors
-                    if (/nonce/i.test(err.message)) {
-                        log(`🔁 Nonce mismatch detected. Refetching and retrying with correct nonce…`, 'warning');
+                        // Fallback for nonce-related errors or "Failed to fetch"
+                        if (/nonce/i.test(err.message) || /Failed to fetch/i.test(err.message)) {
+                            log(`🔁 Nonce mismatch or network error detected. Refetching and retrying with correct nonce…`, 'warning');
 
-                        try {
-                        const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                        const retryTx = { ...originalTxParams };
-                        retryTx.nonce = freshNonce;
+                            try {
+                                // Re-initialize provider if it's a network error
+                                if (/Failed to fetch/i.test(err.message)) {
+                                    log(`Attempting to re-establish RPC connection for Chain ID ${chainId}...`, 'info');
+                                    const rpcConfig = appState.rpcConfigs.find(rc => rc.chainId === chainId);
+                                    if (rpcConfig) {
+                                        wallet = new ethers.Wallet(wallet.privateKey, new ethers.JsonRpcProvider(rpcConfig.url));
+                                        log(`RPC connection re-established for Chain ID ${chainId}.`, 'info');
+                                    } else {
+                                        log(`Could not find RPC config for Chain ID ${chainId}. Cannot re-establish connection.`, 'error');
+                                        break; // Break out of retry loop if RPC cannot be re-established
+                                    }
+                                }
+                                
+                                const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
+                                const retryTx = { ...originalTxParams };
+                                retryTx.nonce = freshNonce;
 
-                        log(`Retrying with corrected nonce ${freshNonce}...`, 'info');
-                        const retryResponse = await wallet.sendTransaction(retryTx);
-                        await retryResponse.wait();
-                        log(`✅ Retry with corrected nonce ${freshNonce} succeeded.`, 'success');
-                        return { success: true, receipt: retryResponse };
-                    } catch (retryError) {
-                        log(`❌ Retry after nonce fix failed: ${retryError.message}`, 'error');
+                                log(`Retrying with corrected nonce ${freshNonce}...`, 'info');
+                                const retryResponse = await wallet.sendTransaction(retryTx);
+                                await retryResponse.wait();
+                                log(`✅ Retry with corrected nonce ${freshNonce} succeeded.`, 'success');
+                                return { success: true, receipt: retryResponse };
+                            } catch (retryError) {
+                                log(`❌ Retry after nonce/network fix failed: ${retryError.message}`, 'error');
+                            }
+                        }
+
+                        if (attempt <= maxRetries) {
+                            const delay = Stealth.generateLogNormalDelay(3000, 8000);
+                            log(`🔄 Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
+                            await sleep(delay);
+                        }
                     }
                 }
 
-                if (attempt <= maxRetries) {
-                    const delay = Stealth.generateLogNormalDelay(3000, 8000);
-                    log(`🔄 Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
-                    await sleep(delay);
-                }
+                log("⚠️ Tx skipped after max retries.", 'log-skipped', {
+                    chainId,
+                    walletAddress: wallet.address,
+                    action: 'skipped'
+                });
+                updateActionDistChart('skipped');
+                return { success: false, receipt: null };
             }
-        }
-
-    log("⚠️ Tx skipped after max retries.", 'log-skipped', {
-        chainId,
-        walletAddress: wallet.address,
-        action: 'skipped'
-    });
-    updateActionDistChart('skipped');
-    return { success: false, receipt: null };
-}
 
             // NEW: Function to perform a harmless "dummy" read call
             async function maybeDummyCall(provider) {
@@ -2108,20 +2121,34 @@ https://rpc.goerli.dev,5</textarea>
                         const rpcConfig = appState.rpcConfigs[rpcConfigIndex];
                         const rpcUrl = rpcConfig.url;
                         const chainId = rpcConfig.chainId;
-                        const provider = new ethers.JsonRpcProvider(rpcUrl);
+                        let provider = new ethers.JsonRpcProvider(rpcUrl); // Use 'let' to allow re-assignment
 
-                        // RPC health probing
+                        // RPC health probing and re-establishment
                         try {
                             await provider.getBlockNumber();
                         } catch (rpcError) {
-                            log(`❌ Failed to connect to RPC ${rpcUrl}: ${rpcError.message}. Removing this RPC and continuing.`, 'error');
-                            appState.rpcConfigs.splice(rpcConfigIndex, 1);
-                            if (appState.rpcConfigs.length === 0) {
-                                log('❌ No RPC endpoints left. Stopping interaction.', 'error');
+                            log(`❌ Failed to connect to RPC ${rpcUrl}: ${rpcError.message}. Attempting to switch RPC.`, 'error');
+                            // Find a different RPC if available
+                            const availableRpcConfigs = appState.rpcConfigs.filter(rc => rc.chainId !== chainId);
+                            if (availableRpcConfigs.length > 0) {
+                                const newRpcConfig = availableRpcConfigs[Math.floor(Math.random() * availableRpcConfigs.length)];
+                                log(`Switching to new RPC: ${newRpcConfig.url} (Chain ID: ${newRpcConfig.chainId})`, 'info');
+                                provider = new ethers.JsonRpcProvider(newRpcConfig.url); // Re-assign provider
+                                // Update current rpcConfig and chainId for this iteration
+                                rpcConfig.url = newRpcConfig.url;
+                                rpcConfig.chainId = newRpcConfig.chainId;
+                            } else {
+                                log('❌ No alternative RPC endpoints left. Stopping interaction.', 'error');
                                 appState.stopFlag = true;
                                 break;
                             }
-                            continue; // Skip to next iteration with remaining RPCs
+                            // Re-check the new RPC
+                            try {
+                                await provider.getBlockNumber();
+                            } catch (secondRpcError) {
+                                log(`❌ Failed to connect to alternative RPC ${provider.connection.url}: ${secondRpcError.message}. Skipping this cycle.`, 'error');
+                                continue; // Skip to next iteration if new RPC also fails
+                            }
                         }
 
                         if (appState.rpcConfigs.length > 1 && appState.config.rpcSwitchDelay > 0) {
@@ -2132,7 +2159,7 @@ https://rpc.goerli.dev,5</textarea>
                         const walletInfoIndex = Math.floor(Math.random() * appState.wallets.length);
                         const walletInfo = appState.wallets[walletInfoIndex];
                         const walletAddress = walletInfo.address;
-                        let wallet = new ethers.Wallet(walletInfo.privateKey, provider);
+                        let wallet = new ethers.Wallet(walletInfo.privateKey, provider); // Re-initialize wallet with potentially new provider
 
                         log(`🌐 Initiating session for Wallet ...${walletAddress.slice(-6)} on Chain ID ${chainId} (${rpcUrl}). Persona: ${walletInfo.persona.name}`, 'info', { personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
 
@@ -2316,7 +2343,39 @@ https://rpc.goerli.dev,5</textarea>
 
                                         log(`Nonce applied: ${tx.nonce} (jitter ${offset >= 0 ? '+' : ''}${offset})`, 'info');
                                     } catch (e) {
-                                        log(`⚠️ Failed to fetch nonce: ${e.message}`, 'error');
+                                        log(`⚠️ Failed to fetch nonce: ${e.message}. Attempting to re-establish provider for nonce retry...`, 'error');
+                                        // Re-initialize provider if it's a network error
+                                        if (/Failed to fetch/i.test(e.message)) {
+                                            log(`Attempting to re-establish RPC connection for Chain ID ${chainId}...`, 'info');
+                                            const rpcConfig = appState.rpcConfigs.find(rc => rc.chainId === chainId);
+                                            if (rpcConfig) {
+                                                wallet = new ethers.Wallet(wallet.privateKey, new ethers.JsonRpcProvider(rpcConfig.url));
+                                                log(`RPC connection re-established for Chain ID ${chainId}.`, 'info');
+                                                // Try fetching nonce again with the new provider
+                                                try {
+                                                    currentNonce = await wallet.provider.getTransactionCount(walletAddress, 'latest');
+                                                    const jitterEnabled = Math.random() < 0.3;
+                                                    const offset = jitterEnabled ? Math.floor(Stealth.getRandomInRange(-1, 2)) : 0;
+                                                    tx.nonce = currentNonce + offset;
+                                                    log(`Nonce re-applied after RPC re-establishment: ${tx.nonce} (jitter ${offset >= 0 ? '+' : ''}${offset})`, 'info');
+                                                } catch (re_e) {
+                                                    log(`❌ Failed to fetch nonce even after RPC re-establishment: ${re_e.message}. Skipping send.`, 'error');
+                                                    actionSuccess = false;
+                                                    updateActionDistChart('skipped');
+                                                    break;
+                                                }
+                                            } else {
+                                                log(`Could not find RPC config for Chain ID ${chainId}. Cannot re-establish connection. Skipping send.`, 'error');
+                                                actionSuccess = false;
+                                                updateActionDistChart('skipped');
+                                                break;
+                                            }
+                                        } else {
+                                            log(`Skipping send due to nonce fetch failure: ${e.message}`, 'error');
+                                            actionSuccess = false;
+                                            updateActionDistChart('skipped');
+                                            break;
+                                        }
                                     }
                                     
                                     // Simulated error (before actual send)
@@ -2759,7 +2818,7 @@ https://rpc.goerli.dev,5</textarea>
                         log('Persona mode changed. Re-assigning personas to loaded wallets...', 'info');
                         appState.wallets.forEach(wallet => {
                             wallet.persona = getPersonaByMode(appState.config.personaMode);
-                            log(`🔍 Re-assigned persona for ...${wallet.address.slice(-6)}: ${wallet.persona.name} | delay ×${wallet.persona.behavior.delayFactor.toFixed(2)} | idle ${Math.round(wallet.persona.behavior.idleChance * 100)}%`, 'info');
+                            log(`🧍 Re-assigned persona for ...${wallet.address.slice(-6)}: ${wallet.persona.name} | delay ×${wallet.persona.behavior.delayFactor.toFixed(2)} | idle ${Math.round(wallet.persona.behavior.idleChance * 100)}%`, 'info');
                         });
                         updateWalletBalanceChart(); // Update display if persona info is shown
                     }
