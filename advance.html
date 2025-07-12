@@ -673,6 +673,17 @@
                         </select>
                     </div>
 
+                    <!-- NEW: Persona Mode Dropdown -->
+                    <div class="mb-6">
+                        <label for="persona-mode" class="block font-medium text-accent mb-1">Persona Mode</label>
+                        <select id="persona-mode" class="w-full p-2 border border-accent rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition wallet-feature-control" disabled>
+                            <option value="random">Random</option>
+                            <option value="speedy">Speedy Mode</option>
+                            <option value="lazy">Lazy Mode</option>
+                        </select>
+                        <p class="text-sm text-gray-500 mt-1">Select a mode to influence persona behavior (delay and idle chance).</p>
+                    </div>
+
                     <!-- Main configuration grid container -->
                     <div class="bg-secondary p-8 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-8">
                         <!-- Individual configuration items -->
@@ -1068,7 +1079,8 @@ https://rpc.goerli.dev,5</textarea>
                 "rpc-urls": [
                     "https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1",
                     "https://rpc.goerli.dev,5"
-                ]
+                ],
+                "persona-mode": "random" // NEW: Default persona mode
             };
 
             setConfigValue("max-txns-per-wallet", stealthDefaults["max-txns-per-wallet"]);
@@ -1098,6 +1110,7 @@ https://rpc.goerli.dev,5</textarea>
             setConfigValue("rpc-switch-delay", stealthDefaults["rpc-switch-delay"]);
             setConfigValue("wallet-switch-delay", stealthDefaults["wallet-switch-delay"]); // NEW: walletSwitchDelay
             setConfigValue("rpc-urls", stealthDefaults["rpc-urls"]);
+            setConfigValue("persona-mode", stealthDefaults["persona-mode"]); // NEW
         };
 
         // --- Stealth Profile Selector ---
@@ -1133,7 +1146,8 @@ https://rpc.goerli.dev,5</textarea>
                 "rpc-urls": [
                     "https://mainnet.infura.io/v3/YOUR_PROJECT_ID,1",
                     "https://rpc.goerli.dev,5"
-                ]
+                ],
+                "persona-mode": "random" // Default to random for profiles
             },
             aggressive: {
                 "max-txns-per-wallet": 8,
@@ -1166,7 +1180,8 @@ https://rpc.goerli.dev,5</textarea>
                 "rpc-urls": [
                     "https://rpc.ankr.com/eth,1",
                     "https://rpc.ankr.com/eth_goerli,5"
-                ]
+                ],
+                "persona-mode": "speedy" // Aggressive implies speedy persona
             },
             ultraSlow: {
                 "max-txns-per-wallet": 2,
@@ -1198,7 +1213,8 @@ https://rpc.goerli.dev,5</textarea>
                 "wallet-switch-delay": 8,
                 "rpc-urls": [
                     "https://rpc.ankr.com/eth_sepolia,11155111"
-                ]
+                ],
+                "persona-mode": "lazy" // Ultra-slow implies lazy persona
             }
         };
 
@@ -1215,6 +1231,17 @@ https://rpc.goerli.dev,5</textarea>
             log(`Applied '${profileName}' stealth profile. Configuration updated.`, 'success');
         };
 
+        // NEW: Function to get persona based on mode
+        function getPersonaByMode(mode) {
+            const basePersona = WalletPersonaManager.getRandomPersona();
+            if (mode === 'speedy') {
+                return { ...basePersona, behavior: { delayFactor: 0.9, idleChance: 0.05 } };
+            }
+            if (mode === 'lazy') {
+                return { ...basePersona, behavior: { delayFactor: 1.8, idleChance: 0.4 } };
+            }
+            return basePersona; // 'random' or any other value
+        }
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1334,6 +1361,7 @@ https://rpc.goerli.dev,5</textarea>
                 themeToggle: document.getElementById('theme-toggle'), // NEW
                 themeToggleIcon: document.getElementById('theme-toggle-icon'), // NEW
                 apiKeyInput: document.getElementById('api-key-input'), // NEW
+                personaModeSelector: document.getElementById('persona-mode'), // NEW UI element
             };
 
             const setUIEnabled = (enabled) => {
@@ -1365,6 +1393,7 @@ https://rpc.goerli.dev,5</textarea>
                     ui.probIdleAction.value = "20"; 
                     ui.probBalanceCheck.value = "20"; 
                     ui.stealthProfileSelector.value = "balanced";
+                    ui.personaModeSelector.value = "random"; // Reset persona mode
                     injectStealthDefaults();
                 }
             };
@@ -1621,7 +1650,8 @@ https://rpc.goerli.dev,5</textarea>
                         send: parseInt(ui.probSend.value) || 60,
                         idle: parseInt(ui.probIdleAction.value) || 20,
                         'balance-check': parseInt(ui.probBalanceCheck.value) || 20,
-                    }
+                    },
+                    personaMode: ui.personaModeSelector.value || "random" // NEW: Read persona mode
                 };
 
                 appState.rpcConfigs = ui.rpcUrls.value.split('\n').map(line => {
@@ -1742,8 +1772,8 @@ https://rpc.goerli.dev,5</textarea>
                         const balanceWei = await defaultProvider.getBalance(wallet.address);
                         const balanceEth = ethers.formatEther(balanceWei);
 
-                        // Assign a persona to the wallet
-                        const persona = WalletPersonaManager.getRandomPersona();
+                        // Assign a persona to the wallet based on selected mode
+                        const persona = getPersonaByMode(appState.config.personaMode);
 
                         // Calculate per-wallet probabilities with jitter
                         let sendJitter = Stealth.getRandomInRange(-jitterFactor, jitterFactor) * baseProbs.send;
@@ -1769,6 +1799,7 @@ https://rpc.goerli.dev,5</textarea>
                             sessionProbabilities: walletSessionProbs, // Store per-wallet probabilities
                             persona: persona // Store the assigned persona
                         });
+                        log(`🧍 Assigned persona: ${persona.name} | delay ×${persona.behavior.delayFactor.toFixed(2)} | idle ${Math.round(persona.behavior.idleChance * 100)}%`, 'info'); // Persona Summary Log
                         ui.keysLoadedCount.textContent = `Loaded ${i + 1} / ${keys.length} wallets.`;
                     } catch (error) {
                         log(`Failed to load key #${i+1}: Invalid key or RPC issue - ${error.message}`, 'error');
@@ -2074,9 +2105,9 @@ https://rpc.goerli.dev,5</textarea>
                             await sleep(appState.config.walletSwitchDelay);
                         }
 
-                        // Use persona's idleChance
+                        // Use persona's idleChance for session-wide idle
                         if (Math.random() * 100 < walletInfo.persona.behavior.idleChance * 100) { // Convert 0-1 to 0-100
-                            log(`Wallet ...${walletAddress.slice(-6)} is idle this session on Chain ID ${chainId} (Persona Idle).`, 'info', { chainId, walletAddress, action: 'idle' });
+                            log(`Wallet ...${walletAddress.slice(-6)} is idling for this session on Chain ID ${chainId} (Persona Idle).`, 'info', { chainId, walletAddress, action: 'idle' });
                             updateActionDistChart('idle');
                             const delay = Stealth.generateLogNormalDelay(appState.config.minDelay, appState.config.maxDelay, walletInfo.persona.behavior.delayFactor);
                             await sleep(delay);
@@ -2321,10 +2352,12 @@ https://rpc.goerli.dev,5</textarea>
 
                                 if (appState.config.enableTimeOfDayBias) {
                                     const currentHour = new Date().getHours();
-                                    if (currentHour >= 1 && currentHour < 6) {
-                                        currentMinDelay *= 2;
-                                        currentMaxDelay *= 2;
-                                        log(`Applying time-of-day bias: increased delay due to night hours.`, 'info');
+                                    // Apply stronger time-of-day bias based on persona's idleChance during night hours
+                                    if (currentHour >= 1 && currentHour < 6) { // 1 AM to 6 AM
+                                        // Increase delay more significantly, also based on persona's idleChance
+                                        currentMinDelay *= (2 + walletInfo.persona.behavior.idleChance);
+                                        currentMaxDelay *= (2 + walletInfo.persona.behavior.idleChance);
+                                        log(`Applying time-of-day bias: increased delay due to night hours and persona.`, 'info');
                                     }
                                 }
 
@@ -2402,6 +2435,7 @@ https://rpc.goerli.dev,5</textarea>
                         ui.privateKeys.value = '';
                         injectStealthDefaults();
                         ui.stealthProfileSelector.value = "balanced";
+                        ui.personaModeSelector.value = "random"; // Reset persona mode
 
                         setUIEnabled(false);
                         initConsoleCharts();
@@ -2672,6 +2706,20 @@ https://rpc.goerli.dev,5</textarea>
                     } else {
                         loadConfiguration();
                         log(`Switched to 'Manual Custom' profile. Current settings will be used.`, 'info');
+                    }
+                });
+
+                // NEW: Event listener for Persona Mode Selector
+                ui.personaModeSelector.addEventListener("change", (e) => {
+                    loadConfiguration(); // Update config with new persona mode
+                    if (appState.wallets.length > 0) {
+                        // Re-assign personas to existing wallets if mode changes
+                        log('Persona mode changed. Re-assigning personas to loaded wallets...', 'info');
+                        appState.wallets.forEach(wallet => {
+                            wallet.persona = getPersonaByMode(appState.config.personaMode);
+                            log(`🔍 Re-assigned persona for ...${wallet.address.slice(-6)}: ${wallet.persona.name} | delay ×${wallet.persona.behavior.delayFactor.toFixed(2)} | idle ${Math.round(wallet.persona.behavior.idleChance * 100)}%`, 'info');
+                        });
+                        updateWalletBalanceChart(); // Update display if persona info is shown
                     }
                 });
                 
