@@ -1946,71 +1946,42 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                 }
             };
             
-            // Function to send a transaction with retries
-            async function sendWithRetryOrSkip(wallet, txParams, maxRetries, chainId, gasFactorUsed) {
-                const originalTxParams = { ...txParams };
+            // Function to send a transaction without retries, populating missing fields
+            async function sendWithRetryOrSkip(wallet, txParams, chainId, gasFactorUsed) {
+                try {
+                    // Auto-fill missing gas, nonce, chainId etc.
+                    const populatedTx = await wallet.populateTransaction(txParams);
 
-                for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
-                    try {
-                        const retryTx = { ...originalTxParams };
+                    // Log full populated tx
+                    console.log("🧾 Final TX being sent:", populatedTx);
+                    log(`🚀 Sending TX with populated fields`, 'info');
 
-                        if (Math.random() * 100 < appState.config.simulatedErrorChance) {
-                            throw new Error("Simulated network error: Transaction dropped/failed.");
-                        }
+                    const txResponse = await wallet.sendTransaction(populatedTx);
 
-                        log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
+                    log(`✅ Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
+                        chainId,
+                        walletAddress: wallet.address,
+                        action: 'send',
+                        gasFactorUsed: gasFactorUsed.toFixed(2)
+                    });
 
-                        const txResponse = await wallet.sendTransaction(retryTx);
+                    const receipt = await txResponse.wait();
+                    log(`✅ Tx confirmed!`, 'success');
+                    return { success: true, receipt };
 
-                        log(`✅ Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
-                            chainId,
-                            walletAddress: wallet.address,
-                            action: 'send',
-                            gasFactorUsed: gasFactorUsed.toFixed(2)
-                        });
+                } catch (err) {
+                    console.warn("❌ TX Send Failed:", err);
+                    log(`❌ TX Failed: ${err.message}`, 'error', {
+                        chainId,
+                        walletAddress: wallet.address,
+                        action: 'send'
+                    });
 
-                        const receipt = await txResponse.wait();
-                        log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
-                        return { success: true, receipt };
-
-                    } catch (err) {
-                        log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', {
-                            chainId,
-                            walletAddress: wallet.address,
-                            action: 'send'
-                        });
-
-                        // Retry on network error
-                        if (/Failed to fetch|timeout/i.test(err.message)) {
-                            log(`🔁 Network error. Retrying on next RPC…`, 'warning');
-                            // rotate provider logic here if needed
-                            const rpcUrlsForChain = appState.rpcConfigs.get(chainId);
-                            if (!rpcUrlsForChain || rpcUrlsForChain.length === 0) {
-                                log(`❌ No RPCs configured for Chain ID ${chainId}. Cannot retry.`, 'error');
-                                break;
-                            }
-
-                            const randomRPC = rpcUrlsForChain[Math.floor(Math.random() * rpcUrlsForChain.length)].url;
-                            wallet.provider = new ethers.JsonRpcProvider(randomRPC);
-                            log(`🔌 Switched to new RPC: ${randomRPC}`, 'warning');
-                        }
-
-                        if (attempt < 1 + maxRetries) {
-                            const delay = Stealth.generateLogNormalDelay(3000, 8000);
-                            log(`⏳ Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
-                            await sleep(delay);
-                        }
-                    }
+                    updateActionDistChart('skipped');
+                    return { success: false, receipt: null };
                 }
-
-                log("⚠️ Tx skipped after max retries.", 'log-skipped', {
-                    chainId,
-                    walletAddress: wallet.address,
-                    action: 'skipped'
-                });
-                updateActionDistChart('skipped');
-                return { success: false, receipt: null };
             }
+
 
             // NEW: Function to perform a harmless "dummy" read call
             async function maybeDummyCall(provider) {
@@ -2355,19 +2326,6 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                                     }
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
-                                    // Nonce Logic (NO JITTER)
-                                    let currentNonce;
-                                    try {
-                                        currentNonce = await wallet.provider.getTransactionCount(walletAddress, 'latest'); // Use wallet.provider
-                                        tx.nonce = currentNonce; // Set nonce directly without jitter
-                                        log(`Nonce applied: ${tx.nonce}`, 'info');
-                                    } catch (e) {
-                                        log(`⚠️ Failed to fetch nonce: ${e.message}. Skipping send.`, 'error');
-                                        actionSuccess = false;
-                                        updateActionDistChart('skipped');
-                                        break;
-                                    }
-                                    
                                     // Simulated error (before actual send)
                                     if (Math.random() * 100 < appState.config.simulatedErrorChance) {
                                         log(`⚠️ Simulated network error (pre-send). Transaction will be skipped.`, 'warning', { chainId: selectedChainId, walletAddress });
@@ -2375,7 +2333,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                                         updateActionDistChart('skipped');
                                         break; // Skip to next wallet/session
                                     }
-                                    const sendResult = await sendWithRetryOrSkip(wallet, tx, appState.config.maxRetries, selectedChainId, randomGasFactor);
+                                    const sendResult = await sendWithRetryOrSkip(wallet, tx, selectedChainId, randomGasFactor); // Removed maxRetries parameter
                                     actionSuccess = sendResult.success;
                                     
                                     if (actionSuccess) {
@@ -2390,7 +2348,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                                         });
                                         updateActionDistChart('send');
                                     } else {
-                                        log(`❌ Transaction failed after retries.`, 'error', { chainId: selectedChainId, walletAddress, action: 'send', personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
+                                        log(`❌ Transaction failed.`, 'error', { chainId: selectedChainId, walletAddress, action: 'send', personaName: walletInfo.persona.name, userAgent: walletInfo.persona.userAgent });
                                         updateActionDistChart('skipped');
                                     }
                                     break; // Break from switch after send attempt
@@ -2499,7 +2457,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
             const stopInteraction = () => {
                 appState.isRunning = false;
                 appState.stopFlag = true;
-                ui.startBtn.disabled = false;
+                ui.startBtn.disabled = true;
                 ui.stopBtn.disabled = true;
                 ui.statusDisplay.textContent = 'Idle';
             };
