@@ -1820,7 +1820,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                             persona: persona // Store the assigned persona
                         });
                         log(`🧍 Assigned persona: ${persona.name} | delay ×${persona.behavior.delayFactor.toFixed(2)} | idle ${Math.round(persona.behavior.idleChance * 100)}%`, 'info'); // Persona Summary Log
-                        ui.keysLoadedCount.textContent = `Loaded ${i + 1} / ${keys.length} wallets.`;
+                        ui.keysLoadedCount.textContent = `Loaded ${i + 1} / ${keys.length}...`;
                     } catch (error) {
                         log(`Failed to load key #${i+1}: Invalid key or RPC issue - ${error.message}`, 'error');
                     }
@@ -1954,25 +1954,18 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
 
                 for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
                     try {
-                        txParams = { ...originalTxParams };
-                        txParams.nonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                        // Simulate random failure
+                        txParams = { ...originalTxParams }; // reset tx
+                        const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
+                        txParams.nonce = freshNonce;
+
                         if (Math.random() * 100 < appState.config.simulatedErrorChance) {
                             throw new Error("Simulated network error: Transaction dropped/failed.");
                         }
 
-                        log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
-
-                        // For retries, update nonce if it's not the first attempt
-                        if (attempt > 1) {
-                           const correctNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                           txParams.nonce = correctNonce;
-
-                            log(`Retrying with fresh nonce ${freshNonce}...`, 'info');
-                        }
+                        log(`🔁 Attempt ${attempt}/${1 + maxRetries} with nonce ${freshNonce}...`, 'info');
 
                         const txResponse = await wallet.sendTransaction(txParams);
-                        log(`Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
+                        log(`✅ Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
                             chainId,
                             walletAddress: wallet.address,
                             action: 'send',
@@ -1982,6 +1975,7 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                         const receipt = await txResponse.wait();
                         log(`✅ Tx confirmed on attempt ${attempt}!`, 'success');
                         return { success: true, receipt };
+
                     } catch (err) {
                         console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
                         log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', {
@@ -1990,61 +1984,30 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                             action: 'send'
                         });
 
-                        // Fallback for nonce-related errors
+                        // Nonce issue — log but allow retry
                         if (/nonce/i.test(err.message)) {
-                            log(`🔁 Nonce mismatch detected. Refetching and retrying with correct nonce…`, 'warning');
-                            // The nonce will be fetched and applied at the start of the next loop iteration (attempt > 1)
-                        } else if (/Failed to fetch/i.test(err.message)) { // Re-added network error specific handling
-                            log(`🔁 Network error detected. Attempting to get a fresh provider and retry…`, 'warning');
+                            log(`🔁 Nonce mismatch detected. Refetching will occur next attempt.`, 'warning');
+                        }
+
+                        // Network error handling: rotate provider
+                        if (/Failed to fetch/i.test(err.message)) {
+                            log(`🔁 Network error detected. Attempting to switch RPC…`, 'warning');
 
                             const rpcUrlsForChain = appState.rpcConfigs.get(chainId);
                             if (!rpcUrlsForChain || rpcUrlsForChain.length === 0) {
                                 log(`❌ No RPCs configured for Chain ID ${chainId}. Cannot retry.`, 'error');
-                                break; // Break out of retry loop
+                                break;
                             }
 
-                            let newProvider = null;
-                            let newRpcUrl = null;
-                            let providerReestablished = false;
-
-                            // Try to find an alternative working RPC for the same chain
-                            for (const rpcEntry of rpcUrlsForChain) {
-                                const tempProvider = new ethers.JsonRpcProvider(rpcEntry.url);
-                                try {
-                                    await tempProvider.getBlockNumber(); // Health check
-                                    newProvider = tempProvider;
-                                    newRpcUrl = rpcEntry.url;
-                                    providerReestablished = true;
-                                    log(`✅ Re-established RPC connection using: ${newRpcUrl} for Chain ID ${chainId}`, 'info');
-                                    break;
-                                } catch (re_e) {
-                                    log(`❌ Alternative RPC ${rpcEntry.url} for Chain ID ${chainId} failed health check during retry: ${re_e.message}. Trying next.`, 'warning');
-                                }
-                            }
-
-                            if (!providerReestablished) {
-                                log(`❌ All RPCs for Chain ID ${chainId} failed during retry. Cannot re-establish connection.`, 'error');
-                                break; // Break out of retry loop if no working provider found
-                            }
-
-                            // Update the wallet's provider to the newly established one
-                            wallet = new ethers.Wallet(wallet.privateKey, newProvider);
-
-                            // For network errors, we also need to ensure the nonce is fresh for the retry
-                            try {
-                                const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                                txParams.nonce = freshNonce; // Update txParams for the next attempt
-                                log(`Updated nonce to ${freshNonce} for retry after network error.`, 'info');
-                            } catch (nonceFetchError) {
-                                log(`❌ Failed to fetch fresh nonce after network error: ${nonceFetchError.message}`, 'error');
-                                break; // If nonce can't be fetched, can't retry
-                            }
+                            const randomRPC = rpcUrlsForChain[Math.floor(Math.random() * rpcUrlsForChain.length)];
+                            wallet.provider = new ethers.JsonRpcProvider(randomRPC);
+                            log(`🔌 Switched to new RPC: ${randomRPC}`, 'warning');
                         }
 
-
-                        if (attempt <= maxRetries) {
+                        // Delay before retry
+                        if (attempt < 1 + maxRetries) {
                             const delay = Stealth.generateLogNormalDelay(3000, 8000);
-                            log(`🔄 Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
+                            log(`⏳ Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
                             await sleep(delay);
                         }
                     }
