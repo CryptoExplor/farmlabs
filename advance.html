@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advance Interactive Script Console</title>
-    <!-- Google AdSense Account Meta Tag (Recommended in <head>) -->
-    <meta name="google-adsense-account" content="ca-pub-3062851685354753">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -1950,21 +1948,20 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
             
             // Function to send a transaction with retries
             async function sendWithRetryOrSkip(wallet, txParams, maxRetries, chainId, gasFactorUsed) {
-                const originalTxParams = { ...txParams }; // Clone for retry fallback
+                const originalTxParams = { ...txParams };
 
                 for (let attempt = 1; attempt <= 1 + maxRetries; attempt++) {
                     try {
-                        txParams = { ...originalTxParams }; // reset tx
-                        const freshNonce = await wallet.provider.getTransactionCount(wallet.address, 'latest');
-                        txParams.nonce = freshNonce;
+                        const retryTx = { ...originalTxParams };
 
                         if (Math.random() * 100 < appState.config.simulatedErrorChance) {
                             throw new Error("Simulated network error: Transaction dropped/failed.");
                         }
 
-                        log(`🔁 Attempt ${attempt}/${1 + maxRetries} with nonce ${freshNonce}...`, 'info');
+                        log(`Attempting to send (Attempt ${attempt}/${1 + maxRetries})...`, 'info');
 
-                        const txResponse = await wallet.sendTransaction(txParams);
+                        const txResponse = await wallet.sendTransaction(retryTx);
+
                         log(`✅ Tx sent! Hash: <a href="https://etherscan.io/tx/${txResponse.hash}" target="_blank" class="underline">${txResponse.hash}</a><button class="log-copy-btn" data-tx-hash="${txResponse.hash}">📋</button>`, 'success', {
                             chainId,
                             walletAddress: wallet.address,
@@ -1977,34 +1974,27 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                         return { success: true, receipt };
 
                     } catch (err) {
-                        console.warn(`❌ Tx failed on attempt ${attempt}:`, err);
                         log(`❌ Tx failed on attempt ${attempt}: ${err.message}`, 'error', {
                             chainId,
                             walletAddress: wallet.address,
                             action: 'send'
                         });
 
-                        // Nonce issue — log but allow retry
-                        if (/nonce/i.test(err.message)) {
-                            log(`🔁 Nonce mismatch detected. Refetching will occur next attempt.`, 'warning');
-                        }
-
-                        // Network error handling: rotate provider
-                        if (/Failed to fetch/i.test(err.message)) {
-                            log(`🔁 Network error detected. Attempting to switch RPC…`, 'warning');
-
+                        // Retry on network error
+                        if (/Failed to fetch|timeout/i.test(err.message)) {
+                            log(`🔁 Network error. Retrying on next RPC…`, 'warning');
+                            // rotate provider logic here if needed
                             const rpcUrlsForChain = appState.rpcConfigs.get(chainId);
                             if (!rpcUrlsForChain || rpcUrlsForChain.length === 0) {
                                 log(`❌ No RPCs configured for Chain ID ${chainId}. Cannot retry.`, 'error');
                                 break;
                             }
 
-                            const randomRPC = rpcUrlsForChain[Math.floor(Math.random() * rpcUrlsForChain.length)];
+                            const randomRPC = rpcUrlsForChain[Math.floor(Math.random() * rpcUrlsForChain.length)].url;
                             wallet.provider = new ethers.JsonRpcProvider(randomRPC);
                             log(`🔌 Switched to new RPC: ${randomRPC}`, 'warning');
                         }
 
-                        // Delay before retry
                         if (attempt < 1 + maxRetries) {
                             const delay = Stealth.generateLogNormalDelay(3000, 8000);
                             log(`⏳ Retrying after ${Math.round(delay / 1000)}s…`, 'warning');
@@ -2365,13 +2355,12 @@ https://sepolia.infura.io/v3/YOUR_PROJECT_ID,11155111</textarea>
                                     }
                                     log(`Attempting to send with random gas factor: x${randomGasFactor.toFixed(2)}`, 'info');
 
-                                    // Nonce Logic (Apply jitter for the first attempt)
+                                    // Nonce Logic (NO JITTER)
                                     let currentNonce;
                                     try {
                                         currentNonce = await wallet.provider.getTransactionCount(walletAddress, 'latest'); // Use wallet.provider
-                                        const nonceOffset = Math.floor(Stealth.getRandomInRange(0, 3)); // 0, 1, or 2
-                                        tx.nonce = currentNonce + nonceOffset;
-                                        log(`Nonce applied: ${tx.nonce} (jitter ${nonceOffset >= 0 ? '+' : ''}${nonceOffset})`, 'info');
+                                        tx.nonce = currentNonce; // Set nonce directly without jitter
+                                        log(`Nonce applied: ${tx.nonce}`, 'info');
                                     } catch (e) {
                                         log(`⚠️ Failed to fetch nonce: ${e.message}. Skipping send.`, 'error');
                                         actionSuccess = false;
