@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Interactive Script Console (0-Value TX Ready)</title>
+    <title>Basic Interactive Script Console (Auto-Send Ready)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -68,6 +68,11 @@
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
         }
+        .explorer-link {
+            color: #3b82f6;
+            text-decoration: underline;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center">
@@ -96,7 +101,7 @@
 
         <!-- Transaction Card -->
         <div class="card p-6 mb-8">
-            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Send Transaction</h2>
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Send Transaction (Manual)</h2>
             <div class="space-y-4">
                 <div>
                     <label for="recipient-input" class="block text-sm font-medium text-gray-700">Recipient Address</label>
@@ -115,7 +120,6 @@
 
                 <div>
                     <label for="amount-input" class="block text-sm font-medium text-gray-700">Amount (ETH/Token) - **Min $0$**</label>
-                    <!-- IMPORTANT FIX: set min="0" to allow 0 value -->
                     <input type="number" id="amount-input" value="0.000" min="0" step="0.000000000000000001" placeholder="0.000" class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
@@ -127,6 +131,31 @@
                 </button>
             </div>
         </div>
+
+        <!-- Automated Transaction Sender Card (NEW) -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Automated Transaction Sender</h2>
+            <p class="text-gray-600 mb-4">Repeatedly sends the transaction defined above with a random delay between attempts.</p>
+            <div class="space-y-4">
+                <!-- Delay Inputs -->
+                <div class="flex space-x-4">
+                    <div class="flex-1">
+                        <label for="min-delay-input" class="block text-sm font-medium text-gray-700">Min Delay (seconds)</label>
+                        <input type="number" id="min-delay-input" value="10" min="1" class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label for="max-delay-input" class="block text-sm font-medium text-gray-700">Max Delay (seconds)</label>
+                        <input type="number" id="max-delay-input" value="20" min="1" class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                
+                <button id="toggle-auto-send-btn" class="w-full bg-green-500 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:bg-green-600 disabled:bg-gray-400" disabled>
+                    <i class="fas fa-play mr-2"></i> Start Auto-Send Loop
+                </button>
+            </div>
+        </div>
+        <!-- End Automated Transaction Sender Card -->
+
 
         <!-- Console Output Card -->
         <div class="card p-6 mb-8">
@@ -171,16 +200,20 @@
         let signer = null;
         let userAddress = null;
         let userBalance = 0n; // Use BigInt for balance
-        let chainId = null; // New global variable for Chain ID
+        let chainId = null; 
         const donationAddressStr = "0xdAC34f55a10A0A9b82F9e4d588526553A577717E"; // Placeholder address
         const deadAddress = "0x0000000000000000000000000000000000000000"; // The standard burn address
+        
+        // Auto-Send Variables
+        let autoSendTimeoutId = null; // Changed from Interval to Timeout for sequential delay logic
+        let isAutoSending = false; 
 
         // DOM elements
         const connectWalletBtn = document.getElementById('connect-wallet-btn');
         const sendTransactionBtn = document.getElementById('send-transaction-btn');
         const statusDisplay = document.getElementById('connection-status');
         const networkDisplay = document.getElementById('network-display');
-        const chainIdDisplay = document.getElementById('chain-id-display'); // New DOM element
+        const chainIdDisplay = document.getElementById('chain-id-display'); 
         const addressDisplay = document.getElementById('address-display');
         const balanceDisplay = document.getElementById('balance-display');
         const recipientInput = document.getElementById('recipient-input');
@@ -191,6 +224,11 @@
         // New Recipient Buttons
         const selfSendBtn = document.getElementById('self-send-btn');
         const deadAddressBtn = document.getElementById('dead-address-btn');
+        
+        // New Auto-Send DOM elements
+        const minDelayInput = document.getElementById('min-delay-input');
+        const maxDelayInput = document.getElementById('max-delay-input');
+        const toggleAutoSendBtn = document.getElementById('toggle-auto-send-btn');
 
 
         // QR Modal elements
@@ -203,6 +241,30 @@
         const showQrBtn = document.getElementById('show-qr-btn');
         const closeQrModalBtn = document.getElementById('close-qr-modal-btn');
 
+        // Map common chain IDs to their block explorers (using BigInt keys for ethers v6)
+        const chainExplorers = {
+            1n: 'https://etherscan.io/tx/',        // Ethereum Mainnet
+            5n: 'https://goerli.etherscan.io/tx/',    // Goerli (Legacy)
+            11155111n: 'https://sepolia.etherscan.io/tx/', // Sepolia
+            137n: 'https://polygonscan.com/tx/',    // Polygon Mainnet
+            80001n: 'https://mumbai.polygonscan.com/tx/', // Polygon Mumbai (Legacy)
+            42161n: 'https://arbiscan.io/tx/',      // Arbitrum One
+            10n: 'https://optimistic.etherscan.io/tx/', // Optimism
+            56n: 'https://bscscan.com/tx/',        // BNB Smart Chain
+            43114n: 'https://snowtrace.io/tx/',     // Avalanche C-Chain
+            250n: 'https://ftmscan.com/tx/',        // Fantom Opera
+        };
+
+        /**
+         * Gets the appropriate block explorer URL for the current chain.
+         * @param {bigint} currentChainId The current chain ID.
+         * @param {string} txHash The transaction hash.
+         * @returns {string} The full transaction explorer URL.
+         */
+        function getExplorerUrl(currentChainId, txHash) {
+            const baseUrl = chainExplorers[currentChainId] || `https://etherscan.io/tx/`;
+            return `${baseUrl}${txHash}`;
+        }
 
         // --- Utility Functions ---
 
@@ -220,9 +282,26 @@
             
             const element = document.createElement('span');
             element.className = color + ' block';
-            element.textContent = `[${time}] [${type.toUpperCase()}] ${message}`;
-
-            // Add to console and scroll to bottom
+            
+            if (message.startsWith('Explorer Link: ')) {
+                const url = message.substring('Explorer Link: '.length);
+                const prefix = `[${time}] [INFO] Explorer Link: `;
+                
+                const prefixSpan = document.createElement('span');
+                prefixSpan.textContent = prefix;
+                
+                const linkAnchor = document.createElement('a');
+                linkAnchor.href = url;
+                linkAnchor.target = '_blank';
+                linkAnchor.textContent = url;
+                linkAnchor.className = 'explorer-link'; 
+                
+                element.appendChild(prefixSpan);
+                element.appendChild(linkAnchor);
+            } else {
+                element.textContent = `[${time}] [${type.toUpperCase()}] ${message}`;
+            }
+            
             consoleOutput.appendChild(element);
             consoleOutput.scrollTop = consoleOutput.scrollHeight;
         }
@@ -255,7 +334,8 @@
                 addressDisplay.textContent = userAddress;
                 balanceDisplay.textContent = userBalance ? `${ethers.formatEther(userBalance)} ETH` : '0 ETH';
                 chainIdDisplay.textContent = chainId !== null ? chainId.toString() : 'N/A'; // Update Chain ID
-                sendTransactionBtn.disabled = false;
+                sendTransactionBtn.disabled = isAutoSending; // Disable single send if auto-sending
+                toggleAutoSendBtn.disabled = false; // Enable auto-send button
             } else {
                 statusDisplay.textContent = 'Disconnected';
                 statusDisplay.className = 'text-red-500';
@@ -264,8 +344,123 @@
                 addressDisplay.textContent = 'Connect Wallet First';
                 balanceDisplay.textContent = 'N/A';
                 sendTransactionBtn.disabled = true;
+                toggleAutoSendBtn.disabled = true; // Disable auto-send button
+                stopAutoSend(); // Ensure loop is stopped on disconnect
             }
         }
+        
+        // --- Auto-Send Logic ---
+
+        /**
+         * Generates a random delay in milliseconds between min and max seconds.
+         * @param {number} minS Minimum delay in seconds.
+         * @param {number} maxS Maximum delay in seconds.
+         * @returns {number} Random delay in milliseconds.
+         */
+        function getRandomDelay(minS, maxS) {
+            const minMs = minS * 1000;
+            const maxMs = maxS * 1000;
+            return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+        }
+
+        /**
+         * Stops the auto-send loop.
+         */
+        function stopAutoSend() {
+            if (!isAutoSending) return;
+
+            clearTimeout(autoSendTimeoutId);
+            autoSendTimeoutId = null;
+            isAutoSending = false;
+
+            // Update UI
+            toggleAutoSendBtn.textContent = 'Start Auto-Send Loop';
+            toggleAutoSendBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            toggleAutoSendBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+
+            updateStatus(); // Re-enable single send button if connected
+            
+            log('Auto-Send Loop Stopped.', 'warn');
+        }
+
+        /**
+         * The core logic for the automated send loop.
+         */
+        async function autoSendLoop() {
+            if (!isAutoSending || !signer) {
+                stopAutoSend();
+                return;
+            }
+
+            const minDelay = parseInt(minDelayInput.value, 10);
+            const maxDelay = parseInt(maxDelayInput.value, 10);
+            const recipient = recipientInput.value.trim();
+            const amountStr = amountInput.value.trim() || '0';
+            const data = dataInput.value.trim() || '0x';
+
+            if (!recipient || isNaN(parseFloat(amountStr)) || parseFloat(amountStr) < 0 || minDelay <= 0 || maxDelay <= 0 || minDelay > maxDelay) {
+                log('Invalid transaction or delay settings for auto-send. Stopping loop.', 'error');
+                stopAutoSend();
+                return;
+            }
+
+            log(`Auto-Send: Attempting transaction...`, 'info');
+            
+            // Use the core send function with the 'isAuto' flag set to true
+            await coreSendTransaction(recipient, amountStr, data, true); 
+
+            // Determine next delay
+            const delayMs = getRandomDelay(minDelay, maxDelay);
+            log(`Auto-Send: Next transaction scheduled in ${delayMs / 1000} seconds.`, 'warn');
+
+            // Set next timeout (using setTimeout for sequential delays)
+            autoSendTimeoutId = setTimeout(autoSendLoop, delayMs);
+        }
+
+        /**
+         * Toggles the auto-send state.
+         */
+        function toggleAutoSend() {
+            if (isAutoSending) {
+                stopAutoSend();
+            } else {
+                startAutoSend();
+            }
+        }
+        
+        /**
+         * Starts the auto-send loop.
+         */
+        function startAutoSend() {
+            if (!signer) {
+                log('Please connect your wallet first.', 'warn');
+                return;
+            }
+            
+            const minDelay = parseInt(minDelayInput.value, 10);
+            const maxDelay = parseInt(maxDelayInput.value, 10);
+
+            if (minDelay <= 0 || maxDelay <= 0 || minDelay > maxDelay) {
+                log('Invalid delay settings. Min must be $\\leq$ Max and both must be $\\geq 1$ second.', 'error');
+                return;
+            }
+
+            isAutoSending = true;
+            
+            // Update UI
+            toggleAutoSendBtn.textContent = 'Stop Auto-Send Loop';
+            toggleAutoSendBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            toggleAutoSendBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+            
+            updateStatus(); // Disable single send button
+
+            log('Auto-Send Loop Started. Transactions will be sent with random delays.', 'success');
+            
+            // Start the first iteration immediately
+            autoSendLoop();
+        }
+
+        // --- Core Application Logic ---
 
         /**
          * Fetches and updates the user's balance and network info.
@@ -292,8 +487,6 @@
             }
         }
 
-        // --- Core Application Logic ---
-
         /**
          * Connects the wallet using window.ethereum (MetaMask/EIP-1193).
          */
@@ -304,18 +497,19 @@
             }
 
             try {
-                // Request account access
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 userAddress = accounts[0];
 
-                // Initialize provider and signer
                 provider = new ethers.BrowserProvider(window.ethereum);
                 signer = await provider.getSigner();
 
                 log('Wallet connected successfully.', 'success');
                 await fetchAccountData();
 
-                // Set up event listeners for account/chain changes
+                // Auto-refresh balance every 15 seconds
+                setInterval(fetchAccountData, 15000); 
+
+                // Event listeners for account/chain changes
                 window.ethereum.on('accountsChanged', (accounts) => {
                     userAddress = accounts.length > 0 ? accounts[0] : null;
                     if (userAddress) {
@@ -330,13 +524,11 @@
                 });
 
                 window.ethereum.on('chainChanged', () => {
-                    // Force a page refresh to reconnect to the new chain gracefully in a real-world app
-                    log('Network changed. Please refresh the page.', 'warn');
+                    log('Network changed. Re-fetching data...', 'warn');
                     fetchAccountData();
                 });
 
             } catch (error) {
-                // User denied account access or other error
                 log(`Connection failed: ${error.message}`, 'error');
                 userAddress = null;
                 updateStatus();
@@ -344,26 +536,17 @@
         }
 
         /**
-         * Handles the transaction sending process.
+         * Handles the transaction sending process (core logic).
+         * @param {string} recipient The recipient address.
+         * @param {string} amountStr The amount string (e.g., '0.001').
+         * @param {string} data The transaction data (e.g., '0x').
+         * @param {boolean} isAuto If true, skips single-send button manipulation.
+         * @returns {Promise<boolean>} True if the transaction was sent/confirmed, false otherwise.
          */
-        async function handleSendTransaction() {
+        async function coreSendTransaction(recipient, amountStr, data, isAuto = false) {
             if (!signer || !userAddress) {
-                log('Please connect your wallet first.', 'warn');
-                return;
-            }
-
-            const recipient = recipientInput.value.trim();
-            const amountStr = amountInput.value.trim() || '0'; // Default to '0' if input is empty
-            const data = dataInput.value.trim() || '0x';
-
-            // 1. Basic Input Validation
-            if (!recipient) {
-                log('Recipient address is required.', 'error');
-                return;
-            }
-            if (isNaN(parseFloat(amountStr)) || parseFloat(amountStr) < 0) {
-                 log('Invalid amount entered. Amount must be 0 or greater.', 'error');
-                 return;
+                log('Sender error: Wallet not connected.', 'error');
+                return false;
             }
             
             let txValue;
@@ -371,11 +554,9 @@
                 // Convert ETH string to BigInt in Wei
                 txValue = ethers.parseEther(amountStr);
             } catch (e) {
-                log(`Invalid amount format: ${e.message}`, 'error');
-                return;
+                log(`Sender error: Invalid amount format for ${amountStr}.`, 'error');
+                return false;
             }
-            
-            log(`Attempting to send ${amountStr} ETH to ${recipient}...`, 'info');
             
             // 2. Prepare Transaction Request
             const txRequest = {
@@ -388,40 +569,50 @@
             try {
                 log('Estimating gas limits and costs...', 'info');
 
-                // This simulates the transaction and checks if the sender has enough balance
-                // to cover the estimated gas limit + the transaction value.
-                const gasLimit = await provider.estimateGas(txRequest);
-                log(`Estimated Gas Limit: ${gasLimit.toString()}`, 'info');
+                let gasLimit;
+                // Better gas estimation fallback
+                try {
+                    gasLimit = await provider.estimateGas(txRequest);
+                    log(`Estimated Gas Limit: ${gasLimit.toString()}`, 'info');
+                } catch (gasError) {
+                    gasLimit = 21000n; // Fallback to base ETH transfer limit (21,000 Wei)
+                    log(`Gas estimation failed (${gasError.message}). Using default ${gasLimit.toString()}n.`, 'warn');
+                }
+                
+                txRequest.gasLimit = gasLimit; // Set the determined gas limit
 
                 // 4. Send Transaction
                 log('Sending transaction to wallet for confirmation...', 'warn');
+                
                 const txResponse = await signer.sendTransaction(txRequest);
                 
-                log('Transaction sent! Waiting for confirmation...', 'info');
-                log(`TX Hash: ${txResponse.hash}`, 'success');
+                log(`Transaction sent! Waiting for confirmation... TX Hash: ${txResponse.hash}`, 'success');
                 
-                sendTransactionBtn.disabled = true;
-                sendTransactionBtn.textContent = 'Waiting for Confirmation...';
+                // Only for the single-send button: change text while waiting
+                if (!isAuto) {
+                    sendTransactionBtn.textContent = 'Waiting for Confirmation...';
+                }
 
                 // Wait for the transaction to be mined
                 const txReceipt = await provider.waitForTransaction(txResponse.hash);
                 
-                sendTransactionBtn.textContent = 'Send Transaction';
-                sendTransactionBtn.disabled = false;
                 
                 if (txReceipt && txReceipt.status === 1) {
                     log(`Transaction Confirmed! Block: ${txReceipt.blockNumber}`, 'success');
+                    
+                    // Show live TX link
+                    const explorerUrl = getExplorerUrl(chainId, txResponse.hash);
+                    log(`Explorer Link: ${explorerUrl}`, 'info');
+
                 } else {
                     log('Transaction failed or was reverted by the network.', 'error');
                 }
                 
                 // Refresh balance after successful transaction
                 await fetchAccountData();
+                return true;
 
             } catch (error) {
-                sendTransactionBtn.disabled = false;
-                sendTransactionBtn.textContent = 'Send Transaction';
-                
                 let errorMessage = error.message;
 
                 // Attempt to parse common error types for a better message
@@ -434,17 +625,45 @@
                 }
 
                 log(`Transaction failed: ${errorMessage}`, 'error');
+                return false;
             }
+        }
+
+        /**
+         * Wrapper for single-click transaction sending.
+         */
+        async function handleSingleSend() {
+            const recipient = recipientInput.value.trim();
+            const amountStr = amountInput.value.trim() || '0';
+            const data = dataInput.value.trim() || '0x';
+
+            // 1. Basic Input Validation
+            if (!recipient) {
+                log('Recipient address is required.', 'error');
+                return;
+            }
+            if (isNaN(parseFloat(amountStr)) || parseFloat(amountStr) < 0) {
+                 log('Invalid amount entered. Amount must be $0$ or greater.', 'error');
+                 return;
+            }
+            
+            sendTransactionBtn.disabled = true;
+            sendTransactionBtn.textContent = 'Sending...';
+
+            await coreSendTransaction(recipient, amountStr, data, false); // false = not auto-send
+
+            // Reset single-send button state (handled by updateStatus if failed, or here if successful/failed within core)
+            sendTransactionBtn.textContent = 'Send Transaction';
+            sendTransactionBtn.disabled = false;
         }
 
 
         // --- Event Listeners and Initial Setup ---
         
-        // Connect button
         connectWalletBtn.addEventListener('click', connectWallet);
+        sendTransactionBtn.addEventListener('click', handleSingleSend);
+        toggleAutoSendBtn.addEventListener('click', toggleAutoSend);
 
-        // Send button
-        sendTransactionBtn.addEventListener('click', handleSendTransaction);
 
         // New Self-Send Button
         selfSendBtn.addEventListener('click', () => {
