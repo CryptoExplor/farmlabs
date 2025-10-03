@@ -132,10 +132,10 @@
             </div>
         </div>
 
-        <!-- Automated Transaction Sender Card (NEW) -->
+        <!-- Automated Transaction Sender Card -->
         <div class="card p-6 mb-8">
             <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Automated Transaction Sender</h2>
-            <p class="text-gray-600 mb-4">Repeatedly sends the transaction defined above with a random delay between attempts. Transactions are **sent but NOT confirmed** before the next interval begins.</p>
+            <p class="text-gray-600 mb-4">Repeatedly sends the transaction defined above with a random delay between attempts. Transactions are **sent but confirmations are monitored in the background** to prevent blocking the loop.</p>
             <div class="space-y-4">
                 <!-- Delay Inputs -->
                 <div class="flex space-x-4">
@@ -279,7 +279,7 @@
             if (type === 'error') color = 'text-red-400';
             if (type === 'warn') color = 'text-yellow-400';
             if (type === 'info') color = 'text-blue-400';
-            if (type === 'pending') color = 'text-purple-400'; // New color for pending
+            if (type === 'pending') color = 'text-purple-400'; 
             
             const element = document.createElement('span');
             element.className = color + ' block';
@@ -334,18 +334,18 @@
                 statusDisplay.className = 'text-green-500 font-semibold';
                 addressDisplay.textContent = userAddress;
                 balanceDisplay.textContent = userBalance ? `${ethers.formatEther(userBalance)} ETH` : '0 ETH';
-                chainIdDisplay.textContent = chainId !== null ? chainId.toString() : 'N/A'; // Update Chain ID
+                chainIdDisplay.textContent = chainId !== null ? chainId.toString() : 'N/A';
                 sendTransactionBtn.disabled = isAutoSending; // Disable single send if auto-sending
                 toggleAutoSendBtn.disabled = false; // Enable auto-send button
             } else {
                 statusDisplay.textContent = 'Disconnected';
                 statusDisplay.className = 'text-red-500';
                 networkDisplay.textContent = 'N/A';
-                chainIdDisplay.textContent = 'N/A'; // Clear Chain ID
+                chainIdDisplay.textContent = 'N/A';
                 addressDisplay.textContent = 'Connect Wallet First';
                 balanceDisplay.textContent = 'N/A';
                 sendTransactionBtn.disabled = true;
-                toggleAutoSendBtn.disabled = true; // Disable auto-send button
+                toggleAutoSendBtn.disabled = true;
                 stopAutoSend(); // Ensure loop is stopped on disconnect
             }
         }
@@ -379,7 +379,7 @@
             toggleAutoSendBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
             toggleAutoSendBtn.classList.add('bg-green-500', 'hover:bg-green-600');
 
-            updateStatus(); // Re-enable single send button if connected
+            updateStatus(); 
             
             log('Auto-Send Loop Stopped.', 'warn');
         }
@@ -407,7 +407,7 @@
 
             log(`Auto-Send: Attempting transaction...`, 'info');
             
-            // Use the core send function (no confirmation wait for auto-send)
+            // Use the core send function, skipping confirmation wait
             const txResponse = await coreSendTransaction(recipient, amountStr, data, true); 
 
             if (txResponse) {
@@ -416,6 +416,7 @@
                 log(`Auto-Send: TX ${txResponse.hash.slice(0, 10)}... sent. Next scheduled in ${delayMs / 1000}s.`, 'pending');
                 
                 // Fire and forget confirmation monitor
+                // The monitorConfirmation function already handles the fetchAccountData call on success/failure
                 monitorConfirmation(txResponse.hash);
                 
                 autoSendTimeoutId = setTimeout(autoSendLoop, delayMs);
@@ -461,7 +462,7 @@
             toggleAutoSendBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
             toggleAutoSendBtn.classList.add('bg-red-500', 'hover:bg-red-600');
             
-            updateStatus(); // Disable single send button
+            updateStatus(); 
 
             log('Auto-Send Loop Started. Transactions will be sent with random delays.', 'success');
             
@@ -551,75 +552,72 @@
          */
         async function monitorConfirmation(txHash) {
             try {
-                // provider.waitForTransaction is generally the correct way to wait for confirmation
+                log(`Waiting for confirmation of TX ${txHash.slice(0, 10)}...`, 'pending');
+
                 const txReceipt = await provider.waitForTransaction(txHash);
 
-                if (txReceipt && txReceipt.status === 1) {
-                    log(`Confirmation SUCCESS: TX ${txHash.slice(0, 10)}... Block: ${txReceipt.blockNumber}`, 'success');
-                    
-                    const explorerUrl = getExplorerUrl(chainId, txHash);
-                    log(`Explorer Link: ${explorerUrl}`, 'info');
-
-                } else if (txReceipt && txReceipt.status === 0) {
-                    log(`Confirmation FAILED: TX ${txHash.slice(0, 10)}... Reverted in Block: ${txReceipt.blockNumber}`, 'error');
+                // Use 1n (BigInt) for comparison as per ethers v6 standard
+                if (txReceipt && txReceipt.status === 1n) {
+                    log(`Confirmation SUCCESS: TX ${txHash.slice(0, 10)}... confirmed in block ${txReceipt.blockNumber}`, 'success');
+                    log(`Explorer Link: ${getExplorerUrl(chainId, txHash)}`, 'info');
                 } else {
-                    // This case handles potential timeouts or dropped transactions
-                    log(`Confirmation UNKNOWN: TX ${txHash.slice(0, 10)}... Status unconfirmed/dropped after waiting. Check explorer.`, 'warn');
+                    log(`Confirmation FAILED: TX ${txHash.slice(0, 10)}... failed or reverted.`, 'error');
                 }
                 
-                await fetchAccountData(); // Always refresh balance after monitoring finishes
-            } catch (error) {
+                await fetchAccountData(); 
+            } catch (err) {
                  // Handle explicit errors during waiting (e.g., node disconnection, timeout)
-                log(`Confirmation monitor error for TX ${txHash.slice(0, 10)}...: ${error.message}`, 'error');
+                log(`Error monitoring confirmation for TX ${txHash.slice(0, 10)}...: ${err.message}`, 'error');
             }
         }
 
         /**
-         * Signs and sends the transaction, but does NOT wait for confirmation.
+         * Signs and sends the transaction, but can optionally skip waiting for confirmation.
          * @param {string} recipient The recipient address.
          * @param {string} amountStr The amount string (e.g., '0.001').
          * @param {string} data The transaction data (e.g., '0x').
+         * @param {boolean} skipConfirm If true, returns immediately after broadcasting.
          * @returns {Promise<ethers.TransactionResponse | null>} The transaction response if sent, null otherwise.
          */
-        async function coreSendTransaction(recipient, amountStr, data) {
-            if (!signer || !userAddress) {
-                log('Sender error: Wallet not connected.', 'error');
+        async function coreSendTransaction(recipient, amountStr, data, skipConfirm = false) {
+            if (!signer) {
+                log('No connected signer. Connect your wallet first.', 'error');
                 return null;
             }
-            
-            let txValue;
-            try {
-                txValue = ethers.parseEther(amountStr);
-            } catch (e) {
-                log(`Sender error: Invalid amount format for ${amountStr}.`, 'error');
-                return null;
-            }
-            
-            const txRequest = {
-                to: recipient,
-                value: txValue,
-                data: data,
-            };
 
             try {
+                // Ensure amount is parsed correctly, defaulting to 0
+                const txValue = ethers.parseEther(amountStr || "0"); 
+                const txData = data && data !== '' ? data : "0x";
+
+                const txRequest = {
+                    to: recipient,
+                    value: txValue,
+                    data: txData,
+                };
+                
                 log('Estimating gas limits and costs...', 'info');
 
                 let gasLimit;
                 try {
                     gasLimit = await provider.estimateGas(txRequest);
-                    log(`Estimated Gas Limit: ${gasLimit.toString()}`, 'info');
                 } catch (gasError) {
                     gasLimit = 21000n; // Fallback to base ETH transfer limit (21,000 Wei)
-                    log(`Gas estimation failed (${gasError.message}). Using default ${gasLimit.toString()}n.`, 'warn');
+                    log(`Gas estimation failed (${gasError.message}). Using default ${gasLimit.toString()}.`, 'warn');
                 }
-                
                 txRequest.gasLimit = gasLimit;
+
                 log('Sending transaction to wallet for confirmation...', 'warn');
-                
+
                 // This line waits for the user to approve the transaction, then returns the broadcasted response.
                 const txResponse = await signer.sendTransaction(txRequest);
+                log(`Transaction broadcasted: ${txResponse.hash}`, 'pending');
                 
-                log(`Transaction broadcasted! TX Hash: ${txResponse.hash}`, 'pending');
+                // If not skipping confirmation (i.e., manual send), start the non-blocking monitor.
+                if (!skipConfirm) {
+                    await monitorConfirmation(txResponse.hash);
+                }
+
                 return txResponse;
 
             } catch (error) {
@@ -639,7 +637,7 @@
         }
 
         /**
-         * Wrapper for single-click transaction sending (waits for confirmation).
+         * Wrapper for single-click transaction sending (calls core function).
          */
         async function handleSingleSend() {
             const recipient = recipientInput.value.trim();
@@ -659,12 +657,8 @@
             sendTransactionBtn.disabled = true;
             sendTransactionBtn.textContent = 'Awaiting Wallet Approval...';
 
-            const txResponse = await coreSendTransaction(recipient, amountStr, data); 
-
-            if (txResponse) {
-                sendTransactionBtn.textContent = 'Waiting for Confirmation...';
-                await monitorConfirmation(txResponse.hash);
-            }
+            // Pass 'false' to ensure monitorConfirmation is called inside coreSendTransaction
+            await coreSendTransaction(recipient, amountStr, data, false); 
             
             // Reset button state
             sendTransactionBtn.textContent = 'Send Transaction';
