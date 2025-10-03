@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Interactive Script Console (Auto-Send Ready)</title>
+    <title>Basic Interactive Script Console (Non-Blocking TX)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -135,7 +135,7 @@
         <!-- Automated Transaction Sender Card (NEW) -->
         <div class="card p-6 mb-8">
             <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Automated Transaction Sender</h2>
-            <p class="text-gray-600 mb-4">Repeatedly sends the transaction defined above with a random delay between attempts.</p>
+            <p class="text-gray-600 mb-4">Repeatedly sends the transaction defined above with a random delay between attempts. Transactions are **sent but NOT confirmed** before the next interval begins.</p>
             <div class="space-y-4">
                 <!-- Delay Inputs -->
                 <div class="flex space-x-4">
@@ -205,7 +205,7 @@
         const deadAddress = "0x0000000000000000000000000000000000000000"; // The standard burn address
         
         // Auto-Send Variables
-        let autoSendTimeoutId = null; // Changed from Interval to Timeout for sequential delay logic
+        let autoSendTimeoutId = null; 
         let isAutoSending = false; 
 
         // DOM elements
@@ -271,7 +271,7 @@
         /**
          * Appends a message to the console output.
          * @param {string} message The message to display.
-         * @param {string} type The type of message (log, error, success).
+         * @param {string} type The type of message (log, error, success, warn, info, pending).
          */
         function log(message, type = 'log') {
             const time = new Date().toLocaleTimeString();
@@ -279,6 +279,7 @@
             if (type === 'error') color = 'text-red-400';
             if (type === 'warn') color = 'text-yellow-400';
             if (type === 'info') color = 'text-blue-400';
+            if (type === 'pending') color = 'text-purple-400'; // New color for pending
             
             const element = document.createElement('span');
             element.className = color + ' block';
@@ -406,15 +407,23 @@
 
             log(`Auto-Send: Attempting transaction...`, 'info');
             
-            // Use the core send function with the 'isAuto' flag set to true
-            await coreSendTransaction(recipient, amountStr, data, true); 
+            // Use the core send function (no confirmation wait for auto-send)
+            const txResponse = await coreSendTransaction(recipient, amountStr, data, true); 
 
-            // Determine next delay
-            const delayMs = getRandomDelay(minDelay, maxDelay);
-            log(`Auto-Send: Next transaction scheduled in ${delayMs / 1000} seconds.`, 'warn');
-
-            // Set next timeout (using setTimeout for sequential delays)
-            autoSendTimeoutId = setTimeout(autoSendLoop, delayMs);
+            if (txResponse) {
+                // If broadcast was successful, schedule the next iteration based on the timer
+                const delayMs = getRandomDelay(minDelay, maxDelay);
+                log(`Auto-Send: TX ${txResponse.hash.slice(0, 10)}... sent. Next scheduled in ${delayMs / 1000}s.`, 'pending');
+                
+                // Fire and forget confirmation monitor
+                monitorConfirmation(txResponse.hash);
+                
+                autoSendTimeoutId = setTimeout(autoSendLoop, delayMs);
+            } else {
+                // If send failed (e.g., user rejected, insufficient funds), wait before retrying or stopping
+                log('Auto-Send: Transaction failed to broadcast. Retrying in 5s.', 'error');
+                autoSendTimeoutId = setTimeout(autoSendLoop, 5000); 
+            }
         }
 
         /**
@@ -536,41 +545,66 @@
         }
 
         /**
-         * Handles the transaction sending process (core logic).
+         * Waits for the transaction confirmation and logs the result.
+         * This function is non-blocking to the main send logic.
+         * @param {string} txHash The transaction hash to monitor.
+         */
+        async function monitorConfirmation(txHash) {
+            try {
+                // provider.waitForTransaction is generally the correct way to wait for confirmation
+                const txReceipt = await provider.waitForTransaction(txHash);
+
+                if (txReceipt && txReceipt.status === 1) {
+                    log(`Confirmation SUCCESS: TX ${txHash.slice(0, 10)}... Block: ${txReceipt.blockNumber}`, 'success');
+                    
+                    const explorerUrl = getExplorerUrl(chainId, txHash);
+                    log(`Explorer Link: ${explorerUrl}`, 'info');
+
+                } else if (txReceipt && txReceipt.status === 0) {
+                    log(`Confirmation FAILED: TX ${txHash.slice(0, 10)}... Reverted in Block: ${txReceipt.blockNumber}`, 'error');
+                } else {
+                    // This case handles potential timeouts or dropped transactions
+                    log(`Confirmation UNKNOWN: TX ${txHash.slice(0, 10)}... Status unconfirmed/dropped after waiting. Check explorer.`, 'warn');
+                }
+                
+                await fetchAccountData(); // Always refresh balance after monitoring finishes
+            } catch (error) {
+                 // Handle explicit errors during waiting (e.g., node disconnection, timeout)
+                log(`Confirmation monitor error for TX ${txHash.slice(0, 10)}...: ${error.message}`, 'error');
+            }
+        }
+
+        /**
+         * Signs and sends the transaction, but does NOT wait for confirmation.
          * @param {string} recipient The recipient address.
          * @param {string} amountStr The amount string (e.g., '0.001').
          * @param {string} data The transaction data (e.g., '0x').
-         * @param {boolean} isAuto If true, skips single-send button manipulation.
-         * @returns {Promise<boolean>} True if the transaction was sent/confirmed, false otherwise.
+         * @returns {Promise<ethers.TransactionResponse | null>} The transaction response if sent, null otherwise.
          */
-        async function coreSendTransaction(recipient, amountStr, data, isAuto = false) {
+        async function coreSendTransaction(recipient, amountStr, data) {
             if (!signer || !userAddress) {
                 log('Sender error: Wallet not connected.', 'error');
-                return false;
+                return null;
             }
             
             let txValue;
             try {
-                // Convert ETH string to BigInt in Wei
                 txValue = ethers.parseEther(amountStr);
             } catch (e) {
                 log(`Sender error: Invalid amount format for ${amountStr}.`, 'error');
-                return false;
+                return null;
             }
             
-            // 2. Prepare Transaction Request
             const txRequest = {
                 to: recipient,
                 value: txValue,
                 data: data,
             };
 
-            // 3. Estimate Gas and Check Balance
             try {
                 log('Estimating gas limits and costs...', 'info');
 
                 let gasLimit;
-                // Better gas estimation fallback
                 try {
                     gasLimit = await provider.estimateGas(txRequest);
                     log(`Estimated Gas Limit: ${gasLimit.toString()}`, 'info');
@@ -579,43 +613,18 @@
                     log(`Gas estimation failed (${gasError.message}). Using default ${gasLimit.toString()}n.`, 'warn');
                 }
                 
-                txRequest.gasLimit = gasLimit; // Set the determined gas limit
-
-                // 4. Send Transaction
+                txRequest.gasLimit = gasLimit;
                 log('Sending transaction to wallet for confirmation...', 'warn');
                 
+                // This line waits for the user to approve the transaction, then returns the broadcasted response.
                 const txResponse = await signer.sendTransaction(txRequest);
                 
-                log(`Transaction sent! Waiting for confirmation... TX Hash: ${txResponse.hash}`, 'success');
-                
-                // Only for the single-send button: change text while waiting
-                if (!isAuto) {
-                    sendTransactionBtn.textContent = 'Waiting for Confirmation...';
-                }
-
-                // Wait for the transaction to be mined
-                const txReceipt = await provider.waitForTransaction(txResponse.hash);
-                
-                
-                if (txReceipt && txReceipt.status === 1) {
-                    log(`Transaction Confirmed! Block: ${txReceipt.blockNumber}`, 'success');
-                    
-                    // Show live TX link
-                    const explorerUrl = getExplorerUrl(chainId, txResponse.hash);
-                    log(`Explorer Link: ${explorerUrl}`, 'info');
-
-                } else {
-                    log('Transaction failed or was reverted by the network.', 'error');
-                }
-                
-                // Refresh balance after successful transaction
-                await fetchAccountData();
-                return true;
+                log(`Transaction broadcasted! TX Hash: ${txResponse.hash}`, 'pending');
+                return txResponse;
 
             } catch (error) {
                 let errorMessage = error.message;
 
-                // Attempt to parse common error types for a better message
                 if (error.code === 'INSUFFICIENT_FUNDS') {
                     errorMessage = 'Insufficient funds to cover the transaction fees (gas).';
                 } else if (error.code === 'ACTION_REJECTED' || error.message.includes('user rejected')) {
@@ -624,13 +633,13 @@
                     errorMessage = 'Invalid recipient address.';
                 }
 
-                log(`Transaction failed: ${errorMessage}`, 'error');
-                return false;
+                log(`Transaction failed to broadcast: ${errorMessage}`, 'error');
+                return null;
             }
         }
 
         /**
-         * Wrapper for single-click transaction sending.
+         * Wrapper for single-click transaction sending (waits for confirmation).
          */
         async function handleSingleSend() {
             const recipient = recipientInput.value.trim();
@@ -648,11 +657,16 @@
             }
             
             sendTransactionBtn.disabled = true;
-            sendTransactionBtn.textContent = 'Sending...';
+            sendTransactionBtn.textContent = 'Awaiting Wallet Approval...';
 
-            await coreSendTransaction(recipient, amountStr, data, false); // false = not auto-send
+            const txResponse = await coreSendTransaction(recipient, amountStr, data); 
 
-            // Reset single-send button state (handled by updateStatus if failed, or here if successful/failed within core)
+            if (txResponse) {
+                sendTransactionBtn.textContent = 'Waiting for Confirmation...';
+                await monitorConfirmation(txResponse.hash);
+            }
+            
+            // Reset button state
             sendTransactionBtn.textContent = 'Send Transaction';
             sendTransactionBtn.disabled = false;
         }
